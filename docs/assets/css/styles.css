@@ -521,21 +521,29 @@ p { margin: 0; }
 .mottos__text, .questions__copy .text, .saints__copy .text { font-family: var(--font-display); font-style: italic; font-size: 1.125rem; }
 
 
-/* ---------- Книжный режим: блоки перелистываются как страницы ----------
-   Включается скриптом на широких экранах (body.book). Блоки сгруппированы
-   в страницы не короче экрана; страницы лежат стопкой на месте, прокрутка
-   сначала дочитывает текущую страницу, затем следующая переворачивается
-   вокруг левого края (корешка) и ложится сверху. */
+/* ---------- Книжный режим: блоки перелистываются как страницы книги ----------
+   Широкие экраны (body.book). Блоки собраны в страницы ровно в один экран:
+   блоки внутри растягиваются, чтобы заполнить страницу, а слишком высокий
+   блок слегка уменьшается. Прокрутка вниз = листаем вперёд: текущая страница
+   поднимается за правый край и уходит влево вокруг корешка, открывая следующую. */
+html.book-snap { scroll-snap-type: y proximity; }
 body.book main { position: fixed; inset: 0; overflow: hidden; z-index: 1; background: var(--milk); }
 body.book .book-spacer { display: block; width: 1px; }
 .book-spacer { display: none; }
-.book-page { position: absolute; top: 0; left: 0; width: 100%; background: var(--milk); will-change: transform; backface-visibility: hidden; }
+.book-spacer > div { scroll-snap-align: start; }
+.book-page { position: absolute; top: 0; left: 0; width: 100%; overflow: hidden; background: var(--milk); will-change: transform; backface-visibility: hidden; }
 .book-page.is-off { opacity: 0; pointer-events: none; }
-/* свет на переворачиваемом листе: темнее к свободному краю */
+.book-sheet { display: flex; flex-direction: column; transform-origin: 0 0; }
+.book-sheet > * { flex-shrink: 0; display: flex; flex-direction: column; }
+.book-sheet > .hero { display: block; }
+.book-sheet > :not(.hero) > :not(.numeral):not(.prayer__plants-left):not(.prayer__plants-right):not(.merch__leaves) { flex: 1 0 auto; width: 100%; }
+.book-sheet > * > .stages, .book-sheet > * > .site-footer__legal { flex: 0 0 auto; }
+body.book .chronicle__inner { justify-content: center; }
+/* свет на переворачиваемом листе: темнеет к поднятому краю */
 .book-page::after { content: ""; position: absolute; inset: 0; z-index: 100; pointer-events: none; opacity: var(--turn, 0);
-  background: linear-gradient(90deg, rgba(255,250,240,.10) 0%, rgba(20,23,15,0) 45%, rgba(20,23,15,.26) 100%); }
-/* тень, которую лист отбрасывает на страницу под ним */
+  background: linear-gradient(90deg, rgba(20,23,15,0) 0%, rgba(20,23,15,.04) 55%, rgba(20,23,15,.30) 100%); }
+/* тень от листа на открывающейся странице */
 .book-shade { position: absolute; inset: 0; pointer-events: none; visibility: hidden;
   background:
-    linear-gradient(90deg, transparent var(--x, 0px), rgba(20,23,15,.30) var(--x, 0px), rgba(20,23,15,0) calc(var(--x, 0px) + 220px)),
+    linear-gradient(90deg, transparent var(--x, 0px), rgba(20,23,15,.34) var(--x, 0px), rgba(20,23,15,.10) calc(var(--x, 0px) + 90px), rgba(20,23,15,0) calc(var(--x, 0px) + 260px)),
     rgba(20,23,15, var(--dim, 0)); }
