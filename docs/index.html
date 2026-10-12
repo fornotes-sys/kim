@@ -157,7 +157,7 @@
       <a class="link-arrow" href="#" data-soon>Узнать больше о храме <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
     <figure class="media about__media">
-      <img src="assets/img/about-ref.jpg" width="801" height="976" alt="Фасад будущего храма в обрамлении осенней листвы" loading="lazy">
+      <img src="assets/img/about-ref.jpg" width="800" height="976" alt="Фасад будущего храма в обрамлении осенней листвы" loading="lazy">
     </figure>
     <ol class="directions" aria-label="Направления жизни прихода">
       <li><span class="directions__num">01</span><div><h3>Молитва</h3><p>Богослужения и таинства</p></div></li>
@@ -217,7 +217,7 @@
       <a class="link-arrow" href="#" data-soon>Подробнее об истории <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
     <figure class="media place__media">
-      <img src="assets/img/pulkovo-ref.jpg" width="1099" height="812" alt="Вид с высот на город на закате" loading="lazy">
+      <img src="assets/img/pulkovo-ref.jpg" width="1100" height="812" alt="Вид с высот на город на закате" loading="lazy">
     </figure>
     <div class="map-card">
       <svg class="map-card__svg" viewBox="0 0 300 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -263,7 +263,7 @@
 <section class="build" id="build" aria-labelledby="build-title">
   <div class="build__grid">
     <figure class="media build__media">
-      <img src="assets/img/build-ref.jpg" width="1376" height="693" alt="Деревянные конструкции и поклонный крест на закате" loading="lazy">
+      <img src="assets/img/build-ref.jpg" width="1428" height="720" alt="Деревянные конструкции и поклонный крест на закате" loading="lazy">
     </figure>
     <div class="build__copy">
       <span class="eyebrow">Строительство</span>
@@ -326,7 +326,7 @@
 <section class="merch" id="merch" aria-labelledby="merch-title">
   <div class="merch__grid">
     <figure class="media merch__media">
-      <img src="assets/img/merch-ref.jpg" width="1360" height="510" alt="Мерч прихода: худи «Пулковские высоты», кружка, блокнот и шопер «Я человек слова»" loading="lazy">
+      <img src="assets/img/merch-ref.jpg" width="1600" height="600" alt="Мерч прихода: худи «Пулковские высоты», кружка, блокнот и шопер «Я человек слова»" loading="lazy">
     </figure>
     <div class="merch__copy">
       <span class="numeral" aria-hidden="true" style="top: 4%; right: 24%">05</span>
@@ -341,62 +341,78 @@
       <a class="link-arrow" href="#" data-soon>Перейти в магазин <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
-  <div class="merch__leaves" aria-hidden="true"><img src="assets/img/leaves-right.jpg" width="236" height="1248" alt="" loading="lazy"></div>
+  <div class="merch__leaves" aria-hidden="true"><img src="assets/img/leaves-right.jpg" width="228" height="1248" alt="" loading="lazy"></div>
 </section>
 
 <!-- ============ ЗАПИСКИ ============ -->
 <section class="prayer" id="prayer" aria-labelledby="prayer-title">
-  <div class="prayer__plants-left" aria-hidden="true"><img src="assets/img/plants-left.jpg" width="240" height="648" alt="" loading="lazy"></div>
+  <div class="prayer__plants-left" aria-hidden="true"><img src="assets/img/plants-left.jpg" width="192" height="648" alt="" loading="lazy"></div>
   <div class="prayer__grid">
     <div class="prayer__copy">
       <span class="eyebrow">Подать записку</span>
       <h2 id="prayer-title">Молитва всегда рядом</h2>
-      <p class="text">Помолимся о вас и ваших близких на ближайшей Литургии.</p>
+      <p class="text">Помолимся о вас и ваших близких на ближайшей Литургии. В одну записку — до 25 имён: полностью, в родительном падеже, в церковном написании («Иоанна», «Марии»). Детей до 7 лет пишут «младенца», до 15 — «отрока» или «отроковицы».</p>
       <a class="link-arrow" href="#" data-soon>Попросить молитвы общины <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
 
-    <form class="note-form" data-note-form="health" novalidate aria-labelledby="note-health-title">
-      <div class="note-form__head">
-        <img class="note-form__seal" src="assets/img/seal-red.png" width="64" height="60" alt="">
-        <div>
+    <div class="prayer__notes">
+      <form class="note-form" data-note-form="health" novalidate aria-labelledby="note-health-title">
+        <div class="note-form__head">
+          <img class="note-form__seal" src="assets/img/seal-red.png" width="104" height="97" alt="">
+          <p class="note-form__church">Храм свв. равноап. Кирилла и Мефодия, учителей Словенских, на Пулковских высотах</p>
+          <span class="note-form__rule" aria-hidden="true"></span>
           <h3 class="note-form__title" id="note-health-title">О здравии</h3>
           <p class="note-form__prayer">Помяни, Господи, о здравии и спасении рабов Твоих:</p>
         </div>
-      </div>
-      <div class="note-form__body">
-        <div class="note-form__lines" data-note-lines>
-          <div class="note-line"><label class="visually-hidden" for="health-1">Имя 1</label><input id="health-1" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="health-2">Имя 2</label><input id="health-2" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="health-3">Имя 3</label><input id="health-3" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
+        <div class="note-form__body">
+          <div class="note-form__lines" data-note-lines>
+          <div class="note-line"><label class="visually-hidden" for="health-1">Имя 1</label><input id="health-1" name="name" type="text" autocomplete="off" placeholder="Имя в родительном падеже" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-2">Имя 2</label><input id="health-2" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-3">Имя 3</label><input id="health-3" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-4">Имя 4</label><input id="health-4" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-5">Имя 5</label><input id="health-5" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-6">Имя 6</label><input id="health-6" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-7">Имя 7</label><input id="health-7" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-8">Имя 8</label><input id="health-8" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-9">Имя 9</label><input id="health-9" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="health-10">Имя 10</label><input id="health-10" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          </div>
+          <button class="note-form__add" type="button" data-note-add><svg aria-hidden="true"><use href="#i-plus"/></svg> Добавить строку</button>
+          <button class="btn btn--gold" type="submit">Подать записку <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <p class="note-form__status" data-note-status role="status" hidden></p>
         </div>
-        <button class="note-form__add" type="button" data-note-add><svg aria-hidden="true"><use href="#i-plus"/></svg> Добавить строку</button>
-        <button class="btn btn--gold" type="submit">Подать записку о здравии <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
-        <p class="note-form__status" data-note-status role="status" hidden></p>
-      </div>
-    </form>
-
-    <form class="note-form note-form--repose" data-note-form="repose" novalidate aria-labelledby="note-repose-title">
-      <div class="note-form__head">
-        <img class="note-form__seal" src="assets/img/seal-dark.png" width="64" height="60" alt="">
-        <div>
+        <span class="note-form__rule note-form__rule--bottom" aria-hidden="true"></span>
+      </form>
+      <form class="note-form note-form--repose" data-note-form="repose" novalidate aria-labelledby="note-repose-title">
+        <div class="note-form__head">
+          <img class="note-form__seal" src="assets/img/seal-dark.png" width="104" height="97" alt="">
+          <p class="note-form__church">Храм свв. равноап. Кирилла и Мефодия, учителей Словенских, на Пулковских высотах</p>
+          <span class="note-form__rule" aria-hidden="true"></span>
           <h3 class="note-form__title" id="note-repose-title">Об упокоении</h3>
           <p class="note-form__prayer">Упокой, Господи, души усопших рабов Твоих:</p>
         </div>
-      </div>
-      <div class="note-form__body">
-        <div class="note-form__lines" data-note-lines>
-          <div class="note-line"><label class="visually-hidden" for="repose-1">Имя 1</label><input id="repose-1" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="repose-2">Имя 2</label><input id="repose-2" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="repose-3">Имя 3</label><input id="repose-3" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
+        <div class="note-form__body">
+          <div class="note-form__lines" data-note-lines>
+          <div class="note-line"><label class="visually-hidden" for="repose-1">Имя 1</label><input id="repose-1" name="name" type="text" autocomplete="off" placeholder="Имя в родительном падеже" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-2">Имя 2</label><input id="repose-2" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-3">Имя 3</label><input id="repose-3" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-4">Имя 4</label><input id="repose-4" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-5">Имя 5</label><input id="repose-5" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-6">Имя 6</label><input id="repose-6" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-7">Имя 7</label><input id="repose-7" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-8">Имя 8</label><input id="repose-8" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-9">Имя 9</label><input id="repose-9" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          <div class="note-line"><label class="visually-hidden" for="repose-10">Имя 10</label><input id="repose-10" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
+          </div>
+          <button class="note-form__add" type="button" data-note-add><svg aria-hidden="true"><use href="#i-plus"/></svg> Добавить строку</button>
+          <button class="btn btn--dark" type="submit">Подать записку <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <p class="note-form__status" data-note-status role="status" hidden></p>
         </div>
-        <button class="note-form__add" type="button" data-note-add><svg aria-hidden="true"><use href="#i-plus"/></svg> Добавить строку</button>
-        <button class="btn btn--dark" type="submit">Подать записку об упокоении <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
-        <p class="note-form__status" data-note-status role="status" hidden></p>
-      </div>
-    </form>
-
+        <span class="note-form__rule note-form__rule--bottom" aria-hidden="true"></span>
+      </form>
+    </div>
   </div>
-  <div class="prayer__plants-right" aria-hidden="true"><img src="assets/img/leaves-right.jpg" width="236" height="1248" alt="" loading="lazy"></div>
+  <div class="prayer__plants-right" aria-hidden="true"><img src="assets/img/leaves-right.jpg" width="228" height="1248" alt="" loading="lazy"></div>
 </section>
 
 <!-- ============ ВОПРОСЫ О ВЕРЕ ============ -->

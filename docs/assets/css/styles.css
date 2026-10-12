@@ -6,6 +6,7 @@
 
 @font-face { font-family: "Playfair Display"; src: url("../fonts/PlayfairDisplay-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "Fedorovsk Unicode"; src: url("../fonts/FedorovskUnicode.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Playfair Display"; src: url("../fonts/PlayfairDisplay-Bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "Playfair Display SC"; src: url("../fonts/PlayfairDisplaySC-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "Playfair Display"; src: url("../fonts/PlayfairDisplay-Italic.woff") format("woff"); font-weight: 400; font-style: italic; font-display: swap; }
 
@@ -234,41 +235,44 @@ p { margin: 0; }
 .merch__leaves { position: absolute; right: 0; top: 4%; bottom: 0; width: clamp(60px, 7vw, 110px); pointer-events: none; mix-blend-mode: multiply; }
 .merch__leaves img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
 
-/* ---------- Записки ---------- */
+/* ---------- Записки: формат печатного бланка 75×210 ---------- */
 .prayer { position: relative; overflow: hidden; background: radial-gradient(120% 140% at 20% 30%, #EFE4D0 0%, #E6D8BE 60%, #DECDAE 100%); }
 .prayer__plants-left, .prayer__plants-right { position: absolute; bottom: 0; pointer-events: none; mix-blend-mode: multiply; opacity: .95; }
-.prayer__plants-left { left: 0; top: 0; width: clamp(50px, 6vw, 96px); }
-.prayer__plants-right { right: 0; top: 30%; width: clamp(50px, 6vw, 96px); }
+.prayer__plants-left { left: 0; top: 0; width: clamp(56px, 6.6vw, 110px); }
+.prayer__plants-right { right: 0; top: 0; width: clamp(50px, 6vw, 96px); }
 .prayer__plants-left img, .prayer__plants-right img { width: 100%; height: 100%; object-fit: cover; object-position: left bottom; }
-.prayer__grid { position: relative; z-index: 1; display: grid; grid-template-columns: 26fr 31fr 31fr; gap: clamp(14px, 1.6vw, 24px); padding: clamp(24px, 2.4vw, 36px) var(--pad) clamp(26px, 2.6vw, 40px); align-items: start; }
-.prayer__copy { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
-.prayer__copy .text { font-size: 1rem; color: #3E3A31; }
-.note-form { position: relative; background: #FBF8F2; border-radius: 6px; padding: 22px 26px 22px; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 0 0 1px rgba(220,207,184,.8), 0 12px 30px rgba(33,31,26,.06); --note: var(--cinnabar); }
+.prayer__grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(24px, 4vw, 72px); padding: clamp(44px, 5vw, 72px) var(--pad); align-items: start; }
+.prayer__copy { display: flex; flex-direction: column; gap: 16px; padding-top: 12px; max-width: 420px; position: sticky; top: 24px; }
+.prayer__copy .text { font-size: 1.0625rem; color: #3E3A31; }
+.prayer__notes { display: flex; flex-wrap: wrap; gap: clamp(20px, 2.4vw, 36px); justify-content: flex-end; }
+.note-form { position: relative; width: clamp(300px, 24vw, 360px); background: #FDFBF6; border-radius: 3px; padding: 26px 24px 22px; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 0 0 1px rgba(214,200,174,.9), 0 18px 36px rgba(33,31,26,.10); --note: var(--cinnabar); }
 .note-form--repose { --note: var(--ink-blue); }
-.note-form::before, .note-form::after { content: ""; display: block; height: 5px; border-top: 2px solid var(--note); border-bottom: 1px solid var(--note); opacity: .85; }
-.note-form::before { margin-bottom: 14px; }
-.note-form::after { margin-top: 16px; }
-.note-form__head { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; margin-bottom: 6px; }
-.note-form__seal { width: 64px; height: auto; }
+.note-form__head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.note-form__seal { width: 104px; height: auto; }
+.note-form__church { font-family: var(--font-slav); font-size: .8125rem; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: var(--note); max-width: 24em; }
+.note-form__rule { display: block; width: 100%; height: 6px; border-top: 3px solid var(--note); border-bottom: 1px solid var(--note); margin: 10px 0 6px; }
+.note-form__title { font-family: var(--font-slav); font-size: clamp(2.1rem, 2.6vw, 2.6rem); letter-spacing: .02em; text-transform: uppercase; font-weight: 400; line-height: 1; color: var(--note); margin-top: 6px; }
+.note-form__prayer { font-family: var(--font-slav); font-size: 1.125rem; line-height: 1.2; color: var(--note); margin-bottom: 6px; }
 .note-form__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.note-form__title { font-family: var(--font-slav); font-size: clamp(1.75rem, 2.2vw, 2.25rem); letter-spacing: .02em; text-transform: uppercase; font-weight: 400; line-height: 1; color: var(--note); }
-.note-form__prayer { font-family: var(--font-slav); font-size: 1.0625rem; line-height: 1.25; color: var(--note); margin-top: 6px; }
-.note-form__lines { display: flex; flex-direction: column; }
-.note-line { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid color-mix(in srgb, var(--note) 45%, transparent); }
-.note-line input { flex: 1 1 auto; min-width: 0; border: 0; background: transparent; padding: 9px 0; font: inherit; font-size: 0.875rem; color: var(--ink); }
-.note-line input::placeholder { color: #8F8778; }
+.note-form__lines { display: flex; flex-direction: column; counter-reset: line; }
+.note-line { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid color-mix(in srgb, var(--note) 55%, transparent); counter-increment: line; }
+.note-line::before { content: counter(line); font-family: var(--font-sc); font-size: .75rem; color: color-mix(in srgb, var(--note) 70%, transparent); width: 16px; text-align: right; flex: 0 0 auto; }
+.note-line input { flex: 1 1 auto; min-width: 0; border: 0; background: transparent; padding: 10px 0 8px; font-family: var(--font-slav); font-size: 1.25rem; line-height: 1.2; color: var(--note); }
+.note-line input::placeholder { font-family: var(--font-body); font-size: .8125rem; color: #A39A89; }
 .note-line input:focus { outline: none; }
-.note-line:focus-within { border-bottom-color: var(--note); }
+.note-line:focus-within { border-bottom-color: var(--note); border-bottom-width: 2px; }
 .note-line__remove { width: 32px; height: 32px; border: 0; background: transparent; cursor: pointer; color: var(--muted); border-radius: var(--radius-pill); display: inline-flex; align-items: center; justify-content: center; }
 .note-line__remove:hover { background: var(--paper); color: var(--ink); }
 .note-line__remove svg { width: 12px; height: 12px; }
-.note-form__add { align-self: flex-start; border: 0; background: transparent; cursor: pointer; color: var(--muted); font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0; }
+.note-form__add { align-self: center; border: 0; background: transparent; cursor: pointer; color: var(--muted); font-size: 0.875rem; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0; margin-top: 4px; }
 .note-form__add:hover { color: var(--ink); }
 .note-form__add svg { width: 12px; height: 12px; }
 .note-form__add[disabled] { opacity: .5; cursor: default; }
-.note-form .btn { margin-top: 8px; align-self: flex-start; }
-.note-form__status { margin-top: 10px; font-size: var(--fs-small); line-height: 1.45; padding: 10px 12px; border-radius: 8px; background: var(--paper); }
+.note-form__count { text-align: center; font-size: .75rem; color: var(--muted); }
+.note-form .btn { margin-top: 10px; align-self: stretch; }
+.note-form__status { margin-top: 10px; font-size: var(--fs-small); line-height: 1.45; padding: 10px 12px; border-radius: 6px; background: var(--paper); }
 .note-form__status.is-error { background: #F4DEDA; color: #6E1E18; }
+.note-form__rule--bottom { margin: 18px 0 0; }
 
 /* ---------- Подвал ---------- */
 .site-footer { background: var(--milk-light); border-top: 1px solid var(--line); }
@@ -425,8 +429,9 @@ p { margin: 0; }
   .events__copy { padding-bottom: 0; padding-right: var(--pad); }
   .events__rail { padding-left: var(--pad); }
   .events__track { grid-template-columns: none; grid-auto-columns: minmax(220px, 30%); }
-  .prayer__grid { grid-template-columns: 1fr 1fr; }
-  .prayer__copy { grid-column: 1 / -1; }
+  .prayer__grid { grid-template-columns: minmax(0, 1fr); }
+  .prayer__copy { position: static; max-width: none; }
+  .prayer__notes { justify-content: flex-start; }
 }
 
 @media (max-width: 760px) {
@@ -464,8 +469,9 @@ p { margin: 0; }
   .merch__leaves { display: none; }
   .prayer__grid { padding-inline: var(--pad); }
   .prayer__plants-right { display: none; }
-  .note-form { grid-template-columns: 40px 1fr; padding: 22px 20px; }
-  .note-form__cross { width: 30px; height: 50px; }
+  .prayer__notes { justify-content: center; }
+  .note-form { width: 100%; max-width: 380px; }
+  .prayer__copy { position: static; }
   .socials { margin-left: 0; }
 
   .mottos__grid { grid-template-columns: minmax(0, 1fr); }
@@ -496,3 +502,20 @@ p { margin: 0; }
 .field input, .field select, .field textarea { width: 100%; min-width: 0; }
 .q-form__row > * { min-width: 0; }
 .stages { padding-top: clamp(24px, 2.6vw, 36px); }
+
+
+/* ---------- Фирменные шрифты шире ---------- */
+.nav__list a { font-family: var(--font-slav); font-size: 1.0625rem; letter-spacing: .03em; }
+.cal-date__num { font-family: var(--font-slav); font-size: clamp(3rem, 4.4vw, 4rem); }
+.cal-date__month { font-family: var(--font-slav); font-weight: 400; font-size: 1.375rem; }
+.directions h3, .timeline h3, .help__cats b, .stages__list span, .product figcaption b { font-family: var(--font-slav); font-weight: 400; letter-spacing: .01em; }
+.directions h3 { font-size: 1.375rem; }
+.timeline h3 { font-size: 1.625rem; }
+.help__cats b { font-size: 1.375rem; }
+.stages__list span { font-size: 1.1875rem; line-height: 1.15; }
+.product figcaption b { font-size: 1.125rem; }
+.progress-card__pct { font-weight: 700; }
+.hero__counter b { font-weight: 700; }
+.footer-contacts b { font-family: var(--font-slav); font-size: 1.125rem; }
+.text--lead-italic { font-family: var(--font-display); font-style: italic; }
+.mottos__text, .questions__copy .text, .saints__copy .text { font-family: var(--font-display); font-style: italic; font-size: 1.125rem; }

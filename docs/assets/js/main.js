@@ -181,7 +181,7 @@
   }
 
   /* ---------- Записки ---------- */
-  var MAX_LINES = 10;
+  var MAX_LINES = 25;
   $$('[data-note-form]').forEach(function (form) {
     var kind = form.getAttribute('data-note-form');
     var lines = $('[data-note-lines]', form);
@@ -197,7 +197,7 @@
       var row = document.createElement('div'); row.className = 'note-line';
       var label = document.createElement('label'); label.className = 'visually-hidden'; label.htmlFor = id; label.textContent = 'Имя ' + (lines.children.length + 1);
       var input = document.createElement('input');
-      input.id = id; input.name = 'name'; input.type = 'text'; input.autocomplete = 'off'; input.placeholder = 'Имя (в родительном падеже)'; input.maxLength = 40;
+      input.id = id; input.name = 'name'; input.type = 'text'; input.autocomplete = 'off'; input.placeholder = ''; input.maxLength = 40;
       var rm = document.createElement('button');
       rm.type = 'button'; rm.className = 'note-line__remove'; rm.setAttribute('aria-label', 'Удалить строку');
       rm.innerHTML = '<svg aria-hidden="true"><use href="#i-x"/></svg>';
