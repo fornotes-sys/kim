@@ -229,5 +229,31 @@
     });
   });
 
+  /* ---------- Вопрос священнику ---------- */
+  var qForm = $('[data-q-form]');
+  if (qForm) {
+    qForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var status = $('[data-q-status]', qForm);
+      var text = $('#q-text').value.trim();
+      var email = $('#q-email').value.trim();
+      status.hidden = false;
+      if (!text) { status.textContent = 'Напишите вопрос.'; $('#q-text').focus(); return; }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { status.textContent = 'Проверьте адрес почты.'; $('#q-email').focus(); return; }
+      status.textContent = 'Приём вопросов через сайт пока не подключён, вопрос не отправлен. Задать его можно священнику в приходе.';
+    });
+  }
+
+  /* ---------- Хочу помочь ---------- */
+  var volForm = $('[data-volunteer-form]');
+  if (volForm) {
+    volForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!$('#vol-contact').value.trim()) { $('#vol-contact').focus(); toast('Оставьте телефон или почту для связи'); return; }
+      closeModals();
+      toast('Заявка не отправлена: приём через сайт пока не подключён');
+    });
+  }
+
   setText('[data-year]', String(new Date().getFullYear()));
 })();

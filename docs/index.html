@@ -32,6 +32,14 @@
   <symbol id="i-plus" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
   <symbol id="i-x" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2 2 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
   <symbol id="i-pin" viewBox="0 0 30 40"><path d="M15 39s13-13.6 13-23.3C28 8.2 22.2 2 15 2S2 8.2 2 15.7C2 25.4 15 39 15 39z" fill="currentColor"/><circle cx="15" cy="15.5" r="5.2" fill="#FAF7F0"/></symbol>
+  <symbol id="i-hammer" viewBox="0 0 30 30"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 26 17 13M14 6l5-3 8 8-3 5z"/><path d="M14 6l10 10"/></g></symbol>
+  <symbol id="i-ruler" viewBox="0 0 30 30"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M3 21 21 3l6 6L9 27z"/><path d="M8 16l2 2M12 12l3 3M16 8l2 2M20 4l3 3" stroke-linecap="round"/></g></symbol>
+  <symbol id="i-bolt" viewBox="0 0 30 30"><path d="M17 3 6 17h8l-2 10 11-14h-8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 30 30"><path d="M15 27c5 0 8-3.4 8-8 0-5-4-7-5-12-2 2-3 4-3 6-1.5-1-2.5-2.5-2.8-4C9 12 7 15 7 19c0 4.6 3 8 8 8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+  <symbol id="i-brush" viewBox="0 0 30 30"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M5 5h16v7H5zM21 8h3v7H13v3"/><path d="M11 18h4v9h-4z"/></g></symbol>
+  <symbol id="i-truck" viewBox="0 0 30 30"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 8h16v13H2zM18 12h6l4 5v4H18z"/><circle cx="8" cy="22" r="2.6" fill="#F7F2E9"/><circle cx="23" cy="22" r="2.6" fill="#F7F2E9"/></g></symbol>
+  <symbol id="i-box" viewBox="0 0 30 30"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M4 9l11-5 11 5v12l-11 5-11-5z"/><path d="M4 9l11 5 11-5M15 14v12"/></g></symbol>
+  <symbol id="i-camera" viewBox="0 0 30 30"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M3 9.5h5l2-3h10l2 3h5v15H3z"/><circle cx="15" cy="16.5" r="4.8"/></g></symbol>
 </svg>
 
 <a class="visually-hidden skip-link" href="#main">Перейти к содержанию</a>
@@ -42,7 +50,7 @@
     <div class="site-header__inner">
       <a class="brand" href="#top" aria-label="Приход храма святых Кирилла и Мефодия — на главную">
         <img src="assets/img/emblem-small.png" width="58" height="58" alt="">
-        <span class="brand__name">Приход храма<br>святых Кирилла и Мефодия<br>на Пулковских высотах</span>
+        <span class="brand__name">Приход храма<br><span class="slav">святых Кирилла и Мефодия</span><br>на Пулковских высотах</span>
       </a>
       <nav class="nav" aria-label="Основное меню">
         <ul class="nav__list">
@@ -51,7 +59,7 @@
           <li><a href="#calendar">Календарь</a></li>
           <li><a href="#events">События</a></li>
           <li><a href="#merch">Мерч</a></li>
-          <li><a href="#build">Как помочь</a></li>
+          <li><a href="#help">Как помочь</a></li>
           <li><a href="#contacts">Контакты</a></li>
         </ul>
       </nav>
@@ -168,10 +176,33 @@
       <img src="assets/img/saints-ref.jpg" width="1600" height="854" alt="Образ святых равноапостольных Кирилла и Мефодия" loading="lazy">
     </figure>
     <div class="saints__copy">
+      <img src="assets/img/seal-gold.png" width="96" height="90" alt="" style="width: 96px; height: auto">
       <span class="eyebrow eyebrow--light">Наши небесные покровители</span>
       <h2 id="saints-title">Святые<br>Кирилл и Мефодий</h2>
       <p class="text text--light">Равноапостольные просветители славян, создатели славянской письменности, учители веры, культуры и единства народов.</p>
+      <p class="slav" style="font-size: clamp(1.5rem, 2.2vw, 2rem); color: var(--gold-light); line-height: 1.1">Въ началѣ бѣ Слово</p>
       <a class="link-arrow link-arrow--light" href="#" data-soon>Узнать больше <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ДЕВИЗЫ ПРИХОДА ============ -->
+<section class="mottos" aria-labelledby="mottos-title">
+  <div class="mottos__grid">
+    <img class="mottos__emblem" src="assets/img/emblem-large.png" width="640" height="624" alt="Эмблема храма: крест и раскрытая книга «Въ началѣ бѣ Слово», по кругу — название храма" loading="lazy">
+    <div>
+      <h2 id="mottos-title" class="visually-hidden">Девизы прихода</h2>
+      <ul class="mottos__list">
+        <li><b>Я</b> человек <b>С</b>лова</li>
+        <li><b>Я</b> глаголю <b>д</b>обро</li>
+        <li><b>Я</b> почитаю <b>к</b>ниги</li>
+      </ul>
+      <p class="mottos__text">Слова славянской азбуки, которую дали нам святые Кирилл и Мефодий: «аз», «глаголь», «добро», «слово». Девизы прихода — на открытках, записках и шоперах.</p>
+    </div>
+    <div class="mottos__cards" aria-hidden="true">
+      <div class="card"><img src="assets/img/postcard-pochitayu-knigi.jpg" width="520" height="770" alt="" loading="lazy"></div>
+      <div class="card"><img src="assets/img/postcard-chelovek-slova.jpg" width="520" height="770" alt="" loading="lazy"></div>
+      <div class="card"><img src="assets/img/postcard-glagolyu-dobro.jpg" width="520" height="770" alt="" loading="lazy"></div>
     </div>
   </div>
 </section>
@@ -207,6 +238,27 @@
   </div>
 </section>
 
+<!-- ============ ЛЕТОПИСЬ ============ -->
+<section class="chronicle" id="chronicle" aria-labelledby="chronicle-title">
+  <div class="chronicle__inner">
+    <div class="chronicle__head">
+      <div>
+        <span class="eyebrow">Летопись прихода</span>
+        <h2 id="chronicle-title">От креста к храму</h2>
+      </div>
+      <a class="link-arrow" href="#" data-soon>Вся история прихода <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <!-- TODO: подставить подтверждённые даты -->
+    <ol class="timeline">
+      <li><span class="timeline__date">[дата]</span><h3>Поклонный крест</h3><p>На месте будущего храма установлен крест.</p></li>
+      <li><span class="timeline__date">[дата]</span><h3>Первые молебны</h3><p>У креста начала собираться община.</p></li>
+      <li><span class="timeline__date">[дата]</span><h3>Проект часовни и храма</h3><p>Готовы визуализации в византийской традиции.</p></li>
+      <li class="is-future"><span class="timeline__date">Впереди</span><h3>Часовня</h3><p>Первое место постоянной молитвы.</p></li>
+      <li class="is-future"><span class="timeline__date">Впереди</span><h3>Храм</h3><p>Храм святых Кирилла и Мефодия.</p></li>
+    </ol>
+  </div>
+</section>
+
 <!-- ============ СТРОИМ ВМЕСТЕ ============ -->
 <section class="build" id="build" aria-labelledby="build-title">
   <div class="build__grid">
@@ -229,6 +281,21 @@
       <button class="btn btn--gold btn--small" type="button" data-modal-open="donate">Поддержать строительство <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
       <p class="progress-card__note" data-fund-note hidden></p>
     </div>
+  </div>
+  <div class="stages">
+    <div class="stages__head">
+      <span class="eyebrow">Этапы</span>
+      <p>Состав этапов, смета и статусы появятся после утверждения проекта. Отчёты будут по каждому этапу.</p>
+    </div>
+    <ol class="stages__list">
+      <li><b>I</b><span>Подготовка участка</span></li>
+      <li><b>II</b><span>Проектирование</span></li>
+      <li><b>III</b><span>Фундамент</span></li>
+      <li><b>IV</b><span>Стены и кровля</span></li>
+      <li><b>V</b><span>Инженерные сети</span></li>
+      <li><b>VI</b><span>Отделка</span></li>
+      <li><b>VII</b><span>Иконы и утварь</span></li>
+    </ol>
   </div>
 </section>
 
@@ -266,6 +333,11 @@
       <span class="eyebrow">Мерч храма</span>
       <h2 id="merch-title">Больше,<br>чем вещи</h2>
       <p class="text">Современный мерч со смыслом. Поддерживая приход, вы становитесь частью большого дела.</p>
+      <div class="products">
+        <figure class="product"><div class="product__img"><img src="assets/img/shopper-chelovek-slova.jpg" width="620" height="620" alt="Шопер «Я человек слова», чёрный" loading="lazy"></div><figcaption><b>Шопер «Я человек слова»</b><span>Скоро в продаже</span></figcaption></figure>
+        <figure class="product"><div class="product__img"><img src="assets/img/shopper-emblem.jpg" width="620" height="620" alt="Шопер с эмблемой храма, чёрный" loading="lazy"></div><figcaption><b>Шопер с эмблемой</b><span>Скоро в продаже</span></figcaption></figure>
+        <figure class="product"><div class="product__img product__img--cards"><img src="assets/img/postcard-pochitayu-knigi.jpg" width="520" height="770" alt="" loading="lazy"><img src="assets/img/postcard-chelovek-slova.jpg" width="520" height="770" alt="" loading="lazy"><img src="assets/img/postcard-glagolyu-dobro.jpg" width="520" height="770" alt="" loading="lazy"></div><figcaption><b>Открытки, 3 шт.</b><span>Скоро в продаже</span></figcaption></figure>
+      </div>
       <a class="link-arrow" href="#" data-soon>Перейти в магазин <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
@@ -280,12 +352,18 @@
       <span class="eyebrow">Подать записку</span>
       <h2 id="prayer-title">Молитва всегда рядом</h2>
       <p class="text">Помолимся о вас и ваших близких на ближайшей Литургии.</p>
+      <a class="link-arrow" href="#" data-soon>Попросить молитвы общины <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
 
     <form class="note-form" data-note-form="health" novalidate aria-labelledby="note-health-title">
-      <svg class="note-form__cross" aria-hidden="true"><use href="#i-cross"/></svg>
+      <div class="note-form__head">
+        <img class="note-form__seal" src="assets/img/seal-red.png" width="64" height="60" alt="">
+        <div>
+          <h3 class="note-form__title" id="note-health-title">О здравии</h3>
+          <p class="note-form__prayer">Помяни, Господи, о здравии и спасении рабов Твоих:</p>
+        </div>
+      </div>
       <div class="note-form__body">
-        <h3 class="note-form__title note-form__title--gold" id="note-health-title">О здравии</h3>
         <div class="note-form__lines" data-note-lines>
           <div class="note-line"><label class="visually-hidden" for="health-1">Имя 1</label><input id="health-1" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
           <div class="note-line"><label class="visually-hidden" for="health-2">Имя 2</label><input id="health-2" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
@@ -297,10 +375,15 @@
       </div>
     </form>
 
-    <form class="note-form" data-note-form="repose" novalidate aria-labelledby="note-repose-title">
-      <svg class="note-form__cross" aria-hidden="true"><use href="#i-cross"/></svg>
+    <form class="note-form note-form--repose" data-note-form="repose" novalidate aria-labelledby="note-repose-title">
+      <div class="note-form__head">
+        <img class="note-form__seal" src="assets/img/seal-dark.png" width="64" height="60" alt="">
+        <div>
+          <h3 class="note-form__title" id="note-repose-title">Об упокоении</h3>
+          <p class="note-form__prayer">Упокой, Господи, души усопших рабов Твоих:</p>
+        </div>
+      </div>
       <div class="note-form__body">
-        <h3 class="note-form__title" id="note-repose-title">Об упокоении</h3>
         <div class="note-form__lines" data-note-lines>
           <div class="note-line"><label class="visually-hidden" for="repose-1">Имя 1</label><input id="repose-1" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
           <div class="note-line"><label class="visually-hidden" for="repose-2">Имя 2</label><input id="repose-2" name="name" type="text" autocomplete="off" placeholder="Имя (в родительном падеже)" maxlength="40"></div>
@@ -311,8 +394,70 @@
         <p class="note-form__status" data-note-status role="status" hidden></p>
       </div>
     </form>
+
   </div>
   <div class="prayer__plants-right" aria-hidden="true"><img src="assets/img/leaves-right.jpg" width="236" height="1248" alt="" loading="lazy"></div>
+</section>
+
+<!-- ============ ВОПРОСЫ О ВЕРЕ ============ -->
+<section class="questions" id="questions" aria-labelledby="questions-title">
+  <div class="questions__grid">
+    <div class="questions__copy">
+      <span class="eyebrow eyebrow--light">Вопросы о вере</span>
+      <h2 id="questions-title">Спросите священника</h2>
+      <p class="text text--light">О крещении и венчании, исповеди и причастии, посте и церковной жизни. Ответ можно получить лично или разрешить опубликовать его для всех — без вашего имени.</p>
+      <a class="link-arrow link-arrow--light" href="#" data-soon>Читать ответы <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <figure class="questions__art">
+      <img src="assets/img/saints-drawing.jpg" width="900" height="888" alt="Святые Кирилл и Мефодий с раскрытой книгой — рисунок из фирменного стиля прихода" loading="lazy">
+    </figure>
+    <form class="q-form" data-q-form novalidate>
+      <label class="field" for="q-topic">Тема
+        <select id="q-topic" name="topic">
+          <option>Крещение</option>
+          <option>Подготовка к таинствам</option>
+          <option>Богослужение</option>
+          <option>Пост</option>
+          <option>Церковная жизнь</option>
+          <option>Другое</option>
+        </select>
+      </label>
+      <label class="field" for="q-text">Ваш вопрос<textarea id="q-text" name="question" placeholder="Например: как подготовиться к крещению ребёнка?"></textarea></label>
+      <div class="q-form__row">
+        <label class="field" for="q-name">Имя<input id="q-name" name="name" type="text" autocomplete="given-name" placeholder="Как к вам обращаться"></label>
+        <label class="field" for="q-email">Почта для ответа<input id="q-email" name="email" type="email" autocomplete="email" placeholder="you@mail.ru"></label>
+      </div>
+      <fieldset>
+        <legend>Ответ</legend>
+        <label class="radio"><input type="radio" name="q-visibility" value="private" checked> Только для меня</label>
+        <label class="radio"><input type="radio" name="q-visibility" value="public"> Можно опубликовать</label>
+      </fieldset>
+      <button class="btn btn--gold" type="submit">Отправить вопрос <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+      <p class="q-form__status" data-q-status role="status" hidden></p>
+    </form>
+  </div>
+</section>
+
+<!-- ============ ПОМОЩЬ ДЕЛОМ ============ -->
+<section class="help" id="help" aria-labelledby="help-title">
+  <div class="help__grid">
+    <div class="help__copy">
+      <span class="eyebrow">Помощь делом</span>
+      <h2 id="help-title">Строим не только деньгами</h2>
+      <p class="text">Храм поднимают руки, знания и время прихожан. Предложите свой труд, материалы, технику или профессиональную консультацию — координатор свяжется с вами.</p>
+      <button class="btn btn--gold" type="button" data-modal-open="volunteer" style="align-self: flex-start">Хочу помочь <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+    </div>
+    <ul class="help__cats">
+      <li><svg aria-hidden="true"><use href="#i-hammer"/></svg><b>Строительство</b><span>Работы на участке</span></li>
+      <li><svg aria-hidden="true"><use href="#i-ruler"/></svg><b>Проектирование</b><span>Архитектура, расчёты, надзор</span></li>
+      <li><svg aria-hidden="true"><use href="#i-bolt"/></svg><b>Электрика</b><span>Монтаж и консультации</span></li>
+      <li><svg aria-hidden="true"><use href="#i-flame"/></svg><b>Отопление</b><span>Сантехника и инженерия</span></li>
+      <li><svg aria-hidden="true"><use href="#i-brush"/></svg><b>Отделка</b><span>Покраска, роспись, дерево</span></li>
+      <li><svg aria-hidden="true"><use href="#i-truck"/></svg><b>Транспорт</b><span>Доставка и логистика</span></li>
+      <li><svg aria-hidden="true"><use href="#i-box"/></svg><b>Материалы</b><span>Передать материалы и технику</span></li>
+      <li><svg aria-hidden="true"><use href="#i-camera"/></svg><b>Фото и видео</b><span>Снимать жизнь прихода</span></li>
+    </ul>
+  </div>
 </section>
 
 </main>
@@ -321,8 +466,8 @@
 <footer class="site-footer" id="contacts">
   <div class="site-footer__inner">
     <a class="brand" href="#top" aria-label="Наверх">
-      <img src="assets/img/emblem-small.png" width="58" height="58" alt="">
-      <span class="brand__name">Приход храма<br>Кирилла и Мефодия<br>на Пулковских высотах</span>
+      <img src="assets/img/emblem-large.png" width="84" height="82" alt="" style="width: 84px; height: auto">
+      <span class="brand__name">Приход храма<br><span class="slav">Кирилла и Мефодия</span><br>на Пулковских высотах</span>
     </a>
     <nav class="nav" aria-label="Меню в подвале">
       <ul class="nav__list">
@@ -331,7 +476,7 @@
         <li><a href="#calendar">Календарь</a></li>
         <li><a href="#events">События</a></li>
         <li><a href="#merch">Мерч</a></li>
-        <li><a href="#build">Как помочь</a></li>
+        <li><a href="#help">Как помочь</a></li>
         <li><a href="#prayer">Записки</a></li>
       </ul>
     </nav>
@@ -340,6 +485,12 @@
       <a href="#" data-soon aria-label="ВКонтакте"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3.2c.4 3.6 2 5.6 3.3 6V7h3v3.6c1.3-.1 2.6-1.7 3.1-3.6h2.9c-.4 2.2-2 3.9-3.2 4.6 1.2.6 3 2.1 3.7 4.4h-3.2c-.6-1.6-1.9-2.8-3.3-3V17H12c-5.4 0-8.6-3.7-9-10z" fill="currentColor"/></svg></a>
       <a href="#" data-soon aria-label="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4.5 2.8 11.4c-.9.4-.9 1.1 0 1.4l4.6 1.4 1.8 5.5c.2.6.5.7 1 .3l2.6-2.2 4.8 3.5c.8.5 1.4.2 1.6-.8L22 5.6c.3-1.2-.4-1.6-1-1.1zM9.6 14l8.5-6.5-6.9 7.4-.3 3.3z" fill="currentColor"/></svg></a>
       <a href="#" data-soon aria-label="Видео"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 7.2c-.2-.9-.9-1.6-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4c-.9.2-1.6.9-1.8 1.8C2 8.8 2 12 2 12s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3z" fill="currentColor"/></svg></a>
+    </div>
+    <div class="footer-contacts">
+      <b>Контакты</b>
+      <!-- TODO: подставить подтверждённые контакты прихода -->
+      <span>[телефон] · [почта]</span>
+      <span>Настоятель: [имя]</span>
     </div>
     <div class="footer-place">
       <svg aria-hidden="true"><use href="#i-pin"/></svg>
@@ -357,7 +508,7 @@
   <div class="mobile-menu__top">
     <a class="brand" href="#top" data-menu-close>
       <img src="assets/img/emblem-small.png" width="46" height="46" alt="">
-      <span class="brand__name">Приход храма<br>Кирилла и Мефодия</span>
+      <span class="brand__name">Приход храма<br><span class="slav">Кирилла и Мефодия</span></span>
     </a>
     <button class="burger" type="button" aria-label="Закрыть меню" data-menu-close><svg aria-hidden="true"><use href="#i-close"/></svg></button>
   </div>
@@ -368,8 +519,11 @@
       <li><a href="#calendar" data-menu-close>Календарь</a></li>
       <li><a href="#events" data-menu-close>События</a></li>
       <li><a href="#merch" data-menu-close>Мерч</a></li>
-      <li><a href="#build" data-menu-close>Как помочь</a></li>
+      <li><a href="#build" data-menu-close>Строительство</a></li>
+      <li><a href="#chronicle" data-menu-close>Летопись</a></li>
       <li><a href="#prayer" data-menu-close>Записки</a></li>
+      <li><a href="#questions" data-menu-close>Вопросы священнику</a></li>
+      <li><a href="#help" data-menu-close>Помощь делом</a></li>
       <li><a href="#contacts" data-menu-close>Контакты</a></li>
     </ul>
   </nav>
@@ -400,6 +554,29 @@
     </label>
     <button class="btn btn--gold" type="submit">Продолжить <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
     <p class="modal__note">Онлайн-оплата откроется после подключения платёжного сервиса прихода. Сейчас платёж не создаётся.</p>
+  </form>
+</div>
+
+<!-- Окно «Хочу помочь» (отправка не подключена) -->
+<div class="modal" id="modal-volunteer" role="dialog" aria-modal="true" aria-labelledby="volunteer-title" hidden>
+  <form class="modal__box" data-volunteer-form novalidate>
+    <button class="modal__close" type="button" aria-label="Закрыть" data-modal-close><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+    <span class="eyebrow">Помощь делом</span>
+    <h2 id="volunteer-title">Хочу помочь</h2>
+    <div class="field"><span>Чем можете помочь</span>
+      <div class="checks">
+        <label><input type="checkbox" name="help" value="Трудом"> Трудом</label>
+        <label><input type="checkbox" name="help" value="Материалами"> Материалами</label>
+        <label><input type="checkbox" name="help" value="Техникой"> Техникой</label>
+        <label><input type="checkbox" name="help" value="Услугой"> Профессиональной услугой</label>
+        <label><input type="checkbox" name="help" value="Консультацией"> Консультацией</label>
+      </div>
+    </div>
+    <label class="field" for="vol-text">Коротко о предложении<textarea id="vol-text" name="about" placeholder="Например: электромонтажник, могу по выходным"></textarea></label>
+    <label class="field" for="vol-name">Имя<input id="vol-name" name="name" type="text" autocomplete="name"></label>
+    <label class="field" for="vol-contact">Телефон или почта<input id="vol-contact" name="contact" type="text" autocomplete="tel"></label>
+    <button class="btn btn--gold" type="submit">Отправить <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+    <p class="modal__note">Приём заявок через сайт пока не подключён: заявка не отправится. Мы соберём только контакт для обратной связи.</p>
   </form>
 </div>
 

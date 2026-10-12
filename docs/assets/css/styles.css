@@ -5,6 +5,8 @@
    ========================================================================== */
 
 @font-face { font-family: "Playfair Display"; src: url("../fonts/PlayfairDisplay-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Fedorovsk Unicode"; src: url("../fonts/FedorovskUnicode.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Playfair Display SC"; src: url("../fonts/PlayfairDisplaySC-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "Playfair Display"; src: url("../fonts/PlayfairDisplay-Italic.woff") format("woff"); font-weight: 400; font-style: italic; font-display: swap; }
 
 :root {
@@ -15,6 +17,8 @@
   --paper-mid: #EEE5D5;
   --olive: #20291F;
   --gold: #A78345;
+  --cinnabar: #9E2B32;      /* киноварь из записок и открыток */
+  --ink-blue: #1E2430;      /* тёмный из записки об упокоении */
   --gold-btn: #8E6C33;
   --gold-ink: #85642C;
   --gold-light: #CDAE72;
@@ -27,6 +31,8 @@
 
   /* Шрифты */
   --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-slav: "Fedorovsk Unicode", "Playfair Display", Georgia, serif;  /* фирменный шрифт прихода: девизы, подписи, записки */
+  --font-sc: "Playfair Display SC", "Playfair Display", Georgia, serif;
   --font-body: "Onest", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
 
   /* Шкала */
@@ -60,7 +66,9 @@ p { margin: 0; }
 .page { max-width: var(--page-max); margin-inline: auto; }
 
 /* ---------- Общие элементы ---------- */
-.eyebrow { font-size: var(--fs-eyebrow); letter-spacing: 0.17em; text-transform: uppercase; font-weight: 500; color: var(--gold-ink); }
+.eyebrow { font-family: var(--font-slav); font-size: 1.0625rem; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 400; line-height: 1.2; color: var(--gold-ink); }
+.slav { font-family: var(--font-slav); font-weight: 400; }
+.slav-red { color: var(--cinnabar); }
 .eyebrow--light { color: var(--gold-light); }
 .text { color: var(--muted); max-width: 31em; }
 .text--light { color: var(--on-dark-muted); }
@@ -101,6 +109,7 @@ p { margin: 0; }
 .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; flex: 0 0 auto; }
 .brand img { width: 58px; height: 58px; }
 .brand__name { font-size: 0.8125rem; line-height: 1.35; }
+.brand__name .slav { font-size: 1.0625rem; letter-spacing: .02em; display: inline-block; line-height: 1.15; }
 .nav { margin-left: auto; }
 .nav__list { display: flex; gap: clamp(16px, 2.2vw, 36px); list-style: none; margin: 0; padding: 0; }
 .nav__list a { text-decoration: none; font-size: 0.8125rem; padding: 12px 0; display: inline-block; position: relative; }
@@ -114,7 +123,7 @@ p { margin: 0; }
 .mobile-menu { position: fixed; inset: 0; z-index: 50; background: var(--milk); padding: calc(env(safe-area-inset-top, 0px) + 18px) var(--pad) calc(env(safe-area-inset-bottom, 0px) + 24px); display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
 .mobile-menu__top { display: flex; justify-content: space-between; align-items: center; }
 .mobile-menu__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.mobile-menu__list a { display: block; padding: 14px 0; border-bottom: 1px solid var(--line); font-family: var(--font-display); font-size: 1.75rem; text-decoration: none; }
+.mobile-menu__list a { display: block; padding: 14px 0; border-bottom: 1px solid var(--line); font-family: var(--font-slav); font-size: 1.75rem; text-decoration: none; }
 
 /* ---------- Первый экран ---------- */
 .hero { position: relative; height: clamp(600px, 51.4vw, 860px); overflow: hidden; background: var(--milk); }
@@ -150,7 +159,7 @@ p { margin: 0; }
 .cal-date__meta { display: flex; flex-direction: column; line-height: 1.3; }
 .cal-date__month { font-weight: 500; font-size: 1.0625rem; }
 .cal-date__wd, .cal-cell__sub { font-size: var(--fs-small); color: var(--muted); }
-.cal-cell__label { font-weight: 500; font-size: 0.9375rem; line-height: 1.3; }
+.cal-cell__label { font-family: var(--font-sc); font-size: 1.0625rem; line-height: 1.25; }
 .cal-cell__title { font-weight: 500; font-size: 0.9375rem; line-height: 1.3; }
 .cal-icon { width: 40px; height: 40px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; color: var(--gold); }
 .cal-icon svg { width: 34px; height: 34px; }
@@ -172,7 +181,7 @@ p { margin: 0; }
 .directions li { display: grid; grid-template-columns: 58px 1fr; align-items: start; }
 .directions__num { font-family: var(--font-display); color: var(--gold-ink); font-size: 1.125rem; padding-top: 4px; }
 .directions div { border-left: 1px solid var(--gold); padding: 2px 0 2px 22px; }
-.directions h3 { font-family: var(--font-body); font-weight: 500; font-size: 1.0625rem; letter-spacing: 0; line-height: 1.3; }
+.directions h3 { font-family: var(--font-sc); font-weight: 400; font-size: 1.1875rem; letter-spacing: 0; line-height: 1.25; }
 .directions p { font-size: var(--fs-small); color: var(--muted); }
 
 /* ---------- Покровители ---------- */
@@ -205,7 +214,7 @@ p { margin: 0; }
 .build__copy { display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 32px clamp(16px, 2vw, 32px) 32px 4px; }
 .build__copy .text { font-size: 0.9375rem; }
 .progress-card { align-self: center; margin: 12px calc(var(--pad) * .2) 12px 0; background: var(--milk-light); border-radius: 12px; padding: 26px 24px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 0 0 1px var(--line), 0 12px 30px rgba(33,31,26,.06); }
-.progress-card__label { font-size: var(--fs-small); font-weight: 500; }
+.progress-card__label { font-family: var(--font-sc); font-size: 1rem; }
 .progress-card__pct { font-family: var(--font-display); font-size: clamp(2.4rem, 3.2vw, 3rem); line-height: 1; font-variant-numeric: tabular-nums; }
 .progress-bar { height: 10px; border-radius: var(--radius-pill); background: var(--paper); overflow: hidden; }
 .progress-bar__fill { height: 100%; width: 0; background: linear-gradient(90deg, #8E6C33, #B8924F); border-radius: inherit; transition: width 1.2s ease; }
@@ -247,17 +256,22 @@ p { margin: 0; }
 .prayer__grid { position: relative; z-index: 1; display: grid; grid-template-columns: 26fr 31fr 31fr; gap: clamp(14px, 1.6vw, 24px); padding: clamp(24px, 2.4vw, 36px) var(--pad) clamp(26px, 2.6vw, 40px); align-items: start; }
 .prayer__copy { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
 .prayer__copy .text { font-size: 1rem; color: #3E3A31; }
-.note-form { background: rgba(250,246,238,.9); border-radius: 12px; padding: 20px 26px 22px; display: grid; grid-template-columns: 52px 1fr; column-gap: 14px; box-shadow: 0 0 0 1px rgba(220,207,184,.8), 0 12px 30px rgba(33,31,26,.06); }
-.note-form__cross { grid-row: 1 / span 4; width: 40px; height: 64px; color: var(--gold); }
+.note-form { position: relative; background: #FBF8F2; border-radius: 6px; padding: 22px 26px 22px; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 0 0 1px rgba(220,207,184,.8), 0 12px 30px rgba(33,31,26,.06); --note: var(--cinnabar); }
+.note-form--repose { --note: var(--ink-blue); }
+.note-form::before, .note-form::after { content: ""; display: block; height: 5px; border-top: 2px solid var(--note); border-bottom: 1px solid var(--note); opacity: .85; }
+.note-form::before { margin-bottom: 14px; }
+.note-form::after { margin-top: 16px; }
+.note-form__head { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; margin-bottom: 6px; }
+.note-form__seal { width: 64px; height: auto; }
 .note-form__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.note-form__title { font-family: var(--font-body); font-size: 1.0625rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; line-height: 1.2; margin-bottom: 4px; }
-.note-form__title--gold { color: var(--gold-ink); }
+.note-form__title { font-family: var(--font-slav); font-size: clamp(1.75rem, 2.2vw, 2.25rem); letter-spacing: .02em; text-transform: uppercase; font-weight: 400; line-height: 1; color: var(--note); }
+.note-form__prayer { font-family: var(--font-slav); font-size: 1.0625rem; line-height: 1.25; color: var(--note); margin-top: 6px; }
 .note-form__lines { display: flex; flex-direction: column; }
-.note-line { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+.note-line { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid color-mix(in srgb, var(--note) 45%, transparent); }
 .note-line input { flex: 1 1 auto; min-width: 0; border: 0; background: transparent; padding: 9px 0; font: inherit; font-size: 0.875rem; color: var(--ink); }
 .note-line input::placeholder { color: #8F8778; }
 .note-line input:focus { outline: none; }
-.note-line:focus-within { border-bottom-color: var(--gold-btn); }
+.note-line:focus-within { border-bottom-color: var(--note); }
 .note-line__remove { width: 32px; height: 32px; border: 0; background: transparent; cursor: pointer; color: var(--muted); border-radius: var(--radius-pill); display: inline-flex; align-items: center; justify-content: center; }
 .note-line__remove:hover { background: var(--paper); color: var(--ink); }
 .note-line__remove svg { width: 12px; height: 12px; }
@@ -299,6 +313,102 @@ p { margin: 0; }
 .video-slot svg { width: 44px; height: 44px; }
 .modal__note { font-size: var(--fs-small); color: var(--muted); }
 .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); z-index: 100; transform: translateX(-50%); background: var(--olive); color: var(--on-dark); padding: 12px 20px; border-radius: var(--radius-pill); font-size: 0.875rem; box-shadow: 0 10px 30px rgba(0,0,0,.2); max-width: calc(100vw - 32px); text-align: center; }
+
+
+/* ---------- Девизы прихода (фирменная полоса) ---------- */
+.mottos { position: relative; background: var(--paper); overflow: hidden; border-block: 1px solid var(--line); }
+.mottos__grid { max-width: var(--page-max); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 5fr) minmax(0, 4fr); align-items: center; gap: clamp(20px, 3vw, 48px); padding: clamp(40px, 5vw, 72px) var(--pad); }
+.mottos__emblem { width: 100%; max-width: 300px; height: auto; justify-self: center; }
+.mottos__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.mottos__list li { font-family: var(--font-slav); font-size: clamp(2rem, 3.6vw, 3.4rem); line-height: 1.02; color: var(--ink-blue); }
+.mottos__list li b { font-weight: 400; color: var(--cinnabar); }
+.mottos__text { margin-top: 18px; color: var(--muted); max-width: 30em; }
+.mottos__cards { position: relative; height: clamp(260px, 24vw, 360px); }
+.mottos__cards .card { position: absolute; width: 46%; aspect-ratio: 2 / 3; border-radius: 3px; overflow: hidden; box-shadow: 0 16px 30px rgba(33,31,26,.22); background: var(--paper); }
+.mottos__cards .card img { width: 100%; height: 100%; object-fit: cover; }
+.mottos__cards .card:nth-child(1) { left: 0; top: 8%; transform: rotate(-7deg); }
+.mottos__cards .card:nth-child(2) { left: 27%; top: 0; transform: rotate(1deg); z-index: 2; }
+.mottos__cards .card:nth-child(3) { left: 54%; top: 9%; transform: rotate(8deg); }
+
+/* ---------- Летопись прихода ---------- */
+.chronicle { background: var(--milk); border-top: 1px solid var(--line); }
+.chronicle__inner { max-width: var(--page-max); margin-inline: auto; padding: clamp(44px, 5vw, 72px) var(--pad); display: flex; flex-direction: column; gap: 32px; }
+.chronicle__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.chronicle__head h2 { font-size: var(--fs-h2); }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px; position: relative; }
+.timeline::before { content: ""; position: absolute; left: 0; right: 0; top: 11px; height: 1px; background: var(--gold); opacity: .6; }
+.timeline li { position: relative; display: flex; flex-direction: column; gap: 6px; padding-top: 38px; min-width: 0; }
+.timeline li::before { content: ""; position: absolute; left: 0; top: 4px; width: 15px; height: 15px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 5px var(--milk); }
+.timeline li.is-future::before { background: var(--milk); border: 1.5px solid var(--gold); }
+.timeline__date { font-family: var(--font-sc); color: var(--gold-ink); font-size: 1rem; }
+.timeline h3 { font-size: 1.375rem; line-height: 1.15; }
+.timeline p { font-size: var(--fs-small); color: var(--muted); }
+
+/* ---------- Этапы строительства ---------- */
+.stages { max-width: var(--page-max); margin-inline: auto; padding: 0 var(--pad) clamp(32px, 3.5vw, 48px); display: flex; flex-direction: column; gap: 14px; }
+.stages__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 24px; }
+.stages__head p { font-size: var(--fs-small); color: var(--muted); }
+.stages__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.stages__list li { padding: 14px 12px 4px 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stages__list b { font-family: var(--font-sc); font-weight: 400; color: var(--gold-ink); font-size: .9375rem; }
+.stages__list span { font-size: .9375rem; line-height: 1.3; }
+
+/* ---------- Мерч: товары ---------- */
+.products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 6px; }
+.product { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.product__img { aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; background: var(--paper); }
+.product__img img { width: 100%; height: 100%; object-fit: cover; }
+.product__img--cards { display: flex; align-items: center; justify-content: center; gap: 0; padding: 10px; background: var(--paper); }
+.product__img--cards img { width: 40%; height: auto; aspect-ratio: 2/3; object-fit: cover; box-shadow: 0 6px 12px rgba(33,31,26,.2); border-radius: 2px; }
+.product__img--cards img:nth-child(1) { transform: rotate(-8deg) translateX(18%); }
+.product__img--cards img:nth-child(2) { z-index: 1; }
+.product__img--cards img:nth-child(3) { transform: rotate(8deg) translateX(-18%); }
+.product figcaption { font-size: var(--fs-small); line-height: 1.35; }
+.product figcaption b { display: block; font-weight: 500; }
+.product figcaption span { color: var(--muted); }
+
+/* ---------- Вопросы о вере ---------- */
+.questions { position: relative; background: var(--olive); color: var(--on-dark); overflow: hidden; }
+.questions__grid { max-width: var(--page-max); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 3.4fr) minmax(0, 4.6fr); gap: clamp(24px, 3.5vw, 56px); align-items: center; padding: clamp(48px, 5.5vw, 80px) var(--pad); }
+.questions__copy { display: flex; flex-direction: column; gap: 18px; }
+.questions__copy h2 { font-size: var(--fs-h2); }
+.questions__art { margin: 0; justify-self: center; width: min(100%, 340px); aspect-ratio: 34 / 40; border-radius: 170px 170px 0 0; overflow: hidden; background: #E9D9BA; box-shadow: inset 0 0 0 8px #E9D9BA, inset 0 0 0 9px rgba(167,131,69,.6); display: flex; align-items: flex-end; padding: 30px 22px 0; }
+.questions__art img { width: 100%; height: auto; }
+.q-form { display: flex; flex-direction: column; gap: 14px; }
+.q-form .field { color: var(--on-dark-muted); }
+.q-form .field input, .q-form .field select, .q-form .field textarea { background: rgba(255,255,255,.04); border: 1px solid #5B6556; color: var(--on-dark); font: inherit; font-size: 1rem; padding: 12px 14px; border-radius: 8px; }
+.q-form .field textarea { min-height: 110px; resize: vertical; }
+.q-form .field select option { color: var(--ink); }
+.q-form .field input:focus, .q-form .field select:focus, .q-form .field textarea:focus { outline: 2px solid var(--gold-light); outline-offset: 0; }
+.q-form fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 22px; }
+.q-form legend { font-size: var(--fs-small); color: var(--on-dark-muted); padding: 0 0 4px; }
+.q-form .radio { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; font-size: .9375rem; }
+.q-form .radio input { accent-color: var(--gold-light); width: 18px; height: 18px; }
+.q-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.q-form__status { font-size: var(--fs-small); color: var(--on-dark-muted); }
+.q-form .btn--gold { align-self: flex-start; }
+
+/* ---------- Помощь делом ---------- */
+.help { background: var(--milk); }
+.help__grid { max-width: var(--page-max); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(24px, 4vw, 64px); align-items: center; padding: clamp(44px, 5vw, 72px) var(--pad); }
+.help__copy { display: flex; flex-direction: column; gap: 18px; }
+.help__copy h2 { font-size: var(--fs-h2); }
+.help__cats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.help__cats li { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 20px 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0; background: var(--milk-light); }
+.help__cats svg { width: 30px; height: 30px; color: var(--gold); }
+.help__cats b { font-family: var(--font-sc); font-weight: 400; font-size: 1.125rem; }
+.help__cats span { font-size: var(--fs-small); color: var(--muted); line-height: 1.4; }
+
+/* ---------- Подвал: контакты ---------- */
+.footer-contacts { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-small); color: var(--muted); }
+.footer-contacts b { font-family: var(--font-sc); font-weight: 400; color: var(--ink); font-size: 1rem; }
+.footer-seal { width: 64px; height: auto; opacity: .9; }
+
+/* ---------- Чекбоксы в окнах ---------- */
+.checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.checks label { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--milk-light); font-weight: 400; cursor: pointer; }
+.checks input { accent-color: var(--gold-btn); }
+.field textarea { font: inherit; font-weight: 400; font-size: 1rem; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--milk-light); color: var(--ink); min-height: 90px; resize: vertical; }
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
 
@@ -372,4 +482,32 @@ p { margin: 0; }
   .note-form { grid-template-columns: 40px 1fr; padding: 22px 20px; }
   .note-form__cross { width: 30px; height: 50px; }
   .socials { margin-left: 0; }
+
+  .mottos__grid { grid-template-columns: minmax(0, 1fr); }
+  .mottos__emblem { max-width: 200px; }
+  .mottos__cards { height: 78vw; max-height: 380px; }
+  .timeline { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .timeline::before { left: 7px; right: auto; top: 0; bottom: 0; width: 1px; height: auto; }
+  .timeline li { padding: 0 0 26px 36px; }
+  .stages__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .questions__grid, .help__grid { grid-template-columns: minmax(0, 1fr); }
+  .questions__art { width: min(100%, 260px); }
+  .q-form__row { grid-template-columns: minmax(0, 1fr); }
+  .help__cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .products { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 }
+
+@media (min-width: 761px) and (max-width: 1200px) {
+  .mottos__grid { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .mottos__cards { grid-column: 1 / -1; height: 340px; max-width: 520px; width: 100%; justify-self: center; }
+  .timeline { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 28px; }
+  .stages__list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .questions__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .questions__art { display: none; }
+  .help__grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* поправки */
+.field input, .field select, .field textarea { width: 100%; min-width: 0; }
+.q-form__row > * { min-width: 0; }
+.stages { padding-top: clamp(24px, 2.6vw, 36px); }
