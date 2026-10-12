@@ -275,7 +275,7 @@ p { margin: 0; }
 .note-form__rule--bottom { margin: 18px 0 0; }
 
 /* ---------- Подвал ---------- */
-.site-footer { position: relative; z-index: 3; background: var(--milk-light); border-top: 1px solid var(--line); box-shadow: 0 -14px 34px rgba(33,31,26,.12); }
+.site-footer { position: relative; z-index: 3; background: var(--milk-light); border-top: 1px solid var(--line); }
 .site-footer__inner { max-width: var(--page-max); margin-inline: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 20px clamp(24px, 4vw, 64px); padding: 34px var(--pad); }
 .site-footer .nav__list { flex-wrap: wrap; gap: 6px clamp(16px, 2vw, 30px); }
 .site-footer .nav { margin-left: 0; }
@@ -521,27 +521,21 @@ p { margin: 0; }
 .mottos__text, .questions__copy .text, .saints__copy .text { font-family: var(--font-display); font-style: italic; font-size: 1.125rem; }
 
 
-/* ---------- Перелистывание блоков при прокрутке ----------
-   Блок «прилипает», когда его низ доходит до низа экрана (--stick считает скрипт).
-   Следующий лист выезжает поверх с косым верхним краем: левый угол идёт первым,
-   край выпрямляется слева направо (--cut — насколько опущен правый угол).
-   Вдоль сгиба лежит мягкая тень, накрытый лист темнеет (--cover 0→1).
-   Двигаются только clip-path и прозрачность — без поворотов, поэтому плавно. */
-.stack {
-  position: sticky; top: var(--stick, 0px); z-index: var(--z, 1);
-  clip-path: polygon(0 0, 100% var(--cut, 0px), 100% 100%, 0 100%);
-  will-change: clip-path;
-}
-.stack::before { content: ""; position: absolute; inset: 0; background: #14170F; opacity: calc(var(--cover, 0) * .32); pointer-events: none; z-index: 60; }
-/* тень сгиба — полоса вдоль косого края */
-.stack::after {
-  content: ""; position: absolute; left: 0; top: 0; z-index: 61; pointer-events: none;
-  width: var(--edge-len, 100%); height: 46px;
-  transform-origin: 0 0; transform: rotate(var(--edge-ang, 0deg));
-  background: linear-gradient(180deg, rgba(20,23,15,.20), rgba(20,23,15,0));
-  opacity: var(--fold, 0);
-}
-@media (prefers-reduced-motion: reduce) {
-  .stack { position: relative; top: auto; clip-path: none; }
-  .stack::before, .stack::after { display: none; }
-}
+/* ---------- Книжный режим: блоки перелистываются как страницы ----------
+   Включается скриптом на широких экранах (body.book). Блоки сгруппированы
+   в страницы не короче экрана; страницы лежат стопкой на месте, прокрутка
+   сначала дочитывает текущую страницу, затем следующая переворачивается
+   вокруг левого края (корешка) и ложится сверху. */
+body.book main { position: fixed; inset: 0; overflow: hidden; z-index: 1; background: var(--milk); }
+body.book .book-spacer { display: block; width: 1px; }
+.book-spacer { display: none; }
+.book-page { position: absolute; top: 0; left: 0; width: 100%; background: var(--milk); will-change: transform; backface-visibility: hidden; }
+.book-page.is-off { opacity: 0; pointer-events: none; }
+/* свет на переворачиваемом листе: темнее к свободному краю */
+.book-page::after { content: ""; position: absolute; inset: 0; z-index: 100; pointer-events: none; opacity: var(--turn, 0);
+  background: linear-gradient(90deg, rgba(255,250,240,.10) 0%, rgba(20,23,15,0) 45%, rgba(20,23,15,.26) 100%); }
+/* тень, которую лист отбрасывает на страницу под ним */
+.book-shade { position: absolute; inset: 0; pointer-events: none; visibility: hidden;
+  background:
+    linear-gradient(90deg, transparent var(--x, 0px), rgba(20,23,15,.30) var(--x, 0px), rgba(20,23,15,0) calc(var(--x, 0px) + 220px)),
+    rgba(20,23,15, var(--dim, 0)); }

@@ -255,59 +255,151 @@
     });
   }
 
-  /* ---------- Блоки наезжают друг на друга ---------- */
-  (function stackSections() {
+  /* ---------- Книжный режим: блоки перелистываются как страницы ---------- */
+  (function book() {
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var main = $('main');
-    var hero = $('.hero');
-    if (reduce || !main || !hero) return;
-    var secs = [hero].concat($$('main > section'));
-    main.style.position = 'relative';
-    main.style.zIndex = '2';
-    secs.forEach(function (s, i) { s.classList.add('stack'); s.style.setProperty('--z', String(i + 1)); });
+    var wide = window.matchMedia ? window.matchMedia('(min-width: 900px)') : { matches: true, addEventListener: function () {} };
+    var main = $('main'), hero = $('.hero'), footer = $('.site-footer');
+    if (reduce || !main || !hero || !footer) return;
 
-    var vh = window.innerHeight;
-    function measure() {
+    var blocks = [hero].concat($$('main > section'), [footer]);
+    var spacer = document.createElement('div'); spacer.className = 'book-spacer'; spacer.setAttribute('aria-hidden', 'true');
+    var shade = document.createElement('div'); shade.className = 'book-shade';
+    var on = false, pages = [], S = [], R = [], F = 0, vh = 0, cur = 0, ticking = false;
+
+    function unwrap() {
+      blocks.forEach(function (b) { main.appendChild(b); });
+      pages.forEach(function (p) { p.remove(); });
+      pages = [];
+    }
+    function group() {
+      unwrap();
       vh = window.innerHeight;
-      secs.forEach(function (s) {
-        // высокий блок прилипает, когда его низ дошёл до низа экрана
-        s.style.setProperty('--stick', Math.min(0, vh - s.offsetHeight) + 'px');
+      var page = null, sum = 0;
+      blocks.forEach(function (b) {
+        if (!page || sum >= vh) {
+          page = document.createElement('div'); page.className = 'book-page';
+          main.appendChild(page); pages.push(page); sum = 0;
+        }
+        page.appendChild(b); sum += b.offsetHeight;
       });
+      // последняя страница не короче экрана: иначе присоединяем к предыдущей
+      if (pages.length > 1 && pages[pages.length - 1].offsetHeight < vh) {
+        var last = pages.pop();
+        while (last.firstChild) pages[pages.length - 1].appendChild(last.firstChild);
+        last.remove();
+      }
+      pages.forEach(function (p, i) { p.style.zIndex = String(2 * i + 2); });
+      main.appendChild(shade);
+    }
+    function measure() {
+      if (!on) return;
+      vh = window.innerHeight; F = Math.round(vh * 0.95);
+      var y = 0; S = []; R = [];
+      pages.forEach(function (p, i) {
+        S.push(y);
+        var r = Math.max(0, p.offsetHeight - vh); R.push(r); y += r;
+        if (i < pages.length - 1) y += F;
+        p.style.transformOrigin = '0 ' + Math.round(vh / 2) + 'px';
+      });
+      spacer.style.height = (y + vh) + 'px';
       update();
     }
-    var ticking = false;
+    function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
     function update() {
       ticking = false;
-      var n = secs.length, w = document.documentElement.clientWidth;
-      var maxCut = Math.min(300, vh * 0.34);          // насколько ниже левого опущен правый угол в начале
-      for (var i = 0; i < n; i++) {
-        var st = secs[i].style, cover = 0, cut = 0;
-        // насколько следующий лист уже наехал на этот: 0 — касаются краями, 1 — закрыл
-        if (i < n - 1) {
-          var bottom = secs[i].getBoundingClientRect().top + secs[i].offsetHeight;
-          var overlap = bottom - secs[i + 1].getBoundingClientRect().top;
-          cover = Math.max(0, Math.min(1, overlap / Math.min(vh, secs[i].offsetHeight)));
+      if (!on || !pages.length) return;
+      var y = window.scrollY, W = main.clientWidth, d = W * 3, last = pages.length - 1, k = last;
+      for (var i = 0; i < last; i++) { if (y < S[i] + R[i] + F) { k = i; break; } }
+      cur = k;
+      var readEnd = S[k] + R[k];
+      var p = (k < last && y > readEnd) ? Math.min(1, (y - readEnd) / F) : 0;
+      var e = ease(p), ang = -90 * (1 - e);
+      pages.forEach(function (pg, j) {
+        var st = pg.style;
+        if (j === k) {
+          pg.classList.remove('is-off');
+          st.transform = 'translate3d(0,' + (-Math.min(R[k], Math.max(0, y - S[k]))).toFixed(1) + 'px,0)';
+          st.setProperty('--turn', '0');
+        } else if (j === k + 1 && p > 0) {
+          pg.classList.remove('is-off');
+          st.transform = 'perspective(' + Math.round(d) + 'px) rotateY(' + ang.toFixed(3) + 'deg)';
+          st.setProperty('--turn', (1 - e).toFixed(3));
+        } else {
+          pg.classList.add('is-off');
+          st.transform = 'none';
         }
-        // этот лист сам наезжает на предыдущий: косой край, выпрямляется к концу
-        if (i > 0) {
-          var prevBottom = secs[i - 1].getBoundingClientRect().top + secs[i - 1].offsetHeight;
-          var ov = Math.max(0, prevBottom - secs[i].getBoundingClientRect().top);   // сколько пикселей уже накрыто
-          var t = Math.min(1, ov / Math.min(vh, secs[i - 1].offsetHeight));
-          var ease = Math.min(1, t * 6) * (1 - t) * (1 - t);   // быстро наклоняется в начале, плавно ложится ровно
-          cut = Math.min(maxCut * ease, ov);                   // косой край не глубже уже накрытой части
-        }
-        st.setProperty('--cover', cover.toFixed(3));
-        st.setProperty('--cut', cut.toFixed(1) + 'px');
-        st.setProperty('--fold', cut > 0.5 ? Math.min(1, cut / 60).toFixed(3) : '0');
-        st.setProperty('--edge-ang', (Math.atan2(cut, w) * 180 / Math.PI).toFixed(3) + 'deg');
-        st.setProperty('--edge-len', Math.ceil(Math.hypot(w, cut)) + 'px');
+      });
+      if (p > 0) {
+        // где сейчас свободный край листа на экране (с учётом перспективы)
+        var r = ang * Math.PI / 180, x3 = W * Math.cos(r), z3 = -W * Math.sin(r);
+        var X = x3 * d / (d - z3);
+        shade.style.visibility = 'visible';
+        shade.style.zIndex = String(2 * k + 3);
+        shade.style.setProperty('--x', X.toFixed(1) + 'px');
+        shade.style.setProperty('--dim', (0.28 * e).toFixed(3));
+      } else {
+        shade.style.visibility = 'hidden';
       }
     }
-    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-    window.addEventListener('resize', measure);
-    if ('ResizeObserver' in window) { var ro = new ResizeObserver(measure); secs.forEach(function (s) { ro.observe(s); }); }
-    window.addEventListener('load', measure);
-    measure();
+    function offsetIn(el, pg) { var o = 0, n = el; while (n && n !== pg) { o += n.offsetTop; n = n.offsetParent; } return o; }
+    function targetFor(el, pad) {
+      var k = -1;
+      for (var i = 0; i < pages.length; i++) { if (pages[i].contains(el)) { k = i; break; } }
+      if (k < 0) return null;
+      return { k: k, o: offsetIn(el, pages[k]), y: S[k] + Math.min(R[k], Math.max(0, offsetIn(el, pages[k]) - (pad || 0))) };
+    }
+
+    function enable() {
+      if (on) return; on = true;
+      var keepY = window.scrollY, keepEl = null;
+      main.insertBefore(hero, main.firstChild); main.appendChild(footer);
+      document.body.classList.add('book'); document.body.appendChild(spacer);
+      group(); measure();
+      if (keepY > 0) window.scrollTo(0, 0);
+      update();
+    }
+    function disable() {
+      if (!on) return; on = false;
+      unwrap(); shade.remove(); spacer.remove();
+      main.parentNode.insertBefore(hero, main);
+      main.parentNode.insertBefore(footer, main.nextSibling);
+      document.body.classList.remove('book');
+    }
+
+    // ссылки-якоря: прокрутка к нужной странице
+    document.addEventListener('click', function (e) {
+      if (!on) return;
+      var a = e.target.closest && e.target.closest('a[href^="#"]');
+      if (!a) return;
+      var id = a.getAttribute('href').slice(1); if (!id) return;
+      var el = document.getElementById(id); if (!el) return;
+      var t = targetFor(el, 0); if (!t) return;
+      e.preventDefault();
+      window.scrollTo({ top: t.y, behavior: 'smooth' });
+    });
+    // фокус с клавиатуры уходит на скрытую страницу — показываем её
+    document.addEventListener('focusin', function (e) {
+      if (!on) return;
+      var t = targetFor(e.target, vh / 3); if (!t) return;
+      var shown = t.k === cur && t.o - Math.min(R[cur], Math.max(0, window.scrollY - S[cur])) >= 0 &&
+                  t.o - Math.min(R[cur], Math.max(0, window.scrollY - S[cur])) < vh - 40;
+      if (!shown) window.scrollTo({ top: t.y, behavior: 'instant' });
+    });
+
+    window.addEventListener('scroll', function () { if (on && !ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    var rt;
+    window.addEventListener('resize', function () {
+      clearTimeout(rt);
+      rt = setTimeout(function () {
+        if (wide.matches && !on) enable(); else if (!wide.matches && on) disable();
+        else if (on && Math.abs(window.innerHeight - vh) > 1) { group(); measure(); } else measure();
+      }, 120);
+    });
+    if ('ResizeObserver' in window) { var ro = new ResizeObserver(function () { measure(); }); blocks.forEach(function (b) { ro.observe(b); }); }
+    window.addEventListener('load', function () { if (on) { group(); measure(); } });
+    if (wide.matches) enable();
+    if (on && location.hash) { var el0 = document.getElementById(location.hash.slice(1)); var t0 = el0 && targetFor(el0, 0); if (t0) window.scrollTo(0, t0.y); }
   })();
 
   setText('[data-year]', String(new Date().getFullYear()));
