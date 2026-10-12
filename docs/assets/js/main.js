@@ -265,6 +265,8 @@
     var blocks = [hero].concat($$('main > section'), [footer]);
     var spacer = document.createElement('div'); spacer.className = 'book-spacer'; spacer.setAttribute('aria-hidden', 'true');
     var shade = document.createElement('div'); shade.className = 'book-shade';
+    var curl = document.createElement('div'); curl.className = 'book-curl'; curl.setAttribute('aria-hidden', 'true'); curl.inert = true;
+    var curlFor = -1, strips = [], idleT;
     var on = false, pages = [], L = 0, vh = 0, cur = 0, ticking = false;
     var HOLD = 0.22;   // доля шага, когда страница лежит спокойно перед переворотом
 
@@ -302,7 +304,8 @@
       });
       var n = pages.length;
       pages.forEach(function (p, i) { p.style.zIndex = String(2 * (n - i) + 2); p.style.transformOrigin = '0 ' + Math.round(vh / 2) + 'px'; });
-      main.appendChild(shade);
+      main.appendChild(shade); main.appendChild(curl);
+      curlFor = -1; curl.innerHTML = ''; strips = [];
       // по одному экрану прокрутки на страницу, с точками «прилипания»
       L = vh;
       spacer.innerHTML = '';
@@ -310,39 +313,92 @@
       update();
     }
     function ease(t) { return 0.5 - 0.5 * Math.cos(Math.PI * t); }   // мягко трогается и мягко ложится
+
+    // полоски-копии страницы k для изгиба
+    function makeStrips(k) {
+      if (curlFor === k) return;
+      curl.innerHTML = ''; strips = [];
+      var W = main.clientWidth, N = Math.max(16, Math.round(W / 34)), w = W / N;
+      var src = pages[k].querySelector('.book-sheet');
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < N; i++) {
+        var u0 = i * w;
+        var st = document.createElement('div'); st.className = 'curl-strip';
+        st.style.left = u0.toFixed(2) + 'px'; st.style.width = (w + 1.2).toFixed(2) + 'px';
+        var front = document.createElement('div'); front.className = 'curl-front';
+        var clip = document.createElement('div'); clip.className = 'curl-clone';
+        clip.style.width = W + 'px'; clip.style.transform = 'translateX(' + (-u0).toFixed(2) + 'px)';
+        var copy = src.cloneNode(true);
+        copy.querySelectorAll('[id]').forEach(function (el) { el.removeAttribute('id'); });
+        clip.appendChild(copy); front.appendChild(clip);
+        var light = document.createElement('div'); light.className = 'curl-light'; front.appendChild(light);
+        var back = document.createElement('div'); back.className = 'curl-back';
+        var backLight = document.createElement('div'); backLight.className = 'curl-light'; back.appendChild(backLight);
+        st.appendChild(front); st.appendChild(back); frag.appendChild(st);
+        strips.push({ el: st, u: u0, w: w, light: light, back: back, backLight: backLight, isBack: false });
+        if (i === N - 1) st.classList.add('is-edge');
+      }
+      curl.appendChild(frag);
+      curlFor = k;
+    }
+    // положение точки листа (расстояние u от корешка) при линии сгиба xf и радиусе r
+    function bend(u, xf, r) {
+      if (u <= xf) return [u, 0, 0];
+      var s = u - xf, half = Math.PI * r;
+      if (s <= half) { var th = s / r; return [xf + r * Math.sin(th), r * (1 - Math.cos(th)), th]; }
+      return [xf - (s - half), 2 * r, Math.PI];
+    }
+    // насколько темна поверхность листа под углом th: лицевая темнеет, отворачиваясь от света;
+    // изнанка темнее у сгиба и светлеет, ложась
+    function shadeAt(th) {
+      if (th <= 0) return 0;
+      if (th <= Math.PI / 2) return 0.40 * Math.pow(Math.sin(th), 1.6);
+      return 0.06 + 0.30 * Math.pow(Math.sin(th), 2);
+    }
     function update() {
       ticking = false;
       if (!on || !pages.length) return;
-      var n = pages.length, y = window.scrollY, W = main.clientWidth, d = W * 4;
+      var n = pages.length, y = window.scrollY, W = main.clientWidth;
       var k = Math.max(0, Math.min(n - 1, Math.floor(y / L)));
       var p = k < n - 1 ? Math.max(0, Math.min(1, (y / L - k - HOLD) / (1 - HOLD))) : 0;
-      var e = ease(p), ang = -96 * e;   // лист поднимается за правый край и уходит влево
+      var e = ease(p);
       cur = p > 0.5 ? k + 1 : k;
       pages.forEach(function (pg, j) {
-        var st = pg.style;
-        if (j === k) {
-          pg.classList.remove('is-off');
-          st.transform = p > 0 ? 'perspective(' + Math.round(d) + 'px) rotateY(' + ang.toFixed(3) + 'deg)' : 'none';
-          st.setProperty('--turn', (Math.sin(Math.PI * 0.5 * e)).toFixed(3));
-        } else if (j === k + 1 && p > 0) {
-          pg.classList.remove('is-off');
-          st.transform = 'none';
-          st.setProperty('--turn', '0');
-        } else {
-          pg.classList.add('is-off');
-          st.transform = 'none';
-        }
+        var show = (j === k && p === 0) || (j === k + 1 && p > 0);
+        pg.classList.toggle('is-off', !show);
+        pg.style.transform = 'none';
+        pg.style.setProperty('--turn', '0');
       });
       if (p > 0) {
-        // где сейчас свободный край листа на экране (с учётом перспективы)
-        var r = ang * Math.PI / 180, x3 = W * Math.cos(r), z3 = -W * Math.sin(r);
-        var X = Math.max(0, x3 * d / (d - z3));
+        makeStrips(k);
+        // радиус сгиба: побольше в середине переворота, линия сгиба бежит от правого края к корешку и дальше
+        var r = W * (0.07 + 0.05 * Math.sin(Math.PI * e));
+        var xf = W - (W + r * 1.15) * e;
+        curl.style.zIndex = String(2 * (n - k) + 2);
+        curl.style.visibility = 'visible';
+        for (var i = 0; i < strips.length; i++) {
+          var st = strips[i], a = bend(st.u, xf, r), c = bend(st.u + st.w / 2, xf, r), z = bend(st.u + st.w, xf, r), th = c[2];
+          st.el.style.transform = 'translate3d(' + (a[0] - st.u).toFixed(2) + 'px,0,' + a[1].toFixed(2) + 'px) rotateY(' + (-th * 180 / Math.PI).toFixed(2) + 'deg)';
+          var isBack = th > Math.PI / 2;
+          if (isBack !== st.isBack) { st.el.classList.toggle('is-back', isBack); st.isBack = isBack; }
+          // светотень плавно внутри полоски: от угла на левом крае к углу на правом
+          var aL = shadeAt(a[2]), aR = shadeAt(z[2]);
+          var lt = isBack ? st.backLight : st.light;
+          lt.style.background = (aL < 0.004 && aR < 0.004) ? 'none' :
+            'linear-gradient(90deg, rgba(20,23,15,' + aL.toFixed(3) + '), rgba(20,23,15,' + aR.toFixed(3) + '))';
+        }
+        // тень от сгиба на следующей странице — справа от гребня
+        var X = Math.max(0, Math.min(W, xf + r));
         shade.style.visibility = 'visible';
         shade.style.zIndex = String(2 * (n - k) + 1);
         shade.style.setProperty('--x', X.toFixed(1) + 'px');
-        shade.style.setProperty('--dim', (0.30 * (1 - e)).toFixed(3));
+        shade.style.setProperty('--dim', (0.26 * (1 - e)).toFixed(3));
       } else {
+        curl.style.visibility = 'hidden';
         shade.style.visibility = 'hidden';
+        // заранее готовим полоски для следующего переворота, пока страница лежит
+        clearTimeout(idleT);
+        idleT = setTimeout(function () { if (on && k < n - 1) makeStrips(k); }, 350);
       }
     }
     function pageOf(el) { for (var i = 0; i < pages.length; i++) { if (pages[i].contains(el)) return i; } return -1; }
@@ -357,7 +413,7 @@
     }
     function disable() {
       if (!on) return; on = false;
-      unwrap(); shade.remove(); spacer.remove();
+      unwrap(); shade.remove(); curl.remove(); spacer.remove();
       main.parentNode.insertBefore(hero, main);
       main.parentNode.insertBefore(footer, main.nextSibling);
       document.body.classList.remove('book'); document.documentElement.classList.remove('book-snap');
