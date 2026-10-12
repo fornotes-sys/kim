@@ -54,7 +54,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--milk); color: var(--ink); font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body { margin: 0; background: var(--milk); color: var(--ink); font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: clip; }
 img { max-width: 100%; display: block; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
@@ -275,7 +275,7 @@ p { margin: 0; }
 .note-form__rule--bottom { margin: 18px 0 0; }
 
 /* ---------- Подвал ---------- */
-.site-footer { background: var(--milk-light); border-top: 1px solid var(--line); }
+.site-footer { position: relative; z-index: 3; background: var(--milk-light); border-top: 1px solid var(--line); box-shadow: 0 -14px 34px rgba(33,31,26,.12); }
 .site-footer__inner { max-width: var(--page-max); margin-inline: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 20px clamp(24px, 4vw, 64px); padding: 34px var(--pad); }
 .site-footer .nav__list { flex-wrap: wrap; gap: 6px clamp(16px, 2vw, 30px); }
 .site-footer .nav { margin-left: 0; }
@@ -519,3 +519,16 @@ p { margin: 0; }
 .footer-contacts b { font-family: var(--font-slav); font-size: 1.125rem; }
 .text--lead-italic { font-family: var(--font-display); font-style: italic; }
 .mottos__text, .questions__copy .text, .saints__copy .text { font-family: var(--font-display); font-style: italic; font-size: 1.125rem; }
+
+
+/* ---------- Блоки наезжают друг на друга при прокрутке ----------
+   Каждый блок «прилипает», когда его низ доходит до низа экрана
+   (--stick считает скрипт), а следующий блок выезжает поверх.
+   Прикрытый блок чуть отдаляется и притемняется (--cover от 0 до 1). */
+.stack { position: sticky; top: var(--stick, 0px); z-index: var(--z, 1); transform-origin: 50% 0; transform: scale(calc(1 - var(--cover, 0) * .035)); }
+.stack + .stack, main > .stack:first-child { box-shadow: 0 -14px 34px rgba(33,31,26,.12); }
+.stack::before { content: ""; position: absolute; inset: 0; background: #14170F; opacity: calc(var(--cover, 0) * .38); pointer-events: none; z-index: 60; }
+@media (prefers-reduced-motion: reduce) {
+  .stack { position: relative; top: auto; transform: none; }
+  .stack::before { display: none; }
+}

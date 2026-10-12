@@ -255,5 +255,45 @@
     });
   }
 
+  /* ---------- Блоки наезжают друг на друга ---------- */
+  (function stackSections() {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var main = $('main');
+    var hero = $('.hero');
+    if (reduce || !main || !hero) return;
+    var secs = [hero].concat($$('main > section'));
+    main.style.position = 'relative';
+    main.style.zIndex = '2';
+    secs.forEach(function (s, i) { s.classList.add('stack'); s.style.setProperty('--z', String(i + 1)); });
+
+    var vh = window.innerHeight;
+    function measure() {
+      vh = window.innerHeight;
+      secs.forEach(function (s) {
+        // высокий блок прилипает, когда его низ дошёл до низа экрана
+        s.style.setProperty('--stick', Math.min(0, vh - s.offsetHeight) + 'px');
+      });
+      update();
+    }
+    var ticking = false;
+    function update() {
+      ticking = false;
+      for (var i = 0; i < secs.length; i++) {
+        var next = secs[i + 1];
+        if (!next) { secs[i].style.setProperty('--cover', '0'); continue; }
+        // насколько следующий блок уже наехал на текущий (0 — касаются краями, 1 — закрыл экран)
+        var cur = secs[i].getBoundingClientRect().top + secs[i].offsetHeight;
+        var overlap = cur - next.getBoundingClientRect().top;
+        var p = Math.max(0, Math.min(1, overlap / Math.min(vh, secs[i].offsetHeight)));
+        secs[i].style.setProperty('--cover', p.toFixed(3));
+      }
+    }
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener('resize', measure);
+    if ('ResizeObserver' in window) { var ro = new ResizeObserver(measure); secs.forEach(function (s) { ro.observe(s); }); }
+    window.addEventListener('load', measure);
+    measure();
+  })();
+
   setText('[data-year]', String(new Date().getFullYear()));
 })();
