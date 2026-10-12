@@ -315,31 +315,48 @@
     }
     function ease(t) { return 0.5 - 0.5 * Math.cos(Math.PI * t); }   // мягко трогается и мягко ложится
 
-    // полоски-копии страницы k для изгиба
+    // полоски-копии страницы k для изгиба. Сгиб идёт по диагонали от правого нижнего угла:
+    // рамка с полосками повёрнута на PHI, внутри каждой полоски страница повёрнута обратно.
+    var PHI = 22 * Math.PI / 180, geo = null;
     function makeStrips(k) {
       if (curlFor === k) return;
       curl.innerHTML = ''; strips = [];
-      var W = main.clientWidth, N = Math.max(16, Math.round(W / 34)), w = W / N;
+      var W = main.clientWidth, H = vh, c = Math.cos(PHI), sn = Math.sin(PHI);
+      var Cx = W / 2, Cy = H / 2, D = Math.ceil(Math.hypot(W, H)) + 6;
+      var uMin = -(Cx * c + Cy * sn), uMax = -uMin;
+      var frame = document.createElement('div'); frame.className = 'curl-frame';
+      frame.style.left = (Cx - D / 2) + 'px'; frame.style.top = (Cy - D / 2) + 'px';
+      frame.style.width = D + 'px'; frame.style.height = D + 'px';
+      frame.style.transform = 'rotate(' + (PHI * 180 / Math.PI).toFixed(3) + 'deg)';
+      var N = Math.max(18, Math.round((uMax - uMin) / 30)), w = (uMax - uMin) / N;
+      var rcx = Cx * c + Cy * sn, rcy = -Cx * sn + Cy * c;   // центр страницы в повёрнутых координатах
       var src = pages[k].querySelector('.book-sheet');
       var frag = document.createDocumentFragment();
+      function face(cls, xs) {
+        var tx = -rcx + D / 2 - xs, ty = -rcy + D / 2;
+        var f = document.createElement('div'); f.className = 'curl-face ' + cls;
+        f.style.width = W + 'px'; f.style.height = H + 'px';
+        f.style.transform = 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px) rotate(' + (-PHI * 180 / Math.PI).toFixed(3) + 'deg)';
+        var lt = document.createElement('div'); lt.className = 'curl-light';
+        lt.style.width = (w + 1.5) + 'px'; lt.style.height = D + 'px';
+        var bx = tx * c - ty * sn, by = tx * sn + ty * c;    // свет — по осям полоски
+        lt.style.transform = 'translate(' + (-bx).toFixed(2) + 'px,' + (-by).toFixed(2) + 'px) rotate(' + (PHI * 180 / Math.PI).toFixed(3) + 'deg)';
+        return { el: f, light: lt };
+      }
       for (var i = 0; i < N; i++) {
-        var u0 = i * w;
+        var xs = D / 2 + uMin + i * w;
         var st = document.createElement('div'); st.className = 'curl-strip';
-        st.style.left = u0.toFixed(2) + 'px'; st.style.width = (w + 1.2).toFixed(2) + 'px';
-        var front = document.createElement('div'); front.className = 'curl-front';
-        var clip = document.createElement('div'); clip.className = 'curl-clone';
-        clip.style.width = W + 'px'; clip.style.transform = 'translateX(' + (-u0).toFixed(2) + 'px)';
+        st.style.left = xs.toFixed(2) + 'px'; st.style.width = (w + 1.2).toFixed(2) + 'px';
+        var fr = face('curl-face--front', xs), bk = face('curl-face--back', xs);
         var copy = src.cloneNode(true);
         copy.querySelectorAll('[id]').forEach(function (el) { el.removeAttribute('id'); });
-        clip.appendChild(copy); front.appendChild(clip);
-        var light = document.createElement('div'); light.className = 'curl-light'; front.appendChild(light);
-        var back = document.createElement('div'); back.className = 'curl-back';
-        var backLight = document.createElement('div'); backLight.className = 'curl-light'; back.appendChild(backLight);
-        st.appendChild(front); st.appendChild(back); frag.appendChild(st);
-        strips.push({ el: st, u: u0, w: w, light: light, back: back, backLight: backLight, isBack: false });
-        if (i === N - 1) st.classList.add('is-edge');
+        fr.el.appendChild(copy); fr.el.appendChild(fr.light);
+        bk.el.appendChild(bk.light);
+        st.appendChild(fr.el); st.appendChild(bk.el); frag.appendChild(st);
+        strips.push({ el: st, u: uMin + i * w, w: w, light: fr.light, backLight: bk.light, isBack: false });
       }
-      curl.appendChild(frag);
+      frame.appendChild(frag); curl.appendChild(frame);
+      geo = { uMin: uMin, uMax: uMax };
       curlFor = k;
     }
     // положение точки листа (расстояние u от корешка) при линии сгиба xf и радиусе r
@@ -373,8 +390,8 @@
       if (p > 0) {
         makeStrips(k);
         // радиус сгиба: побольше в середине переворота, линия сгиба бежит от правого края к корешку и дальше
-        var r = W * (0.07 + 0.05 * Math.sin(Math.PI * e));
-        var xf = W - (W + r * 1.15) * e;
+        var r = W * (0.06 + 0.05 * Math.sin(Math.PI * e));
+        var xf = geo.uMax - (geo.uMax - geo.uMin + r * 1.15) * e;   // линия сгиба: от правого нижнего угла к левому верхнему
         curl.style.zIndex = String(2 * (n - k) + 2);
         curl.style.visibility = 'visible';
         for (var i = 0; i < strips.length; i++) {
@@ -389,7 +406,8 @@
             'linear-gradient(90deg, rgba(20,23,15,' + aL.toFixed(3) + '), rgba(20,23,15,' + aR.toFixed(3) + '))';
         }
         // тень от сгиба на следующей странице — справа от гребня
-        var X = Math.max(0, Math.min(W, xf + r));
+        var X = Math.max(0, Math.min(geo.uMax - geo.uMin, xf + r - geo.uMin));
+        shade.style.setProperty('--ang', (90 + PHI * 180 / Math.PI).toFixed(2) + 'deg');
         shade.style.visibility = 'visible';
         shade.style.zIndex = String(2 * (n - k) + 1);
         shade.style.setProperty('--x', X.toFixed(1) + 'px');

@@ -545,22 +545,22 @@ body.book .chronicle__inner { justify-content: center; }
 /* тень от листа на открывающейся странице */
 .book-shade { position: absolute; inset: 0; pointer-events: none; visibility: hidden;
   background:
-    linear-gradient(90deg, transparent var(--x, 0px), rgba(20,23,15,.34) var(--x, 0px), rgba(20,23,15,.10) calc(var(--x, 0px) + 90px), rgba(20,23,15,0) calc(var(--x, 0px) + 260px)),
+    linear-gradient(var(--ang, 90deg), transparent var(--x, 0px), rgba(20,23,15,.34) var(--x, 0px), rgba(20,23,15,.10) calc(var(--x, 0px) + 90px), rgba(20,23,15,0) calc(var(--x, 0px) + 260px)),
     rgba(20,23,15, var(--dim, 0)); }
 
 /* ---------- Изгиб листа при перелистывании ----------
    Во время переворота страница показывается полосками-копиями; каждая полоска
    встаёт на своё место на «цилиндре» сгиба, поэтому лист гнётся, а не поворачивается плоским. */
-.book-curl { position: absolute; inset: 0; pointer-events: none; visibility: hidden; perspective: 2600px; perspective-origin: 50% 50%; }
-.curl-strip { position: absolute; top: 0; height: 100%; transform-origin: 0 50%; will-change: transform; }
-.curl-front, .curl-back { position: absolute; inset: 0; overflow: hidden; }
-.curl-clone { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; background: var(--milk); }
-.curl-light { position: absolute; inset: 0; }
-.curl-back { display: none; background: linear-gradient(180deg, #F2EBDD, #E9DFCC); }
-.curl-strip.is-back .curl-front { display: none; }
-.curl-strip.is-back .curl-back { display: block; }
-/* тонкий светлый срез на свободном краю листа */
-.curl-strip.is-edge .curl-front::after, .curl-strip.is-edge .curl-back::after { content: ""; position: absolute; top: 0; bottom: 0; right: 0; width: 2px; background: rgba(255,252,244,.85); box-shadow: -1px 0 2px rgba(20,23,15,.18); }
+.book-curl { position: absolute; inset: 0; pointer-events: none; visibility: hidden; overflow: hidden; }
+/* повёрнутая рамка: полоски в ней идут параллельно диагональному сгибу */
+.curl-frame { position: absolute; perspective: 2600px; perspective-origin: 50% 50%; transform-origin: 50% 50%; }
+.curl-strip { position: absolute; top: 0; height: 100%; overflow: hidden; transform-origin: 0 50%; will-change: transform; }
+.curl-face { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; background: var(--milk);
+  box-shadow: inset -2px -2px 0 rgba(255,252,244,.9), inset -3px -3px 3px rgba(20,23,15,.10); }
+.curl-face--back { display: none; background: url("../img/paper.jpg") 0 0 / 512px 512px, linear-gradient(180deg, #F2EBDD, #E9DFCC); background-blend-mode: multiply; }
+.curl-strip.is-back .curl-face--front { display: none; }
+.curl-strip.is-back .curl-face--back { display: block; }
+.curl-light { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 
 /* ---------- Фактура бумаги ----------
    Тонкие волокна и линии «верже», как у бумаги ручного отлива. Накладывается
@@ -574,9 +574,7 @@ body.book .chronicle__inner { justify-content: center; }
   mix-blend-mode: multiply; opacity: .95;
 }
 /* края страницы чуть состарены, как у летописного листа */
-.book-page::before, .curl-clone::after {
+.book-page::before, .curl-face--front::after {
   content: ""; position: absolute; inset: 0; z-index: 99; pointer-events: none;
   box-shadow: inset 0 0 160px rgba(110, 80, 35, .16), inset 0 0 22px rgba(110, 80, 35, .10);
 }
-/* изнанка листа — та же бумага */
-.curl-back { background: url("../img/paper.jpg") 0 0 / 512px 512px, linear-gradient(180deg, #F2EBDD, #E9DFCC); background-blend-mode: multiply; }
