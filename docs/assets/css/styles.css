@@ -521,14 +521,22 @@ p { margin: 0; }
 .mottos__text, .questions__copy .text, .saints__copy .text { font-family: var(--font-display); font-style: italic; font-size: 1.125rem; }
 
 
-/* ---------- Блоки наезжают друг на друга при прокрутке ----------
-   Каждый блок «прилипает», когда его низ доходит до низа экрана
-   (--stick считает скрипт), а следующий блок выезжает поверх.
-   Прикрытый блок чуть отдаляется и притемняется (--cover от 0 до 1). */
-.stack { position: sticky; top: var(--stick, 0px); z-index: var(--z, 1); transform-origin: 50% 0; transform: scale(calc(1 - var(--cover, 0) * .035)); }
-.stack + .stack, main > .stack:first-child { box-shadow: 0 -14px 34px rgba(33,31,26,.12); }
-.stack::before { content: ""; position: absolute; inset: 0; background: #14170F; opacity: calc(var(--cover, 0) * .38); pointer-events: none; z-index: 60; }
+/* ---------- Перелистывание блоков при прокрутке ----------
+   Блок «прилипает», когда его низ доходит до низа экрана (--stick считает скрипт).
+   Следующий блок выезжает поверх, как переворачиваемый лист:
+   его верхний край чуть приподнят (--lift, 0→1→0) и ложится ровно.
+   Накрытый лист слегка отклоняется назад, уменьшается и темнеет (--cover, 0→1). */
+.stack {
+  position: sticky; top: var(--stick, 0px); z-index: var(--z, 1);
+  transform-origin: var(--origin, 50% 0);
+  transform: perspective(2200px) rotateX(var(--rx, 0deg)) scale(var(--sc, 1));
+  box-shadow: 0 -14px 34px rgba(33,31,26, calc(.10 + var(--lift, 0) * .22));
+  backface-visibility: hidden;
+}
+.stack::before { content: ""; position: absolute; inset: 0; background: #14170F; opacity: calc(var(--cover, 0) * .34); pointer-events: none; z-index: 60; }
+/* блик на сгибе приподнятого листа */
+.stack::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 70px; background: linear-gradient(180deg, rgba(255,250,240,.32), rgba(255,250,240,0)); opacity: var(--lift, 0); pointer-events: none; z-index: 61; }
 @media (prefers-reduced-motion: reduce) {
   .stack { position: relative; top: auto; transform: none; }
-  .stack::before { display: none; }
+  .stack::before, .stack::after { display: none; }
 }

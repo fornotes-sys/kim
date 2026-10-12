@@ -278,14 +278,30 @@
     var ticking = false;
     function update() {
       ticking = false;
-      for (var i = 0; i < secs.length; i++) {
-        var next = secs[i + 1];
-        if (!next) { secs[i].style.setProperty('--cover', '0'); continue; }
-        // насколько следующий блок уже наехал на текущий (0 — касаются краями, 1 — закрыл экран)
-        var cur = secs[i].getBoundingClientRect().top + secs[i].offsetHeight;
-        var overlap = cur - next.getBoundingClientRect().top;
+      var n = secs.length, cover = new Array(n), lift = new Array(n);
+      for (var k = 0; k < n; k++) { cover[k] = 0; lift[k] = 0; }
+      for (var i = 0; i < n - 1; i++) {
+        // насколько следующий лист уже наехал на текущий: 0 — касаются краями, 1 — закрыл
+        var bottom = secs[i].getBoundingClientRect().top + secs[i].offsetHeight;
+        var overlap = bottom - secs[i + 1].getBoundingClientRect().top;
         var p = Math.max(0, Math.min(1, overlap / Math.min(vh, secs[i].offsetHeight)));
-        secs[i].style.setProperty('--cover', p.toFixed(3));
+        cover[i] = p;
+        lift[i + 1] = Math.sin(Math.PI * p);   // приподнят в середине перелистывания, ровно в начале и в конце
+      }
+      var k2 = window.innerWidth < 760 ? 0.35 : 1;   // на телефоне наклон мягче: блоки там высокие
+      for (var j = 0; j < n; j++) {
+        var st = secs[j].style;
+        if (cover[j] > 0.001) {            // накрытый лист отклоняется назад от верхнего края
+          st.setProperty('--origin', '50% 0');
+          st.setProperty('--rx', (-cover[j] * 5 * k2).toFixed(2) + 'deg');
+          st.setProperty('--sc', (1 - cover[j] * 0.035).toFixed(4));
+        } else {                            // переворачиваемый лист: верхний край приподнят к зрителю
+          st.setProperty('--origin', '50% 100%');
+          st.setProperty('--rx', (-lift[j] * 4 * k2).toFixed(2) + 'deg');
+          st.setProperty('--sc', (1 - lift[j] * (k2 < 1 ? 0.035 : 0.034)).toFixed(4));   // чтобы приподнятый край не выходил за экран
+        }
+        st.setProperty('--cover', cover[j].toFixed(3));
+        st.setProperty('--lift', lift[j].toFixed(3));
       }
     }
     window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
