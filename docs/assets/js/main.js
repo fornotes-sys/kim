@@ -278,30 +278,29 @@
     var ticking = false;
     function update() {
       ticking = false;
-      var n = secs.length, cover = new Array(n), lift = new Array(n);
-      for (var k = 0; k < n; k++) { cover[k] = 0; lift[k] = 0; }
-      for (var i = 0; i < n - 1; i++) {
-        // насколько следующий лист уже наехал на текущий: 0 — касаются краями, 1 — закрыл
-        var bottom = secs[i].getBoundingClientRect().top + secs[i].offsetHeight;
-        var overlap = bottom - secs[i + 1].getBoundingClientRect().top;
-        var p = Math.max(0, Math.min(1, overlap / Math.min(vh, secs[i].offsetHeight)));
-        cover[i] = p;
-        lift[i + 1] = Math.sin(Math.PI * p);   // приподнят в середине перелистывания, ровно в начале и в конце
-      }
-      var k2 = window.innerWidth < 760 ? 0.35 : 1;   // на телефоне наклон мягче: блоки там высокие
-      for (var j = 0; j < n; j++) {
-        var st = secs[j].style;
-        if (cover[j] > 0.001) {            // накрытый лист отклоняется назад от верхнего края
-          st.setProperty('--origin', '50% 0');
-          st.setProperty('--rx', (-cover[j] * 5 * k2).toFixed(2) + 'deg');
-          st.setProperty('--sc', (1 - cover[j] * 0.035).toFixed(4));
-        } else {                            // переворачиваемый лист: верхний край приподнят к зрителю
-          st.setProperty('--origin', '50% 100%');
-          st.setProperty('--rx', (-lift[j] * 4 * k2).toFixed(2) + 'deg');
-          st.setProperty('--sc', (1 - lift[j] * (k2 < 1 ? 0.035 : 0.034)).toFixed(4));   // чтобы приподнятый край не выходил за экран
+      var n = secs.length, w = document.documentElement.clientWidth;
+      var maxCut = Math.min(300, vh * 0.34);          // насколько ниже левого опущен правый угол в начале
+      for (var i = 0; i < n; i++) {
+        var st = secs[i].style, cover = 0, cut = 0;
+        // насколько следующий лист уже наехал на этот: 0 — касаются краями, 1 — закрыл
+        if (i < n - 1) {
+          var bottom = secs[i].getBoundingClientRect().top + secs[i].offsetHeight;
+          var overlap = bottom - secs[i + 1].getBoundingClientRect().top;
+          cover = Math.max(0, Math.min(1, overlap / Math.min(vh, secs[i].offsetHeight)));
         }
-        st.setProperty('--cover', cover[j].toFixed(3));
-        st.setProperty('--lift', lift[j].toFixed(3));
+        // этот лист сам наезжает на предыдущий: косой край, выпрямляется к концу
+        if (i > 0) {
+          var prevBottom = secs[i - 1].getBoundingClientRect().top + secs[i - 1].offsetHeight;
+          var ov = Math.max(0, prevBottom - secs[i].getBoundingClientRect().top);   // сколько пикселей уже накрыто
+          var t = Math.min(1, ov / Math.min(vh, secs[i - 1].offsetHeight));
+          var ease = Math.min(1, t * 6) * (1 - t) * (1 - t);   // быстро наклоняется в начале, плавно ложится ровно
+          cut = Math.min(maxCut * ease, ov);                   // косой край не глубже уже накрытой части
+        }
+        st.setProperty('--cover', cover.toFixed(3));
+        st.setProperty('--cut', cut.toFixed(1) + 'px');
+        st.setProperty('--fold', cut > 0.5 ? Math.min(1, cut / 60).toFixed(3) : '0');
+        st.setProperty('--edge-ang', (Math.atan2(cut, w) * 180 / Math.PI).toFixed(3) + 'deg');
+        st.setProperty('--edge-len', Math.ceil(Math.hypot(w, cut)) + 'px');
       }
     }
     window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });

@@ -523,20 +523,25 @@ p { margin: 0; }
 
 /* ---------- Перелистывание блоков при прокрутке ----------
    Блок «прилипает», когда его низ доходит до низа экрана (--stick считает скрипт).
-   Следующий блок выезжает поверх, как переворачиваемый лист:
-   его верхний край чуть приподнят (--lift, 0→1→0) и ложится ровно.
-   Накрытый лист слегка отклоняется назад, уменьшается и темнеет (--cover, 0→1). */
+   Следующий лист выезжает поверх с косым верхним краем: левый угол идёт первым,
+   край выпрямляется слева направо (--cut — насколько опущен правый угол).
+   Вдоль сгиба лежит мягкая тень, накрытый лист темнеет (--cover 0→1).
+   Двигаются только clip-path и прозрачность — без поворотов, поэтому плавно. */
 .stack {
   position: sticky; top: var(--stick, 0px); z-index: var(--z, 1);
-  transform-origin: var(--origin, 50% 0);
-  transform: perspective(2200px) rotateX(var(--rx, 0deg)) scale(var(--sc, 1));
-  box-shadow: 0 -14px 34px rgba(33,31,26, calc(.10 + var(--lift, 0) * .22));
-  backface-visibility: hidden;
+  clip-path: polygon(0 0, 100% var(--cut, 0px), 100% 100%, 0 100%);
+  will-change: clip-path;
 }
-.stack::before { content: ""; position: absolute; inset: 0; background: #14170F; opacity: calc(var(--cover, 0) * .34); pointer-events: none; z-index: 60; }
-/* блик на сгибе приподнятого листа */
-.stack::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 70px; background: linear-gradient(180deg, rgba(255,250,240,.32), rgba(255,250,240,0)); opacity: var(--lift, 0); pointer-events: none; z-index: 61; }
+.stack::before { content: ""; position: absolute; inset: 0; background: #14170F; opacity: calc(var(--cover, 0) * .32); pointer-events: none; z-index: 60; }
+/* тень сгиба — полоса вдоль косого края */
+.stack::after {
+  content: ""; position: absolute; left: 0; top: 0; z-index: 61; pointer-events: none;
+  width: var(--edge-len, 100%); height: 46px;
+  transform-origin: 0 0; transform: rotate(var(--edge-ang, 0deg));
+  background: linear-gradient(180deg, rgba(20,23,15,.20), rgba(20,23,15,0));
+  opacity: var(--fold, 0);
+}
 @media (prefers-reduced-motion: reduce) {
-  .stack { position: relative; top: auto; transform: none; }
+  .stack { position: relative; top: auto; clip-path: none; }
   .stack::before, .stack::after { display: none; }
 }
