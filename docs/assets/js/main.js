@@ -268,8 +268,8 @@
     var curl = document.createElement('div'); curl.className = 'book-curl'; curl.setAttribute('aria-hidden', 'true'); curl.inert = true;
     var curlFor = -1, strips = [], idleT;
     var on = false, pages = [], L = 0, vh = 0, cur = 0, ticking = false;
-    var TURN_SCREENS = 2.4;   // сколько экранов прокрутки уходит на одну страницу: больше — листается медленнее
-    var HOLD = 0.25;          // доля этого шага, когда страница лежит спокойно перед переворотом
+    var TURN_SCREENS = 1.3;   // сколько экранов прокрутки уходит на одну страницу: больше — листается медленнее
+    var HOLD = 0.18;          // доля этого шага, когда страница лежит спокойно перед переворотом
 
     function unwrap() {
       blocks.forEach(function (b) { b.style.flexGrow = ''; main.appendChild(b); });
@@ -328,7 +328,7 @@
       frame.style.left = (Cx - D / 2) + 'px'; frame.style.top = (Cy - D / 2) + 'px';
       frame.style.width = D + 'px'; frame.style.height = D + 'px';
       frame.style.transform = 'rotate(' + (PHI * 180 / Math.PI).toFixed(3) + 'deg)';
-      var N = Math.max(18, Math.round((uMax - uMin) / 30)), w = (uMax - uMin) / N;
+      var N = Math.max(18, Math.round((uMax - uMin) / 40)), w = (uMax - uMin) / N;
       var rcx = Cx * c + Cy * sn, rcy = -Cx * sn + Cy * c;   // центр страницы в повёрнутых координатах
       var src = pages[k].querySelector('.book-sheet');
       var frag = document.createDocumentFragment();
@@ -337,11 +337,7 @@
         var f = document.createElement('div'); f.className = 'curl-face ' + cls;
         f.style.width = W + 'px'; f.style.height = H + 'px';
         f.style.transform = 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px) rotate(' + (-PHI * 180 / Math.PI).toFixed(3) + 'deg)';
-        var lt = document.createElement('div'); lt.className = 'curl-light';
-        lt.style.width = (w + 1.5) + 'px'; lt.style.height = D + 'px';
-        var bx = tx * c - ty * sn, by = tx * sn + ty * c;    // свет — по осям полоски
-        lt.style.transform = 'translate(' + (-bx).toFixed(2) + 'px,' + (-by).toFixed(2) + 'px) rotate(' + (PHI * 180 / Math.PI).toFixed(3) + 'deg)';
-        return { el: f, light: lt };
+        return { el: f };
       }
       for (var i = 0; i < N; i++) {
         var xs = D / 2 + uMin + i * w;
@@ -350,14 +346,49 @@
         var fr = face('curl-face--front', xs), bk = face('curl-face--back', xs);
         var copy = src.cloneNode(true);
         copy.querySelectorAll('[id]').forEach(function (el) { el.removeAttribute('id'); });
-        fr.el.appendChild(copy); fr.el.appendChild(fr.light);
-        bk.el.appendChild(bk.light);
+        fr.el.appendChild(copy);
         st.appendChild(fr.el); st.appendChild(bk.el); frag.appendChild(st);
-        strips.push({ el: st, u: uMin + i * w, w: w, light: fr.light, backLight: bk.light, isBack: false });
+        strips.push({ el: st, u: uMin + i * w, w: w, isBack: false });
       }
-      frame.appendChild(frag); curl.appendChild(frame);
-      geo = { uMin: uMin, uMax: uMax };
+      // общий слой светотени: на всю рамку, обрезан по повёрнутому прямоугольнику страницы
+      var light = document.createElement('div'); light.className = 'curl-light';
+      light.style.left = '0px'; light.style.top = '0px'; light.style.width = '0px'; light.style.height = '0px';
+      var tint = document.createElement('div'); tint.className = 'curl-tint';
+      var rampB = document.createElement('div'); rampB.className = 'curl-ramp-back';
+      var rampF = document.createElement('div'); rampF.className = 'curl-ramp-front';
+      [tint, rampF, rampB].forEach(function (el) { el.style.height = D + 'px'; });
+      light.appendChild(tint); light.appendChild(rampF); light.appendChild(rampB);
+      frame.appendChild(frag); curl.appendChild(frame); curl.appendChild(light);
+      geo = { uMin: uMin, uMax: uMax, D: D, tint: tint, rampB: rampB, rampF: rampF,
+              pre: 'translate(' + Cx.toFixed(1) + 'px,' + Cy.toFixed(1) + 'px) rotate(' + (PHI * 180 / Math.PI).toFixed(3) + 'deg) ' };
       curlFor = k;
+    }
+    // светотень видимой поверхности изгиба вдоль оси сгиба (одна градиентная заливка на кадр)
+    function layer(el, x, w, op) {
+      // в экранных координатах: к центру страницы, поворот на угол сгиба, затем сдвиг вдоль оси сгиба
+      var tf = geo.pre + 'translate3d(' + (x - geo.D / 2).toFixed(1) + 'px,' + (-geo.D / 2).toFixed(1) + 'px,0) scaleX(' + Math.max(0.0001, w / 100).toFixed(4) + ')';
+      if (el._tf !== tf) { el.style.transform = tf; el._tf = tf; }
+      var o = op.toFixed(3);
+      if (el._op !== o) { el.style.opacity = o; el._op = o; }
+    }
+    function setLight(xf, r) {
+      var Lc = geo.uMax - xf, thMax = Lc / r, half = Math.PI * r, o = geo.D / 2;
+      // изнанка, лёгшая плоско поверх страницы
+      if (Lc > half) layer(geo.tint, xf - (Lc - half) + o, Lc - half, 0.06); else layer(geo.tint, 0, 0, 0);
+      if (thMax >= Math.PI / 2) {          // видна изнаночная половина дуги: светлая у сгиба, темнее к гребню
+        layer(geo.rampB, xf + o, r, 1); layer(geo.rampF, 0, 0, 0);
+      } else {                             // загнут только краешек: видна лицевая сторона, темнеет к гребню
+        var tm = Math.sin(thMax);
+        layer(geo.rampF, xf + o, r * tm, Math.pow(tm, 1.6)); layer(geo.rampB, 0, 0, 0);
+      }
+    }
+    function resetStrips() {
+      if (geo) { layer(geo.tint, 0, 0, 0); layer(geo.rampB, 0, 0, 0); layer(geo.rampF, 0, 0, 0); }
+      for (var i = 0; i < strips.length; i++) {
+        var st = strips[i];
+        if (st._tf !== 'translateZ(0)') { st.el.style.transform = 'translateZ(0)'; st._tf = 'translateZ(0)'; }
+        if (st.isBack) { st.el.classList.remove('is-back'); st.isBack = false; }
+      }
     }
     // положение точки листа (расстояние u от корешка) при линии сгиба xf и радиусе r
     function bend(u, xf, r) {
@@ -396,15 +427,13 @@
         curl.style.visibility = 'visible';
         for (var i = 0; i < strips.length; i++) {
           var st = strips[i], a = bend(st.u, xf, r), c = bend(st.u + st.w / 2, xf, r), z = bend(st.u + st.w, xf, r), th = c[2];
-          st.el.style.transform = 'translate3d(' + (a[0] - st.u).toFixed(2) + 'px,0,' + a[1].toFixed(2) + 'px) rotateY(' + (-th * 180 / Math.PI).toFixed(2) + 'deg)';
+          var tf = a[2] === 0 && th === 0 ? 'translateZ(0)' :
+            'translate3d(' + (a[0] - st.u).toFixed(1) + 'px,0,' + a[1].toFixed(1) + 'px) rotateY(' + (-th * 180 / Math.PI).toFixed(2) + 'deg)';
+          if (st._tf !== tf) { st.el.style.transform = tf; st._tf = tf; }
           var isBack = th > Math.PI / 2;
           if (isBack !== st.isBack) { st.el.classList.toggle('is-back', isBack); st.isBack = isBack; }
-          // светотень плавно внутри полоски: от угла на левом крае к углу на правом
-          var aL = shadeAt(a[2]), aR = shadeAt(z[2]);
-          var lt = isBack ? st.backLight : st.light;
-          lt.style.background = (aL < 0.004 && aR < 0.004) ? 'none' :
-            'linear-gradient(90deg, rgba(20,23,15,' + aL.toFixed(3) + '), rgba(20,23,15,' + aR.toFixed(3) + '))';
         }
+        setLight(xf, r);
         // тень от сгиба на следующей странице — справа от гребня
         var X = Math.max(0, Math.min(geo.uMax - geo.uMin, xf + r - geo.uMin));
         shade.style.setProperty('--ang', (90 + PHI * 180 / Math.PI).toFixed(2) + 'deg');
@@ -413,11 +442,17 @@
         shade.style.setProperty('--x', X.toFixed(1) + 'px');
         shade.style.setProperty('--dim', (0.26 * (1 - e)).toFixed(3));
       } else {
-        curl.style.visibility = 'hidden';
         shade.style.visibility = 'hidden';
-        // заранее готовим полоски для следующего переворота, пока страница лежит
+        // полоски для следующего переворота готовим заранее и держим под лежащей страницей,
+        // чтобы браузер успел их отрисовать и переворот начинался без рывка
+        if (curlFor === k) { curl.style.zIndex = String(2 * (n - k) + 1); curl.style.visibility = 'visible'; resetStrips(); }
+        else curl.style.visibility = 'hidden';
         clearTimeout(idleT);
-        idleT = setTimeout(function () { if (on && k < n - 1) makeStrips(k); }, 350);
+        idleT = setTimeout(function () {
+          if (!on || k >= n - 1 || curlFor === k) return;
+          makeStrips(k); resetStrips();
+          curl.style.zIndex = String(2 * (n - k) + 1); curl.style.visibility = 'visible';
+        }, 250);
       }
     }
     function pageOf(el) { for (var i = 0; i < pages.length; i++) { if (pages[i].contains(el)) return i; } return -1; }

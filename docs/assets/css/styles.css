@@ -560,7 +560,16 @@ body.book .chronicle__inner { justify-content: center; }
 .curl-face--back { display: none; background: url("../img/paper.jpg") 0 0 / 512px 512px, linear-gradient(180deg, #F2EBDD, #E9DFCC); background-blend-mode: multiply; }
 .curl-strip.is-back .curl-face--front { display: none; }
 .curl-strip.is-back .curl-face--back { display: block; }
-.curl-light { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+/* светотень изгиба: заранее нарисованные градиенты, которые каждый кадр только сдвигаются
+   и растягиваются (это делает видеокарта, без перерисовки); обрезаны по форме страницы */
+.curl-light { position: absolute; left: 0; top: 0; pointer-events: none; }
+.curl-light > div { position: absolute; left: 0; top: 0; width: 100px; transform-origin: 0 0; will-change: transform, opacity; opacity: 0; }
+.curl-tint { background: rgb(20,23,15); }
+.curl-ramp-back { background: linear-gradient(90deg, rgba(20,23,15,.06) 0%, rgba(20,23,15,.079) 25%, rgba(20,23,15,.135) 50%, rgba(20,23,15,.229) 75%, rgba(20,23,15,.36) 100%); }
+.curl-ramp-front { background: linear-gradient(90deg, rgba(20,23,15,0) 0%, rgba(20,23,15,.044) 25%, rgba(20,23,15,.132) 50%, rgba(20,23,15,.252) 75%, rgba(20,23,15,.40) 100%); }
+/* в копиях для изгиба фактура не нужна поверх фактуры — она уже есть у грани */
+.curl-face .hero::after, .curl-face section::after, .curl-face .site-footer::after { mix-blend-mode: normal; opacity: 0; }
+.curl-face--front { background: url("../img/paper.jpg") 0 0 / 512px 512px, var(--milk); background-blend-mode: multiply; }
 
 /* ---------- Фактура бумаги ----------
    Тонкие волокна и линии «верже», как у бумаги ручного отлива. Накладывается
