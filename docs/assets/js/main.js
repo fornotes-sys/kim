@@ -268,7 +268,8 @@
     var curl = document.createElement('div'); curl.className = 'book-curl'; curl.setAttribute('aria-hidden', 'true'); curl.inert = true;
     var curlFor = -1, strips = [], idleT;
     var on = false, pages = [], L = 0, vh = 0, cur = 0, ticking = false;
-    var HOLD = 0.22;   // доля шага, когда страница лежит спокойно перед переворотом
+    var TURN_SCREENS = 2.4;   // сколько экранов прокрутки уходит на одну страницу: больше — листается медленнее
+    var HOLD = 0.25;          // доля этого шага, когда страница лежит спокойно перед переворотом
 
     function unwrap() {
       blocks.forEach(function (b) { b.style.flexGrow = ''; main.appendChild(b); });
@@ -307,7 +308,7 @@
       main.appendChild(shade); main.appendChild(curl);
       curlFor = -1; curl.innerHTML = ''; strips = [];
       // по одному экрану прокрутки на страницу, с точками «прилипания»
-      L = vh;
+      L = Math.round(vh * TURN_SCREENS);
       spacer.innerHTML = '';
       for (var k = 0; k < n; k++) { var d = document.createElement('div'); d.style.height = L + 'px'; spacer.appendChild(d); }
       update();
