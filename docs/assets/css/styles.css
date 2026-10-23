@@ -613,3 +613,9 @@ html { scroll-padding-top: 96px; }
 @media (prefers-reduced-motion: reduce) { .nav__list a:hover, .nav__list a:focus-visible { transform: none; } }
 .note-form--repose > .btn--dark { background: var(--ink-blue); }
 .note-form--repose > .btn--dark:hover { background: #12161E; }
+
+/* Полосы-клинья на стыках блоков */
+main > section, body > footer { position: relative; }
+.joint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 68%; height: 4px; z-index: 5; pointer-events: none; clip-path: polygon(0.0% 50.00%, 4.2% 38.47%, 8.3% 30.63%, 12.5% 24.19%, 16.7% 18.76%, 20.8% 14.15%, 25.0% 10.28%, 29.2% 7.07%, 33.3% 4.50%, 37.5% 2.52%, 41.7% 1.11%, 45.8% 0.28%, 50.0% 0.00%, 54.2% 0.28%, 58.3% 1.11%, 62.5% 2.52%, 66.7% 4.50%, 70.8% 7.07%, 75.0% 10.28%, 79.2% 14.15%, 83.3% 18.76%, 87.5% 24.19%, 91.7% 30.63%, 95.8% 38.47%, 100.0% 50.00%, 100.0% 50.00%, 95.8% 61.53%, 91.7% 69.37%, 87.5% 75.81%, 83.3% 81.24%, 79.2% 85.85%, 75.0% 89.72%, 70.8% 92.93%, 66.7% 95.50%, 62.5% 97.48%, 58.3% 98.89%, 54.2% 99.72%, 50.0% 100.00%, 45.8% 99.72%, 41.7% 98.89%, 37.5% 97.48%, 33.3% 95.50%, 29.2% 92.93%, 25.0% 89.72%, 20.8% 85.85%, 16.7% 81.24%, 12.5% 75.81%, 8.3% 69.37%, 4.2% 61.53%, 0.0% 50.00%); }
+.joint--bottom { top: auto; bottom: 10px; }
+@media (max-width: 720px) { .joint { top: 8px; width: 74%; height: 3px; } .joint--bottom { top: auto; bottom: 8px; } }

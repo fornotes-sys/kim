@@ -303,3 +303,34 @@
 
   setText('[data-year]', String(new Date().getFullYear()));
 })();
+
+/* Полосы-клинья на стыках блоков */
+(function () {
+  var OLIVE = 'rgb(51,80,92)', LIGHT_FALLBACK = 'rgb(239,228,208)';
+  function rgb(s) { var m = s.match(/\d+(\.\d+)?/g); return m ? m.map(Number) : null; }
+  function colorOf(el) {
+    if (el.classList.contains('hero')) return OLIVE;
+    var c = getComputedStyle(el).backgroundColor, v = rgb(c);
+    return (!v || (v.length > 3 && v[3] === 0)) ? LIGHT_FALLBACK : c;
+  }
+  function dark(c) { var v = c[0] === '#' ? [parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)] : rgb(c); return (v[0]*.299+v[1]*.587+v[2]*.114) < 128; }
+  function lum(c) { var v = rgb(c); return v[0]*.299+v[1]*.587+v[2]*.114; }
+  function deepen(c, k) { var v = rgb(c); return 'rgb(' + v.slice(0,3).map(function (x) { return Math.round(x * k); }).join(',') + ')'; }
+  function add(el, color, bottom) {
+    var j = document.createElement('span'); j.className = 'joint' + (bottom ? ' joint--bottom' : ''); j.setAttribute('aria-hidden', 'true');
+    j.style.background = color; el.appendChild(j);
+  }
+  function run() {
+    var blocks = [].slice.call(document.querySelectorAll('.hero, main > section, body > footer'));
+    blocks.forEach(function (el, i) {
+      if (!i || blocks[i - 1].classList.contains('hero')) return;
+      var up = blocks[i - 1], prev = colorOf(up), cur = colorOf(el);
+      if (dark(prev) !== dark(cur)) { add(el, prev, false); return; }
+      var d = lum(prev) - lum(cur);
+      if (Math.abs(d) < 3) return;
+      // тот же тон, разная яркость: на более светлом блоке — полоса цвета более тёмного, чуть насыщеннее
+      if (d > 0) add(up, deepen(cur, .9), true); else add(el, deepen(prev, .9), false);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+})();
