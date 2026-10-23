@@ -589,10 +589,10 @@ p { margin: 0; }
 
 
 /* ---------- Закреплённая стеклянная шапка ----------
-   «Жидкое стекло»: фон на 30% прозрачный, всё под ним размыто. */
+   «Жидкое стекло»: фон на 45% прозрачный, всё под ним размыто. */
 html { scroll-padding-top: 96px; }
 .site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 60;
-  background: rgba(243, 235, 221, .70);
+  background: rgba(243, 235, 221, .55);
   -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
   border-bottom: 1px solid rgba(255, 255, 255, .55);
   box-shadow: 0 6px 22px rgba(33, 31, 26, .08), inset 0 -1px 0 rgba(220, 207, 184, .6); }
@@ -720,3 +720,33 @@ main > section, body > footer { position: relative; }
   .merch-ex:nth-child(3) { display: none; }
   .merch-ex figcaption { font-size: 1rem; }
 }
+
+
+/* ---------- Святые: правые углы иконы мягко тают в паттерн ---------- */
+.saints__media {
+  -webkit-mask-image: radial-gradient(58% 55% at 100% 0, transparent, rgba(0,0,0,.55) 45%, #000), radial-gradient(58% 55% at 100% 100%, transparent, rgba(0,0,0,.55) 45%, #000);
+          mask-image: radial-gradient(58% 55% at 100% 0, transparent, rgba(0,0,0,.55) 45%, #000), radial-gradient(58% 55% at 100% 100%, transparent, rgba(0,0,0,.55) 45%, #000);
+  -webkit-mask-composite: source-in;
+          mask-composite: intersect; }
+@media (max-width: 760px) { .saints__media { -webkit-mask-image: none; mask-image: none; } }
+
+/* ---------- «Спросите священника»: тот же паттерн из букв ----------
+   Буквы аккуратно выходят островками и вверх, в «События», и вниз, в «Как помочь». */
+.questions { overflow: visible; --spill: 140px;
+  background: #0B3238 url("../img/pattern-letters.jpg") center top / max(100%, 1536px) auto repeat-y; }
+.questions__grid { position: relative; z-index: 2; }
+.events__grid, .help__grid { position: relative; z-index: 2; }
+.questions__spill { position: absolute; left: 0; right: 0; top: calc(-1 * var(--spill)); bottom: calc(-1 * var(--spill)); z-index: 1; pointer-events: none;
+  background: var(--olive); opacity: .6;
+  -webkit-mask-image: url("../img/pattern-letters-mask.png"), url("../img/spill-spots-up.png"), url("../img/spill-spots.png");
+          mask-image: url("../img/pattern-letters-mask.png"), url("../img/spill-spots-up.png"), url("../img/spill-spots.png");
+  -webkit-mask-size: max(100%, 1536px) auto, 100% var(--spill), 100% var(--spill);
+          mask-size: max(100%, 1536px) auto, 100% var(--spill), 100% var(--spill);
+  -webkit-mask-position: center var(--spill), 0 0, 0 100%;
+          mask-position: center var(--spill), 0 0, 0 100%;
+  -webkit-mask-repeat: repeat-y, no-repeat, no-repeat;
+          mask-repeat: repeat-y, no-repeat, no-repeat;
+  -webkit-mask-composite: source-in, source-over;
+          mask-composite: intersect, add; }
+.questions > .joint, .help > .joint:not(.joint--bottom) { display: none; }
+@media (max-width: 760px) { .questions { --spill: 100px; } }
