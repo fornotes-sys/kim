@@ -24,15 +24,13 @@
 
   /* ---------- Параметры ---------- */
   var CROWNS = 8;
-  var LOG_L = 248, RB = 12, RT = 7;     // длина, радиус комля и вершины
+  var LOG_L = 248, RB = 12.5, RT = 7;   // длина, наибольший радиус комля и наименьший — вершины
   var D_TILT = 90;                      // «плечо» подвеса: чем больше, тем мягче перекос
   var PERFECT_DEG = 3, OK_DEG = 7.5;    // допуск по углу
   var PERFECT_DX = 12, OK_DX = 30;      // допуск по положению
   var WX = 610, BASE = 500, GROUND = 520;
   var PILE_X = 310, SLEEPER_TOP = 506;
   var ROPE = 64, G = 1500;
-  // смещение центра тяжести усечённого конуса от середины к комлю
-  var COM_SHIFT = LOG_L * (0.5 - (RB * RB + 2 * RB * RT + 3 * RT * RT) / (4 * (RB * RB + RB * RT + RT * RT)));
 
   /* ---------- Утилиты ---------- */
   var NS = 'http://www.w3.org/2000/svg', PI = Math.PI, DEG = 180 / PI;
@@ -94,13 +92,16 @@
   };
 
   /* ---------- Бревно ---------- */
-  function newLog() {
-    var side = Math.random() < .5 ? -1 : 1;           // где комель: -1 слева, +1 справа
+  // у каждого бревна свой сбег: одни почти ровные, другие заметно сужаются
+  function comShift(rb, rt) { return LOG_L * (0.5 - (rb * rb + 2 * rb * rt + 3 * rt * rt) / (4 * (rb * rb + rb * rt + rt * rt))); }
+  function newLog(side) {
+    side = side || (Math.random() < .5 ? -1 : 1);     // где комель: -1 слева, +1 справа
+    var rb = rnd(10.5, RB), rt = rnd(RT, 10);
     var j = rnd(-8, 8); if (Math.abs(j) < 2.5) j = 0; // сук смещает вес
-    return { side: side, jit: j, knot: j ? Math.sign(j) * rnd(30, 80) : null, e: side * COM_SHIFT + j };
+    return { side: side, rb: rb, rt: rt, jit: j, knot: j ? Math.sign(j) * rnd(30, 80) : null, e: side * comShift(rb, rt) + j };
   }
-  function rLeft(lg) { return lg.side < 0 ? RB : RT; }
-  function rRight(lg) { return lg.side < 0 ? RT : RB; }
+  function rLeft(lg) { return lg.side < 0 ? lg.rb : lg.rt; }
+  function rRight(lg) { return lg.side < 0 ? lg.rt : lg.rb; }
   function rAt(lg, x) { return lerp(rLeft(lg), rRight(lg), (x + LOG_L / 2) / LOG_L); }
   function logMarkup(lg) {
     var h2 = LOG_L / 2, a = rLeft(lg), b = rRight(lg);
@@ -121,7 +122,8 @@
   /* ---------- Состояние ---------- */
   var S = null, root, svg, L = {}, ui = {}, timers = [], tweens = [], parts = [];
   var raf = 0, lastT = 0, built = false, open = false, launcher = null;
-  var cur = null;   // текущее бревно
+  var cur = null;   // бревно на крюке или в падении
+  var pile = [];    // штабель на подкладках
   var hold = null;  // бревно на крюке
   var fall = null;  // бревно падает
 
@@ -159,16 +161,13 @@
             '</dl>' +
             '<div class="cg-butt" data-cg-butt></div>' +
             '<p class="cg-tip" data-cg-tip></p>' +
-            '<div class="cg-controls">' +
-              '<button class="cg-flip" type="button" data-cg-flip><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h14l-3.5-3.5M20 15H6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Развернуть бревно</button>' +
-              '<span class="cg-wind" data-cg-wind hidden></span>' +
-            '</div>' +
+            '<div class="cg-controls"><span class="cg-wind" data-cg-wind hidden></span></div>' +
           '</aside>' +
         '</div>' +
       '</div>';
     document.body.appendChild(root);
 
-    ['crown', 'perfect', 'fails', 'wall', 'butt', 'tip', 'flip', 'wind', 'say', 'card', 'scene', 'sound'].forEach(function (k) { ui[k] = root.querySelector('[data-cg-' + k + ']'); });
+    ['crown', 'perfect', 'fails', 'wall', 'butt', 'tip', 'wind', 'say', 'card', 'scene', 'sound'].forEach(function (k) { ui[k] = root.querySelector('[data-cg-' + k + ']'); });
 
     root.querySelector('[data-cg-close]').addEventListener('click', closeGame);
     root.addEventListener('click', function (e) { if (e.target === root) closeGame(); });
@@ -177,7 +176,6 @@
       ui.sound.setAttribute('aria-pressed', String(!muted));
       ui.sound.classList.toggle('is-muted', muted);
     });
-    ui.flip.addEventListener('click', flipLog);
     root.addEventListener('click', onAction);
     root.addEventListener('keydown', function (e) { if (e.key === 'Tab') trapFocus(e); });
     document.addEventListener('keydown', function (e) {
@@ -186,7 +184,6 @@
         if (document.querySelector('.modal:not([hidden])')) return;
         e.stopImmediatePropagation(); closeGame();
       }
-      if (/^[rRкК]$/.test(e.key) && !e.metaKey && !e.ctrlKey) flipLog();
     }, true);
     window.addEventListener('resize', function () { if (open) fitView(); });
 
@@ -248,7 +245,6 @@
     svg.addEventListener('pointerup', onUp);
     svg.addEventListener('pointercancel', onUp);
     svg.addEventListener('pointerleave', function () { if (!hold) clear(L.aim); });
-    svg.addEventListener('dblclick', function (e) { if (cur && hitLog(pt(e))) flipLog(); });
   }
 
   /* Область просмотра под размер экрана: на телефоне — крупнее, только площадка */
@@ -301,7 +297,7 @@
   function reset() {
     timers.forEach(clearTimeout); timers = []; tweens = [];
     parts.forEach(function (p) { p.el.remove(); }); parts = [];
-    hold = null; fall = null; cur = null;
+    hold = null; fall = null; cur = null; pile = [];
     S = { phase: 'intro', crown: 0, yl: BASE, yr: BASE, perfect: 0, fails: 0, regrips: 0, streak: 0, lastSide: null, wind: 0, windT: 0, tips: {}, view: S && S.view };
     [L.wall, L.ghost, L.top, L.act, L.aim, L.fx].forEach(clear);
     L.crane.style.display = 'none';
@@ -324,12 +320,10 @@
     var wd = wallDeg();
     ui.wall.innerHTML = Math.abs(wd) < 0.6 ? 'ровно' : (wd > 0 ? '<span class="cg-long">вправо </span>↘ ' : '<span class="cg-long">влево </span>↙ ') + fmtDeg(wd);
     ui.wall.parentNode.classList.toggle('is-bad', Math.abs(wd) >= 3);
-    ui.flip.disabled = !(S.phase === 'play' && cur && !hold && !fall && !cur.busy);
-    ui.flip.hidden = S.phase !== 'play';
-    if (cur && S.phase === 'play') {
-      var prev = S.lastSide == null ? '' : '<span>в прошлом венце — ' + (S.lastSide < 0 ? 'слева' : 'справа') + '</span>';
-      ui.butt.innerHTML = '<b>Комель ' + (cur.lg.side < 0 ? '← слева' : 'справа →') + '</b>' + prev;
-      ui.butt.classList.toggle('is-same', S.lastSide != null && S.lastSide === cur.lg.side);
+    if (S.phase === 'play' && S.lastSide != null) {
+      var want = S.lastSide < 0 ? 'справа →' : '← слева';
+      ui.butt.innerHTML = '<span>В прошлом венце комель ' + (S.lastSide < 0 ? 'слева' : 'справа') + '</span><b>Теперь лучше комлем ' + want + '</b>';
+      ui.butt.classList.toggle('is-same', !!(cur && cur.lg.side === S.lastSide));
     } else ui.butt.innerHTML = '';
     if (S.wind > 0.05 && S.phase === 'play') {
       ui.wind.hidden = false;
@@ -358,7 +352,7 @@
         '<ul class="cg-rules">' +
           '<li><b>Где взять.</b> Комель — толстый конец — тяжелее. Возьмёте не в точке равновесия, бревно перекосит.</li>' +
           '<li><b>Как опустить.</b> Дождитесь, пока перестанет качаться: пузырёк уровня на крюке станет зелёным.</li>' +
-          '<li><b>Как класть.</b> Комель на вершину предыдущего бревна, иначе стена пойдёт вкось.</li>' +
+          '<li><b>Какое взять.</b> Брёвна в штабеле лежат по-разному. Выбирайте так, чтобы комель лёг над вершиной предыдущего, — иначе стена пойдёт вкось.</li>' +
         '</ul>' +
         '<button class="btn btn--gold" type="button" data-act="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>';
     } else if (kind === 'final') {
@@ -391,9 +385,10 @@
   }
 
   /* ---------- Запас брёвен: торцы в штабеле ---------- */
+  function remaining() { return CROWNS - S.crown - pile.length - (cur ? 1 : 0); }
   function drawStock() {
     clear(L.stock);
-    var left = CROWNS - S.crown - (cur ? 1 : 0);
+    var left = remaining();
     var pos = [[110, 510], [132, 510], [154, 510], [176, 510], [121, 491], [143, 491], [165, 491], [132, 472], [154, 472]];
     for (var i = 0; i < Math.max(0, left) && i < pos.length; i++) {
       sv('circle', { cx: pos[i][0], cy: pos[i][1], r: 10 }, L.stock);
@@ -404,33 +399,60 @@
   /* ---------- Ход игры ---------- */
   function startPlay() {
     S.phase = 'play';
-    spawnLog();
+    refill();
+    drawGhost();
     tipOnce('grab', FINE.matches
-      ? 'Наведите на бревно — пунктир покажет, где кран его подцепит. Нажмите и держите.'
-      : 'Коснитесь бревна и держите палец — кран подцепит его в этой точке.');
+      ? 'Брёвна лежат по-разному — выберите любое. Наведите: пунктир покажет, где кран его подцепит. Нажмите и держите.'
+      : 'Брёвна лежат по-разному — выберите любое. Коснитесь и держите палец: кран подцепит бревно в этой точке.');
   }
-  function pileRest(lg) {
-    var a = rLeft(lg), b = rRight(lg);
-    return { x: PILE_X, y: SLEEPER_TOP - (a + b) / 2, r: -Math.atan2(a - b, LOG_L) * DEG };
+
+  /* Штабель на подкладках: брёвна лежат друг на друге, нижнее вынули — верхние опускаются */
+  function slotOf(k) {
+    var y = SLEEPER_TOP;
+    for (var i = 0; i < k; i++) y -= rLeft(pile[i].lg) + rRight(pile[i].lg) - 1;
+    var lg = pile[k].lg, a = rLeft(lg), b = rRight(lg);
+    return { x: PILE_X + (k % 2 ? 6 : -4), y: y - (a + b) / 2, r: -Math.atan2(a - b, LOG_L) * DEG };
   }
-  function spawnLog(lg) {
-    lg = lg || newLog();
+  function restack(skip) {
+    pile.forEach(function (it, k) {
+      var s = slotOf(k); it.home = s;
+      if (it === skip || it.dropping) return;
+      if (Math.abs(it.y - s.y) < .5 && Math.abs(it.x - s.x) < .5) return;
+      var x0 = it.x, y0 = it.y, r0 = it.r;
+      it.busy = true;
+      tween(260, function (q) { it.x = lerp(x0, s.x, q); it.y = lerp(y0, s.y, q); it.r = lerp(r0, s.r, q); setT(it.el, it.x, it.y, it.r); }, function () { it.busy = false; sfx.clack(); }, easeIn);
+    });
+  }
+  function makeItem(lg) {
     var el = sv('g', { 'class': 'cg-log' }, L.act);
     var inner = sv('g', null, el, logMarkup(lg));
     var strap = sv('rect', { x: -2.5, y: -14, width: 5, height: 28, rx: 1.5, fill: '#8C6A3E', stroke: 'none' }, el);
     strap.style.display = 'none';
-    var rest = pileRest(lg);
-    cur = { lg: lg, el: el, inner: inner, strap: strap, x: rest.x, y: rest.y - 50, r: rest.r, busy: true };
-    el.style.opacity = 0;
-    setT(el, cur.x, cur.y, cur.r);
+    return { lg: lg, el: el, inner: inner, strap: strap, x: PILE_X, y: 0, r: 0, busy: true };
+  }
+  function addLog(lg, delay) {
+    var it = makeItem(lg);
+    pile.push(it);
+    var s0 = slotOf(pile.length - 1); it.home = s0;
+    it.x = s0.x; it.y = s0.y - 60; it.r = s0.r; it.dropping = true;
+    it.el.style.opacity = 0;
+    setT(it.el, it.x, it.y, it.r);
+    later(function () {
+      var y0 = it.y;
+      tween(420, function (k) { it.y = lerp(y0, it.home.y, k); it.el.style.opacity = Math.min(1, k * 2); setT(it.el, it.x, it.y, it.r); },
+        function () { it.busy = false; it.dropping = false; sfx.clack(); dust(it.x - 100, it.y + 10, 3, 6); dust(it.x + 100, it.y + 10, 3, 6); renderStats(); }, easeIn);
+    }, delay || 0);
+    return it;
+  }
+  // в штабеле до трёх брёвен; следим, чтобы комли лежали в разные стороны
+  function refill() {
+    var k = 0;
+    while (pile.length < 3 && remaining() > 0) {
+      var sides = pile.map(function (it) { return it.lg.side; }), side = null;
+      if (sides.length && sides.every(function (v) { return v === sides[0]; })) side = -sides[0];
+      addLog(newLog(side), k++ * 160);
+    }
     drawStock();
-    var me = cur;
-    tween(420, function (k) { me.y = lerp(rest.y - 50, rest.y, k); el.style.opacity = Math.min(1, k * 2); setT(el, me.x, me.y, me.r); },
-      function () { me.busy = false; sfx.clack(); dust(PILE_X - 100, SLEEPER_TOP, 4, 8); dust(PILE_X + 100, SLEEPER_TOP, 4, 8); renderStats(); }, easeIn);
-    drawGhost();
-    if (S.crown >= 4 && S.wind === 0) { S.wind = 0.45; if (tipOnce('wind', 'Наверху поднялся ветер. Бревно раскачивает сильнее — опускайте между порывами.')) say('Поднялся ветер', null, 2000); }
-    if (S.crown >= 6) S.wind = 0.85;
-    renderStats();
   }
   function drawGhost() {
     clear(L.ghost);
@@ -438,62 +460,60 @@
     sv('path', { d: 'M' + x1 + ' ' + (S.yl - 1).toFixed(1) + 'L' + x2 + ' ' + (S.yr - 1).toFixed(1) }, L.ghost);
     sv('path', { d: 'M' + WX + ' ' + (ym - 8).toFixed(1) + 'v-16M' + (WX - 6) + ' ' + (ym - 14).toFixed(1) + 'l6 6 6 -6', 'class': 'cg-ghost__mark' }, L.ghost);
   }
-  function flipLog() {
-    if (!cur || cur.busy || hold || fall || S.phase !== 'play') return;
-    cur.busy = true; sfx.flip(); renderStats();
-    var me = cur, lg = me.lg, inner = me.inner;
-    tween(260, function (k) { inner.setAttribute('transform', 'scale(' + Math.cos(k * PI).toFixed(3) + ' 1)'); }, function () {
-      lg.side = -lg.side; lg.jit = -lg.jit; lg.e = -lg.e; if (lg.knot != null) lg.knot = -lg.knot;
-      inner.innerHTML = logMarkup(lg); inner.removeAttribute('transform');
-      var rest = pileRest(lg); me.r = rest.r; me.y = rest.y; setT(me.el, me.x, me.y, me.r);
-      me.busy = false; renderStats();
-    }, easeInOut);
-  }
 
-  function toLocal(p) {
-    var a = -cur.r / DEG, dx = p.x - cur.x, dy = p.y - cur.y;
+  function toLocal(it, p) {
+    var a = -it.r / DEG, dx = p.x - it.x, dy = p.y - it.y;
     return { x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) };
   }
   function hitLog(p) {
-    if (!cur) return false;
-    var q = toLocal(p), pad = FINE.matches ? 6 : 26;
-    return Math.abs(q.x) <= LOG_L / 2 + pad && Math.abs(q.y) <= rAt(cur.lg, clamp(q.x, -LOG_L / 2, LOG_L / 2)) + pad;
+    var pad = FINE.matches ? 4 : 18;
+    for (var i = pile.length - 1; i >= 0; i--) {   // сверху вниз
+      var it = pile[i]; if (it.busy) continue;
+      var q = toLocal(it, p);
+      if (Math.abs(q.x) <= LOG_L / 2 + pad && Math.abs(q.y) <= rAt(it.lg, clamp(q.x, -LOG_L / 2, LOG_L / 2)) + pad) return it;
+    }
+    return null;
   }
-  function gripWorld(gx) {
-    var a = cur.r / DEG, ly = -rAt(cur.lg, gx);
-    return { x: cur.x + gx * Math.cos(a) - ly * Math.sin(a), y: cur.y + gx * Math.sin(a) + ly * Math.cos(a) };
+  function gripWorld(it, gx) {
+    var a = it.r / DEG, ly = -rAt(it.lg, gx);
+    return { x: it.x + gx * Math.cos(a) - ly * Math.sin(a), y: it.y + gx * Math.sin(a) + ly * Math.cos(a) };
   }
 
   /* ---------- Указатель ---------- */
   function onDown(e) {
-    if (!S || S.phase !== 'play' || !cur || cur.busy || hold || fall) return;
-    var p = pt(e);
-    if (!hitLog(p)) return;
+    if (!S || S.phase !== 'play' || cur || hold || fall) return;
+    var p = pt(e), it = hitLog(p);
+    if (!it) return;
     e.preventDefault();
     try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ничего */ }
-    var gx = clamp(toLocal(p).x, -LOG_L / 2 + 8, LOG_L / 2 - 8);
+    var gx = clamp(toLocal(it, p).x, -LOG_L / 2 + 8, LOG_L / 2 - 8);
     var touch = e.pointerType === 'touch' || e.pointerType === 'pen';
-    var gp = gripWorld(gx);
+    var gp = gripWorld(it, gx);
+    cur = it;
+    pile.splice(pile.indexOf(it), 1);
+    L.act.appendChild(it.el);                 // поднятое бревно — поверх штабеля
+    restack();
     hold = {
       gx: gx, lift: touch ? 80 : 26, px: p.x, py: p.y,
-      tx: gp.x, ty: gp.y - ROPE,
-      th: 0, om: 0, phi: cur.r / DEG, phiV: 0, lx: gp.x, vs: 0, vp: 0, hvx: 0, lifted: 0
+      tx: gp.x, ty: gp.y - ROPE, startY: it.y,
+      th: 0, om: 0, phi: it.r / DEG, phiV: 0, lx: gp.x, vs: 0, vp: 0, hvx: 0, lifted: 0
     };
     clear(L.aim);
-    cur.strap.style.display = '';
-    setT(cur.strap, gx, 0, 0);
+    it.strap.style.display = '';
+    setT(it.strap, gx, 0, 0);
     L.crane.style.display = '';
-    svg.classList.add('is-grabbing');
+    svg.classList.add('is-grabbing'); svg.classList.remove('is-over');
     sfx.pick();
     renderStats();
   }
   function onMove(e) {
     var p = pt(e);
     if (hold) { hold.px = p.x; hold.py = p.y; return; }
-    if (e.pointerType !== 'mouse' || !S || S.phase !== 'play' || !cur || cur.busy || fall) return;
+    if (e.pointerType !== 'mouse' || !S || S.phase !== 'play' || cur || fall) return;
     clear(L.aim);
-    if (hitLog(p)) {
-      var gx = clamp(toLocal(p).x, -LOG_L / 2 + 8, LOG_L / 2 - 8), gp = gripWorld(gx);
+    var it = hitLog(p);
+    if (it) {
+      var gx = clamp(toLocal(it, p).x, -LOG_L / 2 + 8, LOG_L / 2 - 8), gp = gripWorld(it, gx);
       sv('path', { d: 'M' + gp.x.toFixed(1) + ' ' + (gp.y - 50).toFixed(1) + 'V' + (gp.y - 4).toFixed(1), 'class': 'cg-aim__line' }, L.aim);
       sv('path', { d: 'M0 -9v6a5 5 0 1 0 6 5', transform: 'translate(' + gp.x.toFixed(1) + ' ' + (gp.y - 12).toFixed(1) + ')', 'class': 'cg-aim__hook' }, L.aim);
       svg.classList.add('is-over');
@@ -510,15 +530,18 @@
     if (Math.abs(cur.x - WX) < 110 && cur.y < top + 4) {
       fall = { vx: clamp(hd.hvx * 0.5, -260, 260), vy: 0, w: hd.phiV * 0.6, phi: hd.phi };
     } else {
-      if (hd.lifted > 20) { S.regrips++; tipOnce('regrip', 'Положили — можно перехватить в другой точке. Комель тяжелее: берите ближе к нему.'); }
+      if (hd.lifted > 20) { S.regrips++; tipOnce('regrip', 'Положили обратно — можно взять в другой точке или выбрать другое бревно. Комель тяжелее: берите ближе к нему.'); }
       putBack();
     }
     renderStats();
   }
+  // бревно возвращается на верх штабеля
   function putBack() {
-    var me = cur, rest = pileRest(me.lg), x0 = me.x, y0 = me.y, r0 = me.r;
-    me.busy = true;
-    tween(420, function (k) { me.x = lerp(x0, rest.x, k); me.y = lerp(y0, rest.y, k); me.r = lerp(r0, rest.r, k); setT(me.el, me.x, me.y, me.r); },
+    var me = cur; cur = null;
+    pile.push(me);
+    var s = slotOf(pile.length - 1), x0 = me.x, y0 = me.y, r0 = me.r;
+    me.home = s; me.busy = true;
+    tween(420, function (k) { me.x = lerp(x0, s.x, k); me.y = lerp(y0, s.y, k); me.r = lerp(r0, s.r, k); setT(me.el, me.x, me.y, me.r); },
       function () { me.busy = false; sfx.clack(); renderStats(); }, easeInOut);
   }
 
@@ -562,7 +585,7 @@
     cur.y = hy - (hd.gx * Math.sin(a) + ly * Math.cos(a));
     cur.r = a * DEG;
     setT(cur.el, cur.x, cur.y, cur.r);
-    hd.lifted = Math.max(hd.lifted, pileRest(lg).y - cur.y);
+    hd.lifted = Math.max(hd.lifted, hd.startY - cur.y);
 
     var vtop = (S.view ? S.view.y : 0) - 20;
     L.rope.setAttribute('d', 'M' + hd.tx.toFixed(1) + ' ' + vtop.toFixed(1) + 'V' + hd.ty.toFixed(1) + 'L' + hx.toFixed(1) + ' ' + (hy - 8).toFixed(1));
@@ -608,8 +631,10 @@
       tumble(off ? Math.sign(dx) : Math.sign(err), off ? 'Мимо паза — бревно скатилось со сруба' : 'Легло одним концом и соскочило. Бревно должно висеть ровно');
       return;
     }
-    var a = rLeft(lg), b = rRight(lg);
-    var yl = S.yl - a, yr = S.yr - b;
+    // перекос от сбега наполовину гасится подгонкой чаш и паза — стена не уходит веером
+    var a = rLeft(lg), b = rRight(lg), mid = (a + b) / 2;
+    var incL = 2 * mid + (a - b) * 0.5, incR = 2 * mid + (b - a) * 0.5;
+    var yl = S.yl - incL / 2, yr = S.yr - incR / 2;
     var ty = (yl + yr) / 2, tr = Math.atan2(yr - yl, LOG_L) * DEG;
     var perfect = Math.abs(err) <= PERFECT_DEG && Math.abs(dx) <= PERFECT_DX;
     var me = cur, x0 = me.x, y0 = me.y, r0 = me.r;
@@ -621,13 +646,13 @@
       var corner = sv('g', { fill: '#E8D4AE', stroke: '#3E3122', 'stroke-width': 1.4 }, L.wall);
       sv('ellipse', { cx: WX - LOG_L / 2 + 16, cy: ((yl + S.yl) / 2 + 3).toFixed(1), rx: 6, ry: (a * .7).toFixed(1) }, corner);
       sv('ellipse', { cx: WX + LOG_L / 2 - 16, cy: ((yr + S.yr) / 2 + 3).toFixed(1), rx: 6, ry: (b * .7).toFixed(1) }, corner);
-      S.yl -= 2 * a; S.yr -= 2 * b;
+      S.yl -= incL; S.yr -= incR;
       S.crown++;
       if (perfect) { S.perfect++; S.streak++; sfx.perfect(); popText(S.streak > 1 ? 'Ровно! ×' + S.streak : 'Ровно!', WX, ty - 34, true); }
       else { S.streak = 0; popText('Легло', WX, ty - 34, false); }
       if (S.lastSide != null && S.lastSide === lg.side) {
         say('Комель на комель — стена пошла вкось', 'warn', 3200);
-        setTip('Плотники кладут брёвна «комель на вершину»: толстый конец над тонким. Тогда стена растёт ровно. Разверните следующее бревно, если нужно.');
+        setTip('Плотники кладут брёвна «комель на вершину»: толстый конец над тонким. Тогда стена растёт ровно. Выбирайте из штабеля бревно, лежащее комлем в другую сторону.');
       } else if (S.crown === 1) {
         setTip('Следующее бревно кладите комлем в другую сторону — так стена останется ровной.');
       }
@@ -635,7 +660,10 @@
       cur = null;
       renderStats();
       if (S.crown >= CROWNS) { later(finale, 700); return; }
-      later(spawnLog, 520);
+      drawGhost();
+      if (S.crown >= 4 && S.wind === 0) { S.wind = 0.45; if (tipOnce('wind', 'Наверху поднялся ветер. Бревно раскачивает сильнее — опускайте между порывами.')) say('Поднялся ветер', null, 2000); }
+      if (S.crown >= 6) S.wind = 0.85;
+      later(refill, 300);
     });
   }
   function tumble(dir, msg) {
@@ -653,7 +681,7 @@
       sfx.clack(); shake(2); dust(me.x, GROUND, 12, 60);
       tween(500, function (k) { me.el.style.opacity = 1 - k; }, function () {
         me.el.remove(); cur = null;
-        later(function () { spawnLog(me.lg); setTip('Бревно вернули на подкладки. Возьмите его ближе к точке равновесия и опускайте без раскачки.'); }, 200);
+        later(function () { addLog(me.lg); drawStock(); setTip('Бревно вернули в штабель. Возьмите его ближе к точке равновесия и опускайте без раскачки.'); }, 200);
       });
     }, function (k) { return k; });
     renderStats();
@@ -682,6 +710,8 @@
   function finale() {
     S.phase = 'final';
     root.classList.add('is-final');
+    pile.forEach(function (it) { tween(500, function (k) { it.el.style.opacity = 1 - k; }, function () { it.el.remove(); }); });
+    pile = [];
     setTip('');
     renderStats();
     clear(L.ghost);

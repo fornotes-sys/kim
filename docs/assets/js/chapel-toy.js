@@ -2,9 +2,9 @@
    Живая иллюстрация в блоке «Строим вместе» (только компьютер).
    Вместо картинки — та же сцена, но брёвна можно брать мышкой.
 
-   Бревно сбежистое: комель тяжелее вершины. Где возьмёшь — так и повиснет:
-   не в точке равновесия — перекосит. Бревно качается на тросе. Опустил
-   ровно — легло на сруб, криво или мимо — скатилось. Несколько венцов —
+   Простая версия: бревно ровное, центр тяжести посередине. Возьмёшь не в
+   середине — перекосит. Бревно качается на тросе. Опустил ровно — легло
+   на сруб, криво или мимо — скатилось. Без подсказок. Несколько венцов —
    и короткая фраза про профессионалов с кнопкой поддержки.
 
    Кнопка «Заняться строительством по-серьёзному» открывает полную игру
@@ -19,7 +19,7 @@
   var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   /* ---------- Параметры ---------- */
-  var LOG_L = 220, RB = 11, RT = 6.5;   // длина, радиусы комля и вершины
+  var LOG_L = 220, RB = 9, RT = 9;      // бревно ровное, без сбега
   var D_TILT = 80, ROPE = 54, G = 1500;
   var WX = 470, BASE = 385, GROUND = 405, PILE_X = 215, SLEEPER = 392;
   var PREBUILT = 3, GOAL = 5;           // три венца уже стоят, игрок кладёт ещё пять — всего восемь
@@ -57,8 +57,7 @@
   /* ---------- Бревно ---------- */
   function newLog(side) {
     side = side || (Math.random() < .5 ? -1 : 1);
-    var j = rnd(-5, 5);
-    return { side: side, e: side * COM + j };
+    return { side: side, e: rnd(-3, 3) };   // центр тяжести почти точно посередине
   }
   function rL(lg) { return lg.side < 0 ? RB : RT; }
   function rR(lg) { return lg.side < 0 ? RT : RB; }
@@ -67,8 +66,7 @@
     var h = LOG_L / 2, a = rL(lg), b = rR(lg);
     var s = '<path d="M' + (-h) + ' ' + (-a) + 'L' + h + ' ' + (-b) + 'A' + (b * .5) + ' ' + b + ' 0 0 1 ' + h + ' ' + b + 'L' + (-h) + ' ' + a + 'A' + (a * .5) + ' ' + a + ' 0 0 1 ' + (-h) + ' ' + (-a) + 'Z" fill="url(#ct-log)"/>';
     s += '<path d="M' + (-h + 30) + ' ' + (-rAt(lg, -h + 30) * .3).toFixed(1) + 'L' + (-h + 100) + ' ' + (-rAt(lg, -h + 100) * .3).toFixed(1) + 'M' + (h - 120) + ' ' + (rAt(lg, h - 120) * .35).toFixed(1) + 'L' + (h - 40) + ' ' + (rAt(lg, h - 40) * .35).toFixed(1) + '" stroke="#C4A06C" stroke-width=".9"/>';
-    var br = Math.max(a, b), bx = lg.side * (h - br * .1);
-    s += '<ellipse cx="' + bx.toFixed(1) + '" cy="0" rx="' + (br * .42).toFixed(1) + '" ry="' + (br * .78).toFixed(1) + '" fill="#E9D3A8" stroke="#8C6A3E" stroke-width="1.1"/>';
+    [-1, 1].forEach(function (sd) { s += '<ellipse cx="' + (sd * (h - a * .1)).toFixed(1) + '" cy="0" rx="' + (a * .42).toFixed(1) + '" ry="' + (a * .78).toFixed(1) + '" fill="#E9D3A8" stroke="#8C6A3E" stroke-width="1.1"/>'; });
     return s;
   }
 
@@ -98,7 +96,7 @@
       '<g><path d="M672 405v-30h52v30" fill="#E8D4AE"/><path d="M668 375h60"/><path d="M698 322c-21 10-32 28-28 53h56c4-25-7-43-28-53z" fill="#E6C278" stroke="#7A5A22"/><path d="M698 322c-8 13-10 32-8 53M698 322c8 13 10 32 8 53" stroke="#A47F38" stroke-width="1.2"/><g stroke="#7A5A22" stroke-width="2.6"><path d="M698 322v-46M690 286h16M684 298h28M690 308l16 7"/></g></g>');
     L.stock = sv('g', { fill: '#E8D4AE', stroke: '#3E3122', 'stroke-width': 1.6 }, svg);
     L.wall = sv('g', { fill: 'none', stroke: '#3E3122', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, svg);
-    L.target = sv('path', { 'class': 'ct-target' }, svg);
+    L.target = sv('path', { 'class': 'ct-target', 'display': 'none' }, svg);
     L.crane = sv('g', { fill: 'none', 'stroke-linecap': 'round' }, svg);
     L.rope = sv('path', { stroke: '#6B5130', 'stroke-width': 1.7 }, L.crane);
     L.hook = sv('path', { d: 'M0 -9v6a5 5 0 1 0 6 5', stroke: '#3E3122', 'stroke-width': 2.2 }, L.crane);
@@ -108,10 +106,6 @@
     L.fx = sv('g', null, svg);
     media.appendChild(svg);
 
-    ui.hint = document.createElement('p');
-    ui.hint.className = 'ct-hint';
-    ui.hint.innerHTML = '<b>Возьмите бревно мышкой</b> и положите на сруб. Комель — толстый конец — тяжелее.';
-    media.appendChild(ui.hint);
     ui.say = document.createElement('p');
     ui.say.className = 'ct-say';
     ui.say.setAttribute('role', 'status');
@@ -239,8 +233,6 @@
     if (hold) { hold.px = p.x; hold.py = p.y; return; }
     clear(L.aim);
     if (cur && !cur.busy && !fall && ui.card.hidden && hit(p)) {
-      var gp = gripWorld(clamp(toLocal(p).x, -LOG_L / 2 + 8, LOG_L / 2 - 8));
-      sv('path', { d: 'M' + gp.x.toFixed(1) + ' ' + (gp.y - 44).toFixed(1) + 'V' + (gp.y - 4).toFixed(1), stroke: '#A78345', 'stroke-width': 1.4, 'stroke-dasharray': '3 4' }, L.aim);
       svg.classList.add('is-over');
     } else svg.classList.remove('is-over');
   }
