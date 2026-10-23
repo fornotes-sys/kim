@@ -692,3 +692,5 @@ main > section, body > footer { position: relative; }
 /* Фото храма на первом экране: левые углы мягко скруглены */
 .hero__media { border-radius: 32px 0 0 32px; overflow: hidden; }
 @media (max-width: 760px) { .hero__media { border-radius: 0; } }
+/* панель направлений: верх прозрачный, чтобы буквы паттерна из «Святых» доходили и сюда */
+.directions { background: linear-gradient(180deg, color-mix(in srgb, var(--milk-light) 0%, transparent) 0, var(--milk-light) 190px); }
