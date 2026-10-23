@@ -25,12 +25,15 @@
   function mk(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 
   function start() {
-    var masks = new Image();
-    masks.onload = function () { init(masks); };
+    var masks = new Image(), wind = new Image(), n = 0;
+    function done() { if (++n === 2) init(masks, wind); }
+    masks.onload = wind.onload = done;
+    wind.onerror = function () { wind = null; done(); };
     masks.src = 'assets/img/hero-life-masks.png';
+    wind.src = 'assets/img/hero-wind.png';
   }
 
-  function init(masks) {
+  function init(masks, windMap) {
     // каналы масок → отдельные альфа-маски
     var MW = masks.naturalWidth, MH = masks.naturalHeight;
     var mc = mk(MW, MH), mx = mc.getContext('2d');
@@ -47,11 +50,13 @@
 
     var cv = document.createElement('canvas'); cv.className = 'hero__life'; cv.setAttribute('aria-hidden', 'true');
     var tint = document.createElement('div'); tint.className = 'hero__weather'; tint.setAttribute('aria-hidden', 'true');
+    var gl = windMap ? makeWind(windMap) : null;
+    if (gl) img.insertAdjacentElement('afterend', gl.canvas);
     fig.appendChild(tint); fig.appendChild(cv);
     var ctx = cv.getContext('2d');
 
     var W = 0, H = 0, S = 1, OX = 0, OY = 0;
-    var photo, fol, sky, gold, tmp, tmp2;
+    var sky, gold, tmp, tmp2;
     function P(ix, iy) { return [OX + ix * S, OY + iy * S]; }
 
     function layout() {
@@ -59,8 +64,7 @@
       if (!w || !h || (w === W && h === H)) return;
       W = w; H = h; cv.width = W; cv.height = H;
       S = Math.max(W / IW, H / IH); OX = (W - IW * S) / 2; OY = 0;   // как object-fit: cover; object-position: 50% 0
-      photo = mk(W, H); photo.getContext('2d').drawImage(img, OX, OY, IW * S, IH * S);
-      fol = mk(W, H); fol.getContext('2d').drawImage(chan[1], OX, OY, IW * S, IH * S);
+      if (gl) gl.resize(W, H, S, OX, OY);
       sky = mk(W, H); sky.getContext('2d').drawImage(chan[0], OX, OY, IW * S, IH * S);
       gold = mk(W, H); gold.getContext('2d').drawImage(chan[2], OX, OY, IW * S, IH * S);
       tmp = mk(W, H); tmp2 = mk(W, H);
@@ -114,6 +118,27 @@
     var W8 = 0, RAIN = 0, lastTint = -1;
     for (i = 0; i < 14; i++) motes.push({ x: Math.random(), y: rnd(0.15, 0.9), v: rnd(0.004, 0.012), p: rnd(0, 6), r: rnd(0.6, 1.4) });
 
+    /* Ветер как в жизни: сила ветра плавно гуляет, а ветки — это пружины с инерцией.
+       Они разгоняются с запаздыванием, чуть перелетают и успокаиваются.
+       Ближняя ветка мягче и медленнее, дальние кроны жёстче и с меньшим размахом. */
+    var WB = { x: 0, v: 0 }, WT = { x: 0, v: 0 }, WT2 = { x: 0, v: 0 }, flutter = 0, breeze = 0;
+    function spring(o, f, hz, damp, dt) {
+      var k = Math.pow(2 * Math.PI * hz, 2), c = 2 * damp * 2 * Math.PI * hz;
+      o.v += (k * (f - o.x) - c * o.v) * dt; o.x += o.v * dt;
+    }
+    function noise1(t) { return Math.sin(t) * .5 + Math.sin(t * 2.31 + 1.7) * .3 + Math.sin(t * 4.13 + .4) * .2; }
+    function stepWind(dt, g) {
+      breeze = .14 + .1 * noise1(T * .21);                         // почти всегда есть лёгкое движение воздуха
+      var f = breeze + g * (.75 + .25 * noise1(T * 1.9));          // порыв неровный
+      for (var k = 0; k < 2; k++) {                                 // два подшага — устойчиво при любом fps
+        spring(WB, f, .55, .22, dt / 2);
+        spring(WT, f * .9, .8, .3, dt / 2);
+        spring(WT2, f * .8 + .15 * noise1(T * .7 + 3), 1.15, .35, dt / 2);
+      }
+      flutter += (Math.min(1, breeze * .6 + g) - flutter) * Math.min(1, dt * 2);
+      if (gl) gl.set(T, WB.x, WT.x, WT2.x, flutter);
+    }
+
     function gustValue() {
       if (!gust.on) return 0;
       var p = (T - gust.t0) / gust.dur;
@@ -125,6 +150,7 @@
       // порывы ветра: случайные, то тишина, то два подряд
       if (!gust.on && T > gust.next) { gust.on = true; gust.t0 = T; gust.dur = rnd(1.4, 4); gust.amp = rnd(0.35, 1) * (Math.random() < 0.2 ? 0.4 : 1); }
       var g = gustValue() + RAIN * 0.5;
+      stepWind(dt, g);
 
       // погода: ясно → тучи → дождь → проясняется (с бликом)
       var e = T - wx.t0;
@@ -231,18 +257,7 @@
       t2.globalCompositeOperation = 'destination-in'; t2.drawImage(sky, 0, 0);
       ctx.drawImage(tmp, 0, 0);
 
-      // ветер в листве: полосы снимка сдвигаются на пару пикселей, только там, где листва
-      var amp = g * 2.4;
-      if (amp > 0.08) {
-        t2.globalCompositeOperation = 'source-over'; t2.clearRect(0, 0, W, H);
-        for (var y = 0; y < H; y += 3) {
-          var dx = amp * (Math.sin(T * 2.3 + y * 0.045) + 0.55 * Math.sin(T * 5.3 + y * 0.12));
-          t2.drawImage(photo, 0, y, W, 3, dx, y + amp * 0.25 * Math.sin(T * 3.7 + y * 0.08), W, 3);
-        }
-        t2.globalCompositeOperation = 'destination-in'; t2.drawImage(fol, 0, 0);
-        if (W8 > 0.02) ctx.filter = 'saturate(' + (1 - W8 * 0.4) + ') brightness(' + (1 - W8 * 0.15) + ')';
-        ctx.drawImage(tmp, 0, 0); ctx.filter = 'none';
-      }
+      if (gl) gl.draw();
 
       // пылинки в солнечном свете
       if (W8 < 0.6) {
@@ -290,6 +305,7 @@
       if (Math.abs(W8 - lastTint) > 0.01) {
         lastTint = W8;
         img.style.filter = W8 > 0.005 ? 'saturate(' + (1 - W8 * 0.4).toFixed(3) + ') brightness(' + (1 - W8 * 0.15).toFixed(3) + ')' : '';
+        if (gl) gl.canvas.style.filter = img.style.filter;
         tint.style.opacity = (W8 * 0.28).toFixed(3);
       }
     }
@@ -310,6 +326,69 @@
     document.addEventListener('visibilitychange', wake);
     window.addEventListener('resize', function () { W = 0; });
     wake();
+  }
+
+  /* ---------- WebGL: плавный изгиб листвы ----------
+     Снимок рисуется заново с маленьким смещением, которое плавно меняется по картинке.
+     Карта hero-wind.png: R — кроны деревьев, G — ближняя размытая ветка; храм там чёрный
+     и не двигается. Поле смещения шире самих листьев, поэтому край кроны изгибается
+     вместе с небом за ним — без «призраков» и разрывов. */
+  function makeWind(windMap) {
+    var c = document.createElement('canvas'); c.className = 'hero__windgl'; c.setAttribute('aria-hidden', 'true');
+    var g = c.getContext('webgl', { premultipliedAlpha: false, antialias: false, alpha: true });
+    if (!g) return null;
+    var VS = 'attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;v.y=1.-v.y;gl_Position=vec4(p,0.,1.);}';
+    var FS = [
+      'precision mediump float;varying vec2 v;',
+      'uniform sampler2D ph,wm;uniform vec2 sz,off,isz;uniform float t,wb,wt,wt2,fl;',
+      'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+      'float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);',
+      ' return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}',
+      'void main(){',
+      ' vec2 px=v*sz;vec2 iu=(px-off)/isz;',               // координаты на снимке 0..1
+      ' vec4 w=texture2D(wm,iu);',
+      ' float aspect=isz.x/isz.y;',
+      // ближняя ветка: поворот вокруг точки за левым верхним краем + лёгкий изгиб
+      ' vec2 pv=vec2(-.12,-.25);vec2 r=(iu-pv)*vec2(aspect,1.);',
+      ' float ang=wb*.022;vec2 rr=vec2(r.x*cos(ang)-r.y*sin(ang),r.x*sin(ang)+r.y*cos(ang));',
+      ' vec2 dB=(rr-r)/vec2(aspect,1.);',
+      // дальние кроны: качание у каждой кроны чуть своё (фаза по месту), верх кроны сильнее
+      ' float phs=n(iu*vec2(3.,2.))*6.283;',
+      ' float sway=mix(wt,wt2,.5+.5*sin(phs));',
+      ' vec2 dT=vec2(sway*.0042,-abs(sway)*.0009);',
+      // мелкая дрожь листьев поверх
+      ' vec2 q=iu*vec2(26.,20.);',
+      ' vec2 fx=vec2(n(q+vec2(t*1.7,t*.6))-.5,n(q+vec2(5.2-t*1.3,t*1.1))-.5)*fl*.0016;',
+      ' vec2 d=dB*w.g+(dT+fx)*w.r+fx*w.g*.6;',
+      ' gl_FragColor=texture2D(ph,iu-d);',
+      '}'].join('');
+    function sh(type, src) { var o = g.createShader(type); g.shaderSource(o, src); g.compileShader(o); return g.getShaderParameter(o, g.COMPILE_STATUS) ? o : null; }
+    var vs = sh(g.VERTEX_SHADER, VS), fs = sh(g.FRAGMENT_SHADER, FS); if (!vs || !fs) return null;
+    var pr = g.createProgram(); g.attachShader(pr, vs); g.attachShader(pr, fs); g.linkProgram(pr);
+    if (!g.getProgramParameter(pr, g.LINK_STATUS)) return null;
+    g.useProgram(pr);
+    var buf = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, buf);
+    g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
+    var loc = g.getAttribLocation(pr, 'p'); g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
+    function tex(unit, el) {
+      var tx = g.createTexture(); g.activeTexture(g.TEXTURE0 + unit); g.bindTexture(g.TEXTURE_2D, tx);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR);
+      g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, el);
+    }
+    tex(0, img); tex(1, windMap);
+    var U = {}; ['ph', 'wm', 'sz', 'off', 'isz', 't', 'wb', 'wt', 'wt2', 'fl'].forEach(function (k) { U[k] = g.getUniformLocation(pr, k); });
+    g.uniform1i(U.ph, 0); g.uniform1i(U.wm, 1);
+    var dpr = Math.min(2, window.devicePixelRatio || 1), ready = false;
+    return {
+      canvas: c,
+      resize: function (w, h, s, ox, oy) {
+        c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); g.viewport(0, 0, c.width, c.height);
+        g.uniform2f(U.sz, c.width, c.height); g.uniform2f(U.off, ox * dpr, oy * dpr); g.uniform2f(U.isz, IW * s * dpr, IH * s * dpr);
+      },
+      set: function (t, wb, wt, wt2, fl) { g.uniform1f(U.t, t); g.uniform1f(U.wb, wb); g.uniform1f(U.wt, wt); g.uniform1f(U.wt2, wt2); g.uniform1f(U.fl, fl); },
+      draw: function () { g.drawArrays(g.TRIANGLE_STRIP, 0, 4); if (!ready) { ready = true; c.style.opacity = 1; } }
+    };
   }
 
   function go() {
