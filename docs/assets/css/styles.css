@@ -191,7 +191,7 @@ p { margin: 0; }
 .place { position: relative; background: var(--milk); }
 .place__grid { display: grid; grid-template-columns: 38fr 62fr; min-height: clamp(420px, 32vw, 560px); }
 .place__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; padding-top: 4px; }
-.place__media img { object-position: 50% 55%; }
+.place__media img { object-position: 50% 60%; }
 .place__copy { display: flex; flex-direction: column; justify-content: center; gap: 20px; padding: 40px 24px 40px var(--pad); }
 
 /* ---------- Строим вместе ---------- */
