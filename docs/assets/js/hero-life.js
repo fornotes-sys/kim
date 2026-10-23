@@ -211,9 +211,9 @@
       var amp = g * 2.4;
       if (amp > 0.08) {
         t2.globalCompositeOperation = 'source-over'; t2.clearRect(0, 0, W, H);
-        for (var y = 0; y < H; y += 5) {
+        for (var y = 0; y < H; y += 3) {
           var dx = amp * (Math.sin(T * 2.3 + y * 0.045) + 0.55 * Math.sin(T * 5.3 + y * 0.12));
-          t2.drawImage(photo, 0, y, W, 5, dx, y + amp * 0.25 * Math.sin(T * 3.7 + y * 0.08), W, 5);
+          t2.drawImage(photo, 0, y, W, 3, dx, y + amp * 0.25 * Math.sin(T * 3.7 + y * 0.08), W, 3);
         }
         t2.globalCompositeOperation = 'destination-in'; t2.drawImage(fol, 0, 0);
         if (W8 > 0.02) ctx.filter = 'saturate(' + (1 - W8 * 0.4) + ') brightness(' + (1 - W8 * 0.15) + ')';
@@ -276,9 +276,8 @@
       if (!visible || document.hidden) { last = 0; return; }
       raf = requestAnimationFrame(frame);
       if (!last) last = now;
-      var dt = Math.min(0.1, (now - last) / 1000); last = now;
-      acc += dt; if (acc < 1 / 32) return;          // ~30 кадров в секунду хватает
-      dt = acc; acc = 0; T += dt;
+      var dt = Math.min(0.05, (now - last) / 1000); last = now;   // каждый кадр экрана — движение плавное
+      T += dt;
       layout(); if (!W) return;
       draw(update(dt));
     }
