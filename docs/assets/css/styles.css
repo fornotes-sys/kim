@@ -139,7 +139,7 @@ p { margin: 0; }
 .play-link__icon { width: 50px; height: 50px; border-radius: var(--radius-pill); border: 1px solid var(--ink); display: inline-flex; align-items: center; justify-content: center; transition: background-color .2s ease; }
 .play-link:hover .play-link__icon { background: rgba(33,31,26,.06); }
 .play-link__icon svg { width: 14px; height: 14px; margin-left: 2px; }
-.hero__quote { z-index: 3; position: absolute; right: clamp(16px, 2vw, 32px); bottom: clamp(16px, 2.4vw, 32px); max-width: 260px; margin: 0; padding: 12px 16px; background: rgba(247, 242, 233, .6); -webkit-backdrop-filter: blur(10px) saturate(1.3); backdrop-filter: blur(10px) saturate(1.3); border: 1px solid rgba(255, 255, 255, .5); border-radius: 8px; box-shadow: 0 8px 22px rgba(33,31,26,.12); }
+.hero__quote { z-index: 3; position: absolute; right: clamp(16px, 2vw, 32px); bottom: clamp(16px, 2.4vw, 32px); max-width: 260px; margin: 0; padding: 12px 16px; background: rgba(247, 242, 233, .42); -webkit-backdrop-filter: blur(7px) saturate(1.3); backdrop-filter: blur(7px) saturate(1.3); border: 1px solid rgba(255, 255, 255, .35); border-radius: 8px; box-shadow: 0 8px 22px rgba(33,31,26,.12); }
 .hero__quote p { font-family: var(--font-display); font-style: italic; font-size: 1.0625rem; line-height: 1.35; }
 .hero__quote cite { display: block; margin-top: 6px; font-style: normal; font-size: .8125rem; color: #3E3A31; }
 .hero__controls { position: absolute; right: var(--pad); bottom: 22px; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 20px; border-radius: var(--radius-pill); background: rgba(51,80,92,.88); }
