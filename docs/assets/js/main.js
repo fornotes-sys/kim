@@ -324,3 +324,190 @@
   set(); window.addEventListener('resize', set);
   if (window.ResizeObserver) new ResizeObserver(set).observe(cal);
 })();
+
+/* ---------- Живой первый экран ----------
+   Поверх фото храма: листва шелестит порывами (SVG-фильтр смещения по маске крон),
+   иногда прилетает птица и садится на крышу, изредка проходит человек за кустами,
+   во время порывов падают листья. Всё случайно и нелинейно; при «уменьшить движение»
+   ничего не запускается, вне экрана анимация стоит на паузе. */
+(function () {
+  var slide = document.querySelector('.hero__slide');
+  var stage = slide && slide.querySelector('.hero__stage');
+  if (!stage) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var IW = 1444, IH = 1089, NS = 'http://www.w3.org/2000/svg';
+  var base = slide.querySelector(':scope > img');
+  var wind = stage.querySelector('.hero__wind');
+  var back = stage.querySelector('.hero__fx--back');
+  var front = stage.querySelector('.hero__fx--front');
+  var fOff = document.querySelector('#hero-wind feOffset');
+  var fMap = document.querySelector('#hero-wind feDisplacementMap');
+  var pxPerUnit = 1;
+
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+  /* сцена = кадр фото при object-fit: cover, object-position: 50% 0 */
+  function fit() {
+    var w = slide.clientWidth, h = slide.clientHeight; if (!w || !h) return;
+    var s = Math.max(w / IW, h / IH), sw = IW * s, sh = IH * s;
+    stage.style.width = sw + 'px'; stage.style.height = sh + 'px';
+    stage.style.left = ((w - sw) / 2) + 'px'; stage.style.top = '0px';
+    pxPerUnit = s;
+  }
+  fit(); window.addEventListener('resize', fit);
+  if (base && !base.complete) base.addEventListener('load', fit);
+
+  /* ---- ветер: тишина, лёгкий бриз или порыв ---- */
+  var gust = null, nextGust = rnd(1.5, 4), breeze = 0, phase = 0, intensity = 0;
+  function windAt(t, dt) {
+    if (!gust && t > nextGust) gust = { t0: t, dur: rnd(1.6, 4.5), amp: rnd(.35, 1) };
+    var g = 0;
+    if (gust) {
+      var p = (t - gust.t0) / gust.dur;
+      if (p >= 1) { gust = null; nextGust = t + (Math.random() < .35 ? rnd(.8, 2.5) : rnd(3.5, 11)); }
+      else g = gust.amp * Math.pow(Math.sin(Math.PI * p), 2) * (.8 + .2 * Math.sin(t * 9.1) * Math.sin(t * 3.7));
+    }
+    breeze += (((Math.sin(t * .23) + Math.sin(t * .071 + 2)) > .6 ? .12 : 0) - breeze) * Math.min(1, dt * .8);
+    intensity = Math.max(g, breeze);
+    phase += dt * (.35 + 2.4 * intensity);
+    var dx = 70 * Math.sin(phase * .9) + 25 * Math.sin(phase * 2.6 + 1);
+    var dy = 45 * Math.cos(phase * 1.2) + 15 * Math.sin(phase * 3.1);
+    var sc = intensity < .015 ? 0 : (1.2 + 9 * intensity) * pxPerUnit * 1.4;
+    fOff.setAttribute('dx', dx.toFixed(1)); fOff.setAttribute('dy', dy.toFixed(1));
+    fMap.setAttribute('scale', sc.toFixed(2));
+    wind.style.filter = sc ? 'url(#hero-wind)' : 'none';
+  }
+
+  /* ---- листья ---- */
+  var leafSrc = [[40, 30, 460, 200], [10, 380, 110, 900], [980, 320, 1230, 520], [1240, 420, 1430, 900]];
+  var leafCols = ['#E3A63A', '#D98F2B', '#F0C25A', '#C9772A'];
+  var leaves = [];
+  function spawnLeaf() {
+    if (leaves.length > 7) return;
+    var b = leafSrc[(Math.random() * leafSrc.length) | 0];
+    var g = el('g', {}, front);
+    el('path', { d: 'M0,-7 C5,-5 6,2 0,8 C-6,2 -5,-5 0,-7 Z M0,-7 L0,8', fill: leafCols[(Math.random() * 4) | 0], stroke: 'rgba(120,70,20,.5)', 'stroke-width': '.6' }, g);
+    leaves.push({ g: g, x: rnd(b[0], b[2]), y: rnd(b[1], b[3]), vx: rnd(-10, 10), vy: rnd(28, 46), r: rnd(0, 360), vr: rnd(-160, 160), ph: rnd(0, 6), s: rnd(.8, 1.35) });
+  }
+  function stepLeaves(dt) {
+    if (Math.random() < dt * (.04 + 1.6 * intensity * intensity)) spawnLeaf();
+    for (var i = leaves.length - 1; i >= 0; i--) {
+      var L = leaves[i]; L.ph += dt * 3;
+      L.x += (L.vx + 140 * intensity + 18 * Math.sin(L.ph)) * dt;
+      L.y += (L.vy + 10 * Math.cos(L.ph * 1.3)) * dt;
+      L.r += L.vr * dt * (1 + intensity);
+      L.g.setAttribute('transform', 'translate(' + L.x.toFixed(1) + ',' + L.y.toFixed(1) + ') rotate(' + L.r.toFixed(0) + ') scale(' + L.s.toFixed(2) + ',' + (L.s * (.55 + .45 * Math.abs(Math.sin(L.ph)))).toFixed(2) + ')');
+      if (L.y > IH + 20 || L.x > IW + 40) { L.g.remove(); leaves.splice(i, 1); }
+    }
+  }
+
+  /* ---- птица ---- */
+  var perches = [[300, 354, 1], [262, 340, 1], [1150, 581, -1], [690, 470, 1]]; // точки на крышах (x, y лапок, куда смотрит)
+  var bird = el('g', { opacity: 0 }, front), bBody = el('g', {}, bird);
+  el('path', { d: 'M-11,0 C-7,-6 4,-7 9,-4 L13,-3 L9,-1 C7,4 -4,5 -11,0 Z', fill: '#2B2520' }, bBody);          // тело и голова
+  el('path', { d: 'M-11,0 L-18,-3 L-17,2 Z', fill: '#2B2520' }, bBody);                                        // хвост
+  el('path', { d: 'M1,4 L0,8 M4,4 L4,8', stroke: '#2B2520', 'stroke-width': '1.1' }, bBody);                   // лапки
+  var wingUp = el('path', { d: 'M-2,-3 C-6,-16 -14,-20 -20,-19 C-12,-12 -7,-6 -2,-1 Z', fill: '#3A312A' }, bird);
+  var wingFold = el('path', { d: 'M-8,-3 C-3,-6 5,-5 6,-2 C2,0 -4,1 -8,-1 Z', fill: '#3F352D' }, bBody);
+  var B = { st: 'away', t: 0, next: rnd(5, 9) };
+  function bez(a, c, b, p) { var q = 1 - p; return [q * q * a[0] + 2 * q * p * c[0] + p * p * b[0], q * q * a[1] + 2 * q * p * c[1] + p * p * b[1]]; }
+  function birdFly(from, to, dur) {
+    var c = [(from[0] + to[0]) / 2 + rnd(-120, 120), Math.min(from[1], to[1]) - rnd(60, 160)];
+    B.path = [from, c, to]; B.dur = dur; B.t = 0;
+  }
+  function stepBird(t, dt) {
+    var x, y, dir = 1, flap = 0;
+    if (B.st === 'away') {
+      if (t < B.next) return;
+      var P = perches[(Math.random() * perches.length) | 0]; B.perch = P;
+      var fromLeft = Math.random() < .5;
+      birdFly([fromLeft ? -40 : IW + 40, rnd(40, 260)], [P[0], P[1] - 8], rnd(3.2, 4.8));
+      B.st = 'in'; bird.setAttribute('opacity', 1);
+    }
+    if (B.st === 'in' || B.st === 'out') {
+      B.t += dt; var p = Math.min(1, B.t / B.dur), e = B.st === 'in' ? 1 - Math.pow(1 - p, 2.2) : p * p;
+      var pt = bez(B.path[0], B.path[1], B.path[2], e), pt2 = bez(B.path[0], B.path[1], B.path[2], Math.min(1, e + .02));
+      x = pt[0]; y = pt[1]; dir = pt2[0] >= x ? 1 : -1;
+      var glide = B.st === 'in' && p > .7 ? 0 : 1;
+      flap = glide ? Math.sin(t * 34) : (p > .9 ? Math.sin(t * 40) : .3);
+      if (p >= 1) {
+        if (B.st === 'in') { B.st = 'sit'; B.t = 0; B.stay = rnd(3, 8); B.hop = rnd(1, 2.5); B.dir = B.perch[2]; }
+        else { B.st = 'away'; bird.setAttribute('opacity', 0); B.next = t + rnd(14, 32); return; }
+      }
+      wingUp.setAttribute('opacity', 1); wingFold.setAttribute('opacity', 0);
+      wingUp.setAttribute('transform', 'scale(1,' + (.25 + .75 * (flap * .5 + .5)).toFixed(2) + ') ' + (flap < -.4 ? 'scale(1,-1)' : ''));
+      bird.setAttribute('transform', 'translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ') scale(' + (dir * 1.05) + ',1.05)');
+      return;
+    }
+    if (B.st === 'sit') {
+      B.t += dt; var P2 = B.perch;
+      if (B.t > B.hop) { B.dir = -B.dir; B.hop = B.t + rnd(1.2, 3); }
+      var bob = Math.max(0, Math.sin(B.t * 5)) * .8 * (Math.sin(B.t * .9) > .5 ? 1 : 0);
+      wingUp.setAttribute('opacity', 0); wingFold.setAttribute('opacity', 1);
+      bBody.setAttribute('transform', 'rotate(' + (-bob * 6).toFixed(1) + ')');
+      bird.setAttribute('transform', 'translate(' + P2[0] + ',' + (P2[1] - 8 - bob).toFixed(1) + ') scale(' + (B.dir * 1.05) + ',1.05)');
+      if (B.t > B.stay || intensity > .85) {
+        bBody.setAttribute('transform', '');
+        var away = Math.random() < .5 ? -60 : IW + 60;
+        birdFly([P2[0], P2[1] - 8], [away, rnd(-60, 120)], rnd(2.6, 3.6)); B.st = 'out';
+      }
+    }
+  }
+
+  /* ---- прохожий за кустами ---- */
+  var man = el('g', { opacity: 0 }, back);
+  var legs = [el('path', { d: 'M-5,40 L-6,95', stroke: '#2A2420', 'stroke-width': '9', 'stroke-linecap': 'round' }, man),
+              el('path', { d: 'M5,40 L6,95', stroke: '#2A2420', 'stroke-width': '9', 'stroke-linecap': 'round' }, man)];
+  el('path', { d: 'M-16,-40 C-18,-46 -10,-52 0,-52 C10,-52 18,-46 16,-40 L20,40 L-20,40 Z', fill: '#2F2A2C' }, man);  // пальто
+  var arm = el('path', { d: 'M0,-38 L2,10', stroke: '#2A2528', 'stroke-width': '8', 'stroke-linecap': 'round' }, man);
+  el('circle', { cx: 0, cy: -62, r: 11, fill: '#3A2E28' }, man);                                                  // голова
+  el('path', { d: 'M-11,-66 C-9,-76 9,-76 11,-66 Z', fill: '#2A2420' }, man);                                       // шапка
+  var M = { on: false, next: rnd(10, 18) };
+  function stepMan(t, dt) {
+    if (!M.on) {
+      if (t < M.next) return;
+      M.on = true; M.dir = Math.random() < .5 ? 1 : -1; M.x = M.dir > 0 ? 250 : IW + 40; M.ph = 0; M.v = rnd(38, 52);
+      man.setAttribute('opacity', .93);
+    }
+    M.x += M.dir * M.v * dt; M.ph += dt * 5.2;
+    var sw = Math.sin(M.ph), bob = Math.abs(Math.cos(M.ph)) * 2.2;
+    legs[0].setAttribute('transform', 'rotate(' + (sw * 16).toFixed(1) + ' -5 40)');
+    legs[1].setAttribute('transform', 'rotate(' + (-sw * 16).toFixed(1) + ' 5 40)');
+    arm.setAttribute('transform', 'rotate(' + (-sw * 12).toFixed(1) + ' 0 -38)');
+    man.setAttribute('transform', 'translate(' + M.x.toFixed(1) + ',' + (968 - bob).toFixed(1) + ') scale(' + M.dir + ',1)');
+    if ((M.dir > 0 && M.x > IW + 40) || (M.dir < 0 && M.x < 250)) { M.on = false; man.setAttribute('opacity', 0); M.next = t + rnd(35, 70); }
+  }
+
+  /* ---- цикл ---- */
+  var visible = true, last = 0, clock = 0, raf = 0;
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    var dt = Math.min(.05, (now - last) / 1000 || 0); last = now;
+    if (!visible || document.hidden) return;
+    clock += dt;
+    windAt(clock, dt); stepLeaves(dt); stepBird(clock, dt); stepMan(clock, dt);
+  }
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }).observe(slide);
+  raf = requestAnimationFrame(frame);
+})();
+
+/* Паттерн из букв: привязываем узор к верху страницы, чтобы на стыках блоков он не ломался */
+(function () {
+  var sel = '.hero, .calendar-strip, .saints, .about, .prayer, .place, .chronicle, .build, .events, .questions, .help, .merch, .site-footer';
+  var raf = 0;
+  function apply() {
+    raf = 0;
+    var y = window.pageYOffset || 0;
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.style.setProperty('--doc-y', -Math.round(el.getBoundingClientRect().top + y) + 'px');
+    });
+  }
+  function schedule() { if (!raf) raf = requestAnimationFrame(apply); }
+  apply();
+  window.addEventListener('load', schedule);
+  window.addEventListener('resize', schedule);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+  if ('ResizeObserver' in window) new ResizeObserver(schedule).observe(document.body);
+})();
