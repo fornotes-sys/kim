@@ -750,3 +750,48 @@ main > section, body > footer { position: relative; }
           mask-composite: intersect, add; }
 .questions > .joint, .help > .joint:not(.joint--bottom) { display: none; }
 @media (max-width: 760px) { .questions { --spill: 100px; } }
+
+/* ---------- Паттерн из букв в светлых блоках ----------
+   Еле заметные буквы того же узора, что у «Святых», чтобы фон не был пустым.
+   В каждом блоке своё место и своя яркость: --pl-a — насыщенность,
+   --pl-place — где буквы видны (маска-градиент), --pl-y — сдвиг узора по вертикали.
+   Слой лежит под содержимым (isolation + z-index: -1) и не мешает тексту. */
+.hero, .calendar-strip, .about, .prayer, .place, .chronicle, .build, .events, .help, .merch, .site-footer { isolation: isolate; }
+.hero::before, .calendar-strip::before, .about::before, .prayer::before, .place::before, .chronicle::before,
+.build::before, .events::before, .help::before, .merch::before, .site-footer::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--pl-ink, var(--olive)); opacity: var(--pl-a, .1);
+  -webkit-mask-image: url("../img/pattern-letters-mask.png"), var(--pl-place, linear-gradient(#000, #000));
+          mask-image: url("../img/pattern-letters-mask.png"), var(--pl-place, linear-gradient(#000, #000));
+  -webkit-mask-size: max(100%, 1536px) auto, 100% 100%;
+          mask-size: max(100%, 1536px) auto, 100% 100%;
+  -webkit-mask-position: var(--pl-x, center) var(--pl-y, 0), 0 0;
+          mask-position: var(--pl-x, center) var(--pl-y, 0), 0 0;
+  -webkit-mask-repeat: repeat, no-repeat;
+          mask-repeat: repeat, no-repeat;
+  -webkit-mask-composite: source-in;
+          mask-composite: intersect; }
+.calendar-strip, .chronicle, .help, .site-footer { position: relative; }
+
+/* первый экран — чуть-чуть, только в левом нижнем углу под кнопками */
+.hero { --pl-a: .07; --pl-y: -300px; --pl-place: radial-gradient(60% 70% at 0 100%, #000, transparent 75%); }
+/* календарь — еле читаемо, по краям */
+.calendar-strip { --pl-a: .05; --pl-y: -120px; --pl-place: linear-gradient(90deg, #000, transparent 25%, transparent 75%, #000); }
+/* о храме — буквы из «Святых» уже есть сверху; немного внизу слева */
+.about { --pl-a: .08; --pl-y: -420px; --pl-place: radial-gradient(45% 55% at 0 100%, #000, transparent 80%); }
+/* записки — ярче, справа */
+.prayer { --pl-a: .12; --pl-ink: #6B4E22; --pl-y: -200px; --pl-place: radial-gradient(55% 80% at 100% 50%, #000, transparent 80%); }
+/* Пулково — слабо, правый верх */
+.place { --pl-a: .07; --pl-x: right; --pl-y: -60px; --pl-place: radial-gradient(50% 60% at 100% 0, #000, transparent 80%); }
+/* летопись — средне, по левому краю */
+.chronicle { --pl-a: .09; --pl-y: -500px; --pl-place: linear-gradient(90deg, #000, transparent 30%); }
+/* стройка — еле заметно, вниз */
+.build { --pl-a: .06; --pl-y: -340px; --pl-place: linear-gradient(0deg, #000, transparent 45%); }
+/* события — средне, левый низ */
+.events { --pl-a: .09; --pl-y: -150px; --pl-place: radial-gradient(50% 70% at 0 100%, #000, transparent 80%); }
+/* как помочь — буквы уже приходят сверху; чуть справа внизу */
+.help { --pl-a: .07; --pl-x: right; --pl-y: -260px; --pl-place: radial-gradient(45% 60% at 100% 100%, #000, transparent 80%); }
+/* мерч — справа сверху, ярче */
+.merch { --pl-a: .1; --pl-x: left; --pl-y: -380px; --pl-place: radial-gradient(40% 70% at 100% 0, #000, transparent 85%); }
+/* подвал — едва-едва, по всей ширине снизу */
+.site-footer { --pl-a: .05; --pl-y: -600px; --pl-place: linear-gradient(0deg, #000, transparent 70%); }
