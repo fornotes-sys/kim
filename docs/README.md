@@ -9,6 +9,9 @@
 index.html            главная страница
 assets/css/styles.css стили (цвета и шрифты — в блоке :root вверху)
 assets/js/main.js     меню, слайдер, календарь, прогресс сбора, записки
+assets/js/chapel-toy.js   живая иллюстрация в блоке «Строим вместе» (только компьютер)
+assets/js/chapel-game.js  полная игра «Сложи сруб», открывается из неё кнопкой
+assets/css/chapel-game.css стили обеих
 assets/img/           визуализации храма, эмблема, рисунок святых, мерч
 assets/fonts/         Old Standard TT, Fedorovsk, Playfair Display SC (woff)
 ```
