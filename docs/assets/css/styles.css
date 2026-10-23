@@ -688,3 +688,7 @@ main > section, body > footer { position: relative; }
           mask-composite: intersect; }
 .about > .joint:not(.joint--bottom) { display: none; }
 @media (max-width: 760px) { .saints { --spill: 110px; } }
+
+/* Фото храма на первом экране: левые углы мягко скруглены */
+.hero__media { border-radius: 32px 0 0 32px; overflow: hidden; }
+@media (max-width: 760px) { .hero__media { border-radius: 0; } }
