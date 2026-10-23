@@ -330,6 +330,7 @@
 
     <div class="prayer__notes">
       <form class="note-form" data-note-form="health" novalidate aria-labelledby="note-health-title">
+        <div class="note-form__paper">
         <div class="note-form__head">
           <img class="note-form__seal" src="assets/img/seal-red.png" width="104" height="97" alt="">
           <p class="note-form__church">Храм свв. равноап. Кирилла и Мефодия, учителей Словенских, на Пулковских высотах</p>
@@ -346,17 +347,16 @@
           <div class="note-line"><label class="visually-hidden" for="health-5">Имя 5</label><input id="health-5" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
           <div class="note-line"><label class="visually-hidden" for="health-6">Имя 6</label><input id="health-6" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
           <div class="note-line"><label class="visually-hidden" for="health-7">Имя 7</label><input id="health-7" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="health-8">Имя 8</label><input id="health-8" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="health-9">Имя 9</label><input id="health-9" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="health-10">Имя 10</label><input id="health-10" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
           </div>
-          <button class="note-form__add" type="button" data-note-add><svg aria-hidden="true"><use href="#i-plus"/></svg> Добавить строку</button>
-          <button class="btn btn--gold" type="submit">Подать записку <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
-          <p class="note-form__status" data-note-status role="status" hidden></p>
+          <button class="note-form__add" type="button" data-note-add><svg aria-hidden="true"><use href="#i-plus"/></svg> ещё строка</button>
         </div>
         <span class="note-form__rule note-form__rule--bottom" aria-hidden="true"></span>
+        </div>
+        <button class="btn btn--gold" type="submit">Подать записку <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        <p class="note-form__status" data-note-status role="status" hidden></p>
       </form>
       <form class="note-form note-form--repose" data-note-form="repose" novalidate aria-labelledby="note-repose-title">
+        <div class="note-form__paper">
         <div class="note-form__head">
           <img class="note-form__seal" src="assets/img/seal-dark.png" width="104" height="97" alt="">
           <p class="note-form__church">Храм свв. равноап. Кирилла и Мефодия, учителей Словенских, на Пулковских высотах</p>
@@ -373,15 +373,13 @@
           <div class="note-line"><label class="visually-hidden" for="repose-5">Имя 5</label><input id="repose-5" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
           <div class="note-line"><label class="visually-hidden" for="repose-6">Имя 6</label><input id="repose-6" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
           <div class="note-line"><label class="visually-hidden" for="repose-7">Имя 7</label><input id="repose-7" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="repose-8">Имя 8</label><input id="repose-8" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="repose-9">Имя 9</label><input id="repose-9" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
-          <div class="note-line"><label class="visually-hidden" for="repose-10">Имя 10</label><input id="repose-10" name="name" type="text" autocomplete="off" placeholder="" maxlength="40"></div>
           </div>
-          <button class="note-form__add" type="button" data-note-add><svg aria-hidden="true"><use href="#i-plus"/></svg> Добавить строку</button>
-          <button class="btn btn--dark" type="submit">Подать записку <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
-          <p class="note-form__status" data-note-status role="status" hidden></p>
+          <button class="note-form__add" type="button" data-note-add><svg aria-hidden="true"><use href="#i-plus"/></svg> ещё строка</button>
         </div>
         <span class="note-form__rule note-form__rule--bottom" aria-hidden="true"></span>
+        </div>
+        <button class="btn btn--dark" type="submit">Подать записку <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        <p class="note-form__status" data-note-status role="status" hidden></p>
       </form>
     </div>
   </div>
