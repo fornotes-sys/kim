@@ -282,5 +282,24 @@
     }
   })();
 
+  /* ---------- Кадрирование фото храма на первом экране ----------
+     Храм стоит по центру снимка (центр — 50% ширины). Подбираем сдвиг кадра так,
+     чтобы храм стоял посередине и пейзаж слева и справа был поровну. */
+  (function focusHero() {
+    var img = $('.hero__slide img'), FX = 0.5;
+    if (!img) return;
+    function fit() {
+      var box = img.parentNode, w = box.clientWidth, h = box.clientHeight;
+      var W = img.naturalWidth, H = img.naturalHeight;
+      if (!w || !h || !W || !H) return;
+      var V = w * H / h;                       // видимая ширина исходника при object-fit: cover
+      if (V >= W) { img.style.objectPosition = '50% 45%'; return; }
+      var x = Math.max(0, Math.min(1, (FX * W - V / 2) / (W - V)));
+      img.style.objectPosition = (x * 100).toFixed(1) + '% 45%';
+    }
+    if (img.complete) fit(); else img.addEventListener('load', fit);
+    window.addEventListener('resize', fit);
+  })();
+
   setText('[data-year]', String(new Date().getFullYear()));
 })();
