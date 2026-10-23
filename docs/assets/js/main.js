@@ -496,16 +496,31 @@
     }
   })();
 
-  /* ---------- Мягкие светящиеся переходы между блоками ---------- */
+  /* ---------- Плавные переходы между блоками ----------
+     На каждом стыке — полоса, где цвет верхнего блока перетекает в цвет нижнего.
+     Цвета берутся с самих блоков; у блоков с градиентным фоном — из data-edge. */
   (function seams() {
-    var secs = $$('main > section');
-    secs.forEach(function (sec, i) {
-      if (i === 0) return;
+    var EDGE = { prayer: '#E2D3B7' };          // фон из градиента: цвет у краёв блока
+    function colorOf(el) {
+      if (!el) return null;
+      if (el.id && EDGE[el.id]) return EDGE[el.id];
+      var c = getComputedStyle(el).backgroundColor;
+      return (c && c !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(c)) ? c : getComputedStyle(document.body).backgroundColor;
+    }
+    var secs = $$('main > section'), footer = $('.site-footer');
+    function add(before, prev, next) {
       var d = document.createElement('div'); d.className = 'seam'; d.setAttribute('aria-hidden', 'true');
-      sec.parentNode.insertBefore(d, sec);
-    });
+      d.style.setProperty('--a', colorOf(prev)); d.style.setProperty('--b', colorOf(next));
+      before.parentNode.insertBefore(d, before);
+      return d;
+    }
+    secs.forEach(function (sec, i) { if (i > 0) add(sec, secs[i - 1], sec); });
     var last = secs[secs.length - 1];
-    if (last) { var d = document.createElement('div'); d.className = 'seam'; d.setAttribute('aria-hidden', 'true'); last.parentNode.insertBefore(d, last.nextSibling); }
+    if (last && footer) {
+      var d = document.createElement('div'); d.className = 'seam'; d.setAttribute('aria-hidden', 'true');
+      d.style.setProperty('--a', colorOf(last)); d.style.setProperty('--b', colorOf(footer));
+      last.parentNode.insertBefore(d, last.nextSibling);
+    }
   })();
 
   setText('[data-year]', String(new Date().getFullYear()));

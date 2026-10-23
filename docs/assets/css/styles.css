@@ -189,14 +189,10 @@ p { margin: 0; }
 
 /* ---------- Пулковские высоты ---------- */
 .place { position: relative; background: var(--milk); }
-.place__grid { display: grid; grid-template-columns: 34fr 40fr 26fr; min-height: clamp(360px, 24.8vw, 440px); }
+.place__grid { display: grid; grid-template-columns: 38fr 62fr; min-height: clamp(420px, 32vw, 560px); }
+.place__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; padding-top: 4px; }
+.place__media img { object-position: 50% 55%; }
 .place__copy { display: flex; flex-direction: column; justify-content: center; gap: 20px; padding: 40px 24px 40px var(--pad); }
-.map-card { position: relative; margin: 8px 8px 8px 0; border-radius: 10px; overflow: hidden; background: #E4E2D4; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 0 40px clamp(20px, 3vw, 44px); box-shadow: 0 0 0 1px var(--line); }
-.map-card__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.map-card__pin { position: absolute; z-index: 1; left: 28%; top: 30%; display: flex; align-items: center; gap: 10px; }
-.map-card__pin svg { width: 30px; height: 40px; flex: 0 0 auto; color: #8E2F2A; filter: drop-shadow(0 3px 4px rgba(0,0,0,.25)); }
-.map-card__label { background: rgba(250,247,240,.92); border-radius: 8px; padding: 7px 11px; font-size: 0.75rem; line-height: 1.35; box-shadow: 0 4px 14px rgba(33,31,26,.12); }
-.map-card .btn { position: relative; z-index: 1; align-self: flex-start; }
 
 /* ---------- Строим вместе ---------- */
 .build { position: relative; background: var(--milk); }
@@ -424,7 +420,6 @@ p { margin: 0; }
   .about__grid { grid-template-columns: 1fr 1fr; }
   .directions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding-inline: var(--pad); }
   .place__grid { grid-template-columns: 1fr 1fr; }
-  .map-card { grid-column: 1 / -1; min-height: 280px; margin: 0 var(--pad) 32px; }
   .build__grid { grid-template-columns: 1fr 1fr; }
   .progress-card { grid-column: 1 / -1; margin: 0 var(--pad) 40px; }
   .events__grid { grid-template-columns: 1fr; }
@@ -463,7 +458,6 @@ p { margin: 0; }
   .about__media, .place__media, .build__media, .merch__media { aspect-ratio: 4 / 3; }
   .saints__media { aspect-ratio: 16 / 10; order: 2; }
   .directions { grid-template-columns: minmax(0, 1fr); gap: 18px; padding-block: 32px; }
-  .map-card { margin: 24px var(--pad) 40px; }
   .build__copy { padding: 32px var(--pad) 20px; }
   .events__track { grid-auto-columns: 70%; }
   .events__next { display: none; }
@@ -591,11 +585,21 @@ body.cover-on .site-header--bar { display: block; position: sticky; top: 0; z-in
 }
 
 
-/* ---------- Мягкие переходы между блоками: светящийся шов ----------
-   Вместо резкой границы — размытая полоса тёплого света поверх стыка двух блоков. */
-.seam { position: relative; height: 0; z-index: 45; pointer-events: none; }
+/* ---------- Плавные переходы между блоками ----------
+   Полоса поверх стыка: сверху цвет верхнего блока, внизу — нижнего, посередине их смесь.
+   На самой границе цвет одинаков с обеих сторон, поэтому ступеньки нет. */
+.seam { position: relative; height: 0; z-index: 45; pointer-events: none; --a: var(--milk); --b: var(--milk); }
 .seam::before { content: ""; position: absolute; left: 0; right: 0; top: -90px; height: 180px;
-  background:
-    radial-gradient(ellipse 62% 50% at 50% 50%, rgba(255, 244, 222, .55) 0%, rgba(255, 244, 222, .18) 45%, rgba(255, 244, 222, 0) 75%),
-    linear-gradient(180deg, rgba(243, 235, 221, 0) 0%, rgba(243, 235, 221, .30) 50%, rgba(243, 235, 221, 0) 100%);
-  filter: blur(6px); }
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--a) 0%, transparent) 0%,
+    color-mix(in srgb, var(--a) 12%, transparent) 25%,
+    color-mix(in srgb, var(--a) 50%, transparent) 40%,
+    color-mix(in srgb, var(--a), var(--b)) 50%,
+    color-mix(in srgb, var(--b) 50%, transparent) 60%,
+    color-mix(in srgb, var(--b) 12%, transparent) 75%,
+    color-mix(in srgb, var(--b) 0%, transparent) 100%); }
+/* фактура бумаги поверх перехода, чтобы полоса не выглядела гладкой плёнкой */
+.seam::after { content: ""; position: absolute; left: 0; right: 0; top: -90px; height: 180px;
+  background: url("../img/paper.jpg") 0 0 / 512px 512px; mix-blend-mode: multiply; opacity: .9;
+  -webkit-mask-image: linear-gradient(180deg, transparent 25%, #000 45%, #000 55%, transparent 75%);
+          mask-image: linear-gradient(180deg, transparent 25%, #000 45%, #000 55%, transparent 75%); }

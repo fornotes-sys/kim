@@ -232,27 +232,15 @@
       <span class="eyebrow">Расположение</span>
       <h2 id="place-title">Пулковские<br>высоты</h2>
       <p class="text">Место с особой историей и духовным значением. От рубежа обороны Ленинграда до символа мира и возрождения. Здесь, на этой земле, будет воздвигнут храм — как благодарность за жизнь, мир и будущее.</p>
-      <a class="link-arrow" href="#" data-soon>Подробнее об истории <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <div class="place__actions">
+        <a class="btn btn--gold btn--small" href="https://yandex.ru/maps/?text=%D0%9F%D1%83%D0%BB%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B5%20%D0%B2%D1%8B%D1%81%D0%BE%D1%82%D1%8B%2C%20%D0%A1%D0%B0%D0%BD%D0%BA%D1%82-%D0%9F%D0%B5%D1%82%D0%B5%D1%80%D0%B1%D1%83%D1%80%D0%B3" target="_blank" rel="noopener">Как добраться <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="link-arrow" href="#" data-soon>Подробнее об истории <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
     </div>
+    <!-- TODO: заменить на настоящее фото Пулковских высот (assets/img/pulkovo.jpg) -->
     <figure class="media place__media">
       <img src="assets/img/pulkovo-ref.jpg" width="1100" height="812" alt="Вид с высот на город на закате" loading="lazy">
     </figure>
-    <div class="map-card">
-      <svg class="map-card__svg" viewBox="0 0 300 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <rect width="300" height="380" fill="#E5E3D5"/>
-        <g fill="#D6DCC3"><path d="M0 0h70l-20 90H0z"/><path d="M210 230l90-20v170H180z"/><rect x="190" y="30" width="70" height="55" rx="4"/></g>
-        <g fill="#DDD8C8"><rect x="90" y="40" width="40" height="30" rx="2"/><rect x="140" y="110" width="45" height="35" rx="2"/><rect x="70" y="160" width="38" height="44" rx="2"/><rect x="130" y="210" width="40" height="30" rx="2"/><rect x="40" y="260" width="50" height="34" rx="2"/><rect x="220" y="120" width="40" height="40" rx="2"/></g>
-        <g stroke="#F8F6EE" fill="none" stroke-linecap="round">
-          <path d="M-10 120 L310 70" stroke-width="9"/><path d="M60 -10 L130 390" stroke-width="9"/><path d="M-10 330 Q150 300 310 250" stroke-width="7"/>
-          <path d="M0 40 L300 10" stroke-width="3"/><path d="M0 200 L300 160" stroke-width="3"/><path d="M180 -10 L210 390" stroke-width="3"/><path d="M250 -10 L270 390" stroke-width="3"/><path d="M20 -10 L60 390" stroke-width="3"/>
-        </g>
-      </svg>
-      <div class="map-card__pin">
-        <svg aria-hidden="true"><use href="#i-pin"/></svg>
-        <span class="map-card__label">Будущий храм<br>свв. Кирилла и Мефодия<br>Пулковские высоты</span>
-      </div>
-      <a class="btn btn--gold btn--small" href="https://yandex.ru/maps/?text=%D0%9F%D1%83%D0%BB%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B5%20%D0%B2%D1%8B%D1%81%D0%BE%D1%82%D1%8B%2C%20%D0%A1%D0%B0%D0%BD%D0%BA%D1%82-%D0%9F%D0%B5%D1%82%D0%B5%D1%80%D0%B1%D1%83%D1%80%D0%B3" target="_blank" rel="noopener">Как добраться <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
-    </div>
   </div>
 </section>
 
@@ -359,12 +347,10 @@
       <a class="link-arrow" href="#" data-soon>Перейти в магазин <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
-  <div class="merch__leaves" aria-hidden="true"><img src="assets/img/leaves-right.jpg" width="228" height="1248" alt="" loading="lazy"></div>
 </section>
 
 <!-- ============ ЗАПИСКИ ============ -->
 <section class="prayer" id="prayer" aria-labelledby="prayer-title">
-  <div class="prayer__plants-left" aria-hidden="true"><img src="assets/img/plants-left.jpg" width="192" height="648" alt="" loading="lazy"></div>
   <div class="prayer__grid">
     <div class="prayer__copy">
       <span class="eyebrow">Подать записку</span>
@@ -430,7 +416,6 @@
       </form>
     </div>
   </div>
-  <div class="prayer__plants-right" aria-hidden="true"><img src="assets/img/leaves-right.jpg" width="228" height="1248" alt="" loading="lazy"></div>
 </section>
 
 <!-- ============ ВОПРОСЫ О ВЕРЕ ============ -->
