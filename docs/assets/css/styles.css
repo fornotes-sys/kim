@@ -517,56 +517,6 @@ p { margin: 0; }
 .mottos__text, .questions__copy .text, .saints__copy .text { font-family: var(--font-display); font-style: italic; font-size: 1.125rem; }
 
 
-/* ---------- Обложка: перелистывается только первый экран ----------
-   Широкие экраны (body.cover-on). Первый экран лежит поверх сайта и уходит,
-   загибаясь с правого нижнего угла; лендинг под ним в это время закреплён. */
-/* браузер не должен сам «подправлять» прокрутку, когда лендинг открепляется */
-html.cover-on-root, html.cover-on-root body { overflow-anchor: none; }
-.cover-spacer, .site-header--bar { display: none; }
-body.cover-on .cover-spacer { display: block; width: 1px; }
-body.cover-on .hero { position: fixed; inset: 0 0 auto 0; z-index: 50; }
-body.cover-on .hero.is-turning { opacity: 0; pointer-events: none; }
-body.cover-on .landing { position: relative; z-index: 1; background: var(--milk); }
-body.cover-on .landing.is-pinned { position: fixed; top: 0; left: 0; right: 0; }
-.cover-fx { position: fixed; inset: 0; pointer-events: none; visibility: hidden; }
-.cover-fx .book-curl { visibility: inherit; }
-/* края обложки чуть состарены, как у летописного листа */
-body.cover-on .hero::before { content: ""; position: absolute; inset: 0; z-index: 41; pointer-events: none;
-  box-shadow: inset 0 0 160px rgba(110, 80, 35, .16), inset 0 0 22px rgba(110, 80, 35, .10); }
-/* шапка лендинга */
-body.cover-on .site-header--bar { display: block; position: sticky; top: 0; z-index: 30; background: var(--milk); border-bottom: 1px solid var(--line); box-shadow: 0 6px 18px rgba(33,31,26,.05); }
-.site-header--bar .site-header__inner { padding-block: 10px; }
-.site-header--bar .brand img { width: 46px; height: 46px; }
-/* тень от загибающегося листа на открывающемся лендинге */
-.cover-shade { position: absolute; inset: 0; pointer-events: none; visibility: hidden;
-  background:
-    linear-gradient(var(--ang, 90deg), transparent var(--x, 0px), rgba(20,23,15,.34) var(--x, 0px), rgba(20,23,15,.10) calc(var(--x, 0px) + 90px), rgba(20,23,15,0) calc(var(--x, 0px) + 260px)),
-    rgba(20,23,15, var(--dim, 0)); }
-
-/* ---------- Изгиб листа при перелистывании ----------
-   Во время переворота страница показывается полосками-копиями; каждая полоска
-   встаёт на своё место на «цилиндре» сгиба, поэтому лист гнётся, а не поворачивается плоским. */
-.book-curl { position: absolute; inset: 0; pointer-events: none; visibility: hidden; overflow: hidden; }
-/* повёрнутая рамка: полоски в ней идут параллельно диагональному сгибу */
-.curl-frame { position: absolute; perspective: 2600px; perspective-origin: 50% 50%; transform-origin: 50% 50%; }
-.curl-strip { position: absolute; top: 0; height: 100%; overflow: hidden; transform-origin: 0 50%; will-change: transform; }
-.curl-face { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; background: var(--milk);
-  box-shadow: inset -2px -2px 0 rgba(255,252,244,.9), inset -3px -3px 3px rgba(20,23,15,.10); }
-.curl-face--back { display: none; background: url("../img/paper.jpg") 0 0 / 512px 512px, linear-gradient(180deg, #F2EBDD, #E9DFCC); background-blend-mode: multiply; }
-.curl-strip.is-back .curl-face--front { display: none; }
-.curl-strip.is-back .curl-face--back { display: block; }
-/* светотень изгиба: заранее нарисованные градиенты, которые каждый кадр только сдвигаются
-   и растягиваются (это делает видеокарта, без перерисовки); обрезаны по форме страницы */
-.curl-light { position: absolute; left: 0; top: 0; pointer-events: none; }
-.curl-light > div { position: absolute; left: 0; top: 0; width: 100px; transform-origin: 0 0; will-change: transform, opacity; opacity: 0; }
-.curl-tint { background: rgb(20,23,15); }
-.curl-ramp-back { background: linear-gradient(90deg, rgba(20,23,15,.06) 0%, rgba(20,23,15,.079) 25%, rgba(20,23,15,.135) 50%, rgba(20,23,15,.229) 75%, rgba(20,23,15,.36) 100%); }
-.curl-ramp-front { background: linear-gradient(90deg, rgba(20,23,15,0) 0%, rgba(20,23,15,.044) 25%, rgba(20,23,15,.132) 50%, rgba(20,23,15,.252) 75%, rgba(20,23,15,.40) 100%); }
-/* в копиях для изгиба фактура не нужна поверх фактуры — она уже есть у грани */
-.curl-face .hero::after, .curl-face section::after, .curl-face .site-footer::after { mix-blend-mode: normal; opacity: 0; }
-.curl-face .hero { position: absolute !important; inset: 0 !important; height: 100% !important; opacity: 1 !important; }
-.curl-face--front { background: url("../img/paper.jpg") 0 0 / 512px 512px, var(--milk); background-blend-mode: multiply; }
-
 /* ---------- Фактура бумаги ----------
    Тонкие волокна и линии «верже», как у бумаги ручного отлива. Накладывается
    умножением поверх каждого блока, поэтому тонирует и фон, и фото, и карточки. */
@@ -577,11 +527,6 @@ body.cover-on .site-header--bar { display: block; position: sticky; top: 0; z-in
   content: ""; position: absolute; inset: 0; z-index: 40; pointer-events: none;
   background: url("../img/paper.jpg") 0 0 / 512px 512px;
   mix-blend-mode: multiply; opacity: .95;
-}
-/* края страницы чуть состарены, как у летописного листа */
-.curl-face--front::after {
-  content: ""; position: absolute; inset: 0; z-index: 99; pointer-events: none;
-  box-shadow: inset 0 0 160px rgba(110, 80, 35, .16), inset 0 0 22px rgba(110, 80, 35, .10);
 }
 
 
