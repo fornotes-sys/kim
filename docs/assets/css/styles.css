@@ -570,3 +570,29 @@ p { margin: 0; }
 /* переходы фон-в-фон без градиента */
 .seam { display: none; }
 .q-form .field input::placeholder, .q-form .field textarea::placeholder { color: rgba(243,235,221,.6); }
+
+
+/* ---------- Закреплённая стеклянная шапка ----------
+   «Жидкое стекло»: фон на 30% прозрачный, всё под ним размыто. */
+html { scroll-padding-top: 96px; }
+.site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+  background: rgba(243, 235, 221, .70);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid rgba(255, 255, 255, .55);
+  box-shadow: 0 6px 22px rgba(33, 31, 26, .08), inset 0 -1px 0 rgba(220, 207, 184, .6); }
+.mobile-menu { z-index: 70; }
+.site-header .brand__name { font-size: .875rem; }
+.site-header .brand__name .slav { font-size: 1.1875rem; }
+
+/* пункты меню: крупнее; при наведении — красная буквица, золотой крестик, лёгкий сдвиг */
+.nav__list a { font-size: clamp(1.0625rem, 1.42vw, 1.3125rem); padding: 10px 2px; transition: transform .18s ease; }
+.nav__list a::after { content: none; }
+.nav__list a::before { content: "✠"; position: absolute; left: -15px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-display); font-size: 13px; line-height: 1; color: var(--gold); opacity: 0; transition: opacity .18s ease; }
+.nav__list a .cap { transition: color .18s ease; }
+.nav__list a:hover, .nav__list a:focus-visible { transform: translateX(7px); }
+.nav__list a:hover::before, .nav__list a:focus-visible::before { opacity: 1; }
+.nav__list a:hover .cap, .nav__list a:focus-visible .cap { color: var(--cinnabar); }
+.nav__list { gap: 6px clamp(16px, 1.9vw, 32px); flex-wrap: nowrap; white-space: nowrap; }
+.site-footer .nav__list a { font-size: 1.125rem; }
+@media (prefers-reduced-motion: reduce) { .nav__list a:hover, .nav__list a:focus-visible { transform: none; } }
