@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 60 790 430" role="img" aria-label="Строительство деревянной временной часовни: сруб, стропила, леса, купол с крестом ждёт на земле, рядом поклонный крест">
+  <defs>
+    <pattern id="logs" width="10" height="20" patternUnits="userSpaceOnUse">
+      <rect width="10" height="20" fill="#E8D4AE"/>
+      <path d="M0 19.5H10" stroke="#8C6A3E" stroke-width="1.2"/>
+      <path d="M0 6H10M0 13H10" stroke="#C9A877" stroke-width=".6"/>
+    </pattern>
+  </defs>
+  <g fill="none" stroke="#3E3122" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- солнце -->
+    <circle cx="612" cy="132" r="44" stroke="#B88A3E"/>
+    <g stroke="#C9A35C" stroke-width="1.6">
+      <path d="M612 70v-22M612 194v22M550 132h-22M674 132h22M568 88l-15-15M656 176l15 15M656 88l15-15M568 176l-15 15"/>
+    </g>
+    <path d="M70 120c40-14 80-14 120 0M640 230c30-10 60-10 90 0" stroke="#C9B48E" stroke-width="1.4"/>
+
+    <!-- земля -->
+    <path d="M0 472c120-6 220 4 330 0s250-8 470 2" />
+    <g stroke="#7E7A4E" stroke-width="1.4">
+      <path d="M22 478l4-10M40 480l3-9M64 477l5-11M610 479l3-9M700 478l5-11M740 481l3-8M760 478l4-10"/>
+    </g>
+
+    <!-- поклонный крест -->
+    <g stroke="#5A3F22" stroke-width="3">
+      <path d="M118 472V236"/>
+      <path d="M104 262h28"/>
+      <path d="M84 296h68"/>
+      <path d="M96 404l44-22"/>
+    </g>
+    <circle cx="118" cy="296" r="5" fill="#B88A3E" stroke="none"/>
+
+    <!-- доски у креста -->
+    <g fill="#E3CBA0">
+      <rect x="168" y="452" width="86" height="8" rx="1.5"/>
+      <rect x="174" y="444" width="76" height="8" rx="1.5"/>
+      <rect x="164" y="460" width="94" height="10" rx="1.5"/>
+    </g>
+    <g fill="#E8D4AE">
+      <circle cx="176" cy="430" r="7"/><circle cx="192" cy="430" r="7"/><circle cx="208" cy="430" r="7"/><circle cx="224" cy="430" r="7"/>
+      <circle cx="184" cy="417" r="7"/><circle cx="200" cy="417" r="7"/><circle cx="216" cy="417" r="7"/>
+    </g>
+    <g stroke="#8C6A3E" stroke-width="1"><path d="M176 427v6M192 427v6M208 427v6M224 427v6M184 414v6M200 414v6M216 414v6"/></g>
+
+    <!-- сруб: стены собраны до половины высоты, справа ещё ниже -->
+    <path d="M286 470V350h228v40h-0V470z" fill="url(#logs)"/>
+    <path d="M286 470V350h120v-0" />
+    <path d="M286 470V350H514V470"/>
+    <!-- последний венец справа ещё не уложен -->
+    <path d="M460 350h54" stroke="#E8D4AE" stroke-width="4"/>
+    <path d="M460 350v20M460 370h54"/>
+    <!-- выпуски брёвен на углах -->
+    <g fill="#E8D4AE">
+      <rect x="272" y="352" width="22" height="16" rx="8"/><rect x="272" y="372" width="22" height="16" rx="8"/><rect x="272" y="392" width="22" height="16" rx="8"/><rect x="272" y="412" width="22" height="16" rx="8"/><rect x="272" y="432" width="22" height="16" rx="8"/><rect x="272" y="452" width="22" height="16" rx="8"/>
+      <rect x="506" y="372" width="22" height="16" rx="8"/><rect x="506" y="392" width="22" height="16" rx="8"/><rect x="506" y="412" width="22" height="16" rx="8"/><rect x="506" y="432" width="22" height="16" rx="8"/><rect x="506" y="452" width="22" height="16" rx="8"/>
+    </g>
+    <!-- дверной проём -->
+    <path d="M378 470v-58a22 22 0 0 1 44 0v58" fill="#F3EBDD"/>
+    <!-- окошко -->
+    <path d="M318 388h30v26h-30z" fill="#F3EBDD"/>
+    <path d="M333 388v26"/>
+
+    <!-- стропила кровли: каркас без обшивки -->
+    <g stroke="#5A3F22">
+      <path d="M270 352L400 258L530 352"/>
+      <path d="M296 352L400 276L504 352" stroke-width="1.6"/>
+      <path d="M400 258V352" stroke-width="2"/>
+      <path d="M336 306h128" stroke-width="1.8"/>
+      <path d="M350 352L400 300M450 352L400 300" stroke-width="1.6"/>
+    </g>
+    <!-- левый скат уже обшит досками -->
+    <g stroke="#8C6A3E" stroke-width="1.4">
+      <path d="M282 344L398 262M290 350L398 272M300 352L398 282"/>
+    </g>
+    <!-- барабан будущего купола на коньке — пока только основание -->
+    <path d="M388 258v-14h24v14" fill="#E8D4AE"/>
+
+    <!-- леса справа -->
+    <g stroke="#6B5130" stroke-width="2.4">
+      <path d="M548 472V296M600 472V296"/>
+      <path d="M540 352h68M540 412h68M540 300h68"/>
+      <path d="M548 412L600 352M548 472L600 412M548 352L600 300" stroke-width="1.5"/>
+    </g>
+    <rect x="536" y="346" width="76" height="7" fill="#E3CBA0"/>
+    <!-- брус, который поднимают на леса -->
+    <path d="M574 296V262M574 262h-40" stroke="#6B5130" stroke-width="1.6"/>
+    <path d="M534 262v28" stroke="#6B5130" stroke-width="1.2"/>
+    <rect x="512" y="290" width="44" height="8" rx="2" fill="#E8D4AE"/>
+
+    <!-- лестница у левой стены -->
+    <g stroke="#6B5130" stroke-width="2">
+      <path d="M232 472L300 330M252 472L318 334"/>
+      <path d="M239 456h20M246 440h20M254 424h20M261 408h20M269 392h20M277 376h20M284 360h20M292 344h19" stroke-width="1.5"/>
+    </g>
+
+    <!-- купол с крестом ждёт на земле -->
+    <g>
+      <path d="M662 472v-34h56v34" fill="#E8D4AE"/>
+      <path d="M658 438h64"/>
+      <path d="M690 380c-22 10-34 30-30 58h60c4-28-8-48-30-58z" fill="#E6C278" stroke="#7A5A22"/>
+      <path d="M690 380c-8 14-10 34-8 58M690 380c8 14 10 34 8 58" stroke="#A47F38" stroke-width="1.2"/>
+      <path d="M690 380v-46M680 346h20M674 358h32M680 374l20-8" stroke="#7A5A22" stroke-width="2.6"/>
+    </g>
+  </g>
+</svg>

@@ -127,7 +127,7 @@ p { margin: 0; }
 .hero__media { position: absolute; top: 83px; bottom: 0; right: 0; width: 56%; }
 .hero__slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity .9s ease; }
 .hero__slide.is-active { opacity: 1; }
-.hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: 0% 60%; }
+.hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
 .hero__badge { position: absolute; left: 24px; bottom: 30px; z-index: 3; font-size: 0.6875rem; letter-spacing: .14em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--radius-pill); background: rgba(32,41,31,.88); color: var(--on-dark); }
 .hero__inner { position: relative; z-index: 4; height: 100%; max-width: var(--page-max); margin-inline: auto; padding: 0 var(--pad); }
 .hero__copy { position: absolute; left: var(--pad); top: calc(50% + 40px); transform: translateY(-50%); width: min(36%, 540px); display: flex; flex-direction: column; gap: clamp(12px, 2.6vh, 24px); }
@@ -171,7 +171,7 @@ p { margin: 0; }
 .about__grid { display: grid; grid-template-columns: 35.5fr 36fr 28.5fr; min-height: clamp(430px, 30vw, 520px); }
 .about__copy { display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 48px 24px 48px var(--pad); }
 .about__copy h2, .place__copy h2, .build__copy h2, .events__copy h2, .merch__copy h2, .prayer__copy h2 { font-size: var(--fs-h2); }
-.about__media img { object-position: 60% 40%; }
+.about__media img { object-position: 55% 40%; }
 .directions { position: relative; list-style: none; margin: 0; padding: 32px clamp(20px, 3.5vw, 60px); display: flex; flex-direction: column; justify-content: center; gap: clamp(18px, 2.6vw, 38px); background: var(--milk-light); }
 .directions li { display: grid; grid-template-columns: 58px 1fr; align-items: start; }
 .directions__num { font-family: var(--font-display); color: var(--gold-ink); font-size: 1.125rem; padding-top: 4px; }
@@ -562,3 +562,10 @@ p { margin: 0; }
   .about, .saints, .place, .build, .merch { padding-block: 40px; }
   .about__media, .saints__media, .place__media, .build__media, .merch__media { border-radius: 0; min-height: 0; }
 }
+
+/* иллюстрация стройки часовни: рисунок целиком на бумажном фоне */
+.build__media { background: var(--paper-mid); }
+.build__media > img { object-fit: contain; padding: 12px; }
+
+/* переходы фон-в-фон без градиента */
+.seam { display: none; }
