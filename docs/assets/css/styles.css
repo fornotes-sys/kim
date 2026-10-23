@@ -173,7 +173,7 @@ p { margin: 0; }
 .about__copy { display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 48px 24px 48px var(--pad); }
 .about__copy h2, .place__copy h2, .build__copy h2, .events__copy h2, .merch__copy h2, .prayer__copy h2 { font-size: var(--fs-h2); }
 .about__media img { object-position: 55% 40%; }
-.directions { position: relative; list-style: none; margin: 0; padding: 32px clamp(20px, 3.5vw, 60px); display: flex; flex-direction: column; justify-content: center; gap: clamp(18px, 2.6vw, 38px); background: var(--milk-light); }
+.directions { position: relative; list-style: none; margin: 0; padding: 32px clamp(20px, 3.5vw, 60px); display: flex; flex-direction: column; justify-content: center; gap: clamp(18px, 2.6vw, 38px); background: transparent; }
 .directions li { display: grid; grid-template-columns: 58px 1fr; align-items: start; }
 .directions__num { font-family: var(--font-display); color: var(--gold-ink); font-size: 1.125rem; padding-top: 4px; }
 .directions div { border-left: 1px solid var(--gold); padding: 2px 0 2px 22px; }
@@ -692,5 +692,6 @@ main > section, body > footer { position: relative; }
 /* Фото храма на первом экране: левые углы мягко скруглены */
 .hero__media { border-radius: 32px 0 0 32px; overflow: hidden; }
 @media (max-width: 760px) { .hero__media { border-radius: 0; } }
-/* панель направлений: верх прозрачный, чтобы буквы паттерна из «Святых» доходили и сюда */
-.directions { background: linear-gradient(180deg, color-mix(in srgb, var(--milk-light) 0%, transparent) 0, var(--milk-light) 190px); }
+/* панель направлений без своего фона: тот же цвет, что у всего блока «О храме»,
+   и буквы паттерна из «Святых» доходят и сюда */
+.directions { background: transparent; }
