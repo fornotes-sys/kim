@@ -419,11 +419,7 @@
         // обложка лежит: заранее готовим изгиб под ней, чтобы переворот начался без рывка
         shade.style.visibility = 'hidden';
         if (curlFor === 0) { resetStrips(); fx.style.zIndex = '45'; fx.style.visibility = 'visible'; }
-        clearTimeout(idleT);
-        idleT = setTimeout(function () {
-          if (!on || curlFor === 0) return;
-          makeStrips(0); resetStrips(); fx.style.zIndex = '45'; fx.style.visibility = 'visible';
-        }, 250);
+        if (curlFor !== 0) { makeStrips(0); resetStrips(); fx.style.zIndex = '45'; fx.style.visibility = 'visible'; }
       } else {
         fx.style.visibility = 'hidden';   // лист ушёл
         shade.style.visibility = 'hidden';
@@ -441,7 +437,7 @@
       landing.appendChild(main); landing.appendChild(footer);
       landing.parentNode.insertBefore(spacer, landing);
       document.body.appendChild(fx);
-      document.body.classList.add('cover-on'); document.documentElement.classList.add('cover-snap-on');
+      document.body.classList.add('cover-on'); document.documentElement.classList.add('cover-on-root');
       measure();
     }
     function disable() {
@@ -450,7 +446,7 @@
       main.parentNode.insertBefore(footer, main.nextSibling);
       landing.remove(); spacer.remove(); fx.remove();
       hero.style.height = ''; hero.classList.remove('is-turning');
-      document.body.classList.remove('cover-on'); document.documentElement.classList.remove('cover-snap-on');
+      document.body.classList.remove('cover-on'); document.documentElement.classList.remove('cover-on-root');
     }
 
     // ссылки-якоря: ведём к нужному месту лендинга с учётом перелистанной обложки
@@ -472,7 +468,16 @@
       else if (hero.contains(e.target) && window.scrollY >= L) window.scrollTo({ top: 0, behavior: 'instant' });
     });
 
-    window.addEventListener('scroll', function () { if (on && !ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener('scroll', function () {
+      if (!on) return;
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      // остановились посреди переворота — мягко доводим лист до конца или возвращаем
+      clearTimeout(idleT);
+      idleT = setTimeout(function () {
+        var y = window.scrollY, p = (y / L - HOLD) / (1 - HOLD);
+        if (y > 2 && y < L - 2) window.scrollTo({ top: p >= 0.45 ? L : 0, behavior: 'smooth' });
+      }, 160);
+    }, { passive: true });
     var rt;
     window.addEventListener('resize', function () {
       clearTimeout(rt);
@@ -489,6 +494,18 @@
       var el0 = document.getElementById(location.hash.slice(1));
       if (el0 && landing.contains(el0)) { setPinned(false); window.scrollTo(0, landingTarget(el0)); }
     }
+  })();
+
+  /* ---------- Мягкие светящиеся переходы между блоками ---------- */
+  (function seams() {
+    var secs = $$('main > section');
+    secs.forEach(function (sec, i) {
+      if (i === 0) return;
+      var d = document.createElement('div'); d.className = 'seam'; d.setAttribute('aria-hidden', 'true');
+      sec.parentNode.insertBefore(d, sec);
+    });
+    var last = secs[secs.length - 1];
+    if (last) { var d = document.createElement('div'); d.className = 'seam'; d.setAttribute('aria-hidden', 'true'); last.parentNode.insertBefore(d, last.nextSibling); }
   })();
 
   setText('[data-year]', String(new Date().getFullYear()));
