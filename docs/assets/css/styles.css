@@ -534,7 +534,7 @@ p { margin: 0; }
    Полоса поверх стыка: сверху цвет верхнего блока, внизу — нижнего, посередине их смесь.
    На самой границе цвет одинаков с обеих сторон, поэтому ступеньки нет. */
 .seam { position: relative; height: 0; z-index: 45; pointer-events: none; --a: var(--milk); --b: var(--milk); }
-.seam::before { content: ""; position: absolute; left: 0; right: 0; top: -90px; height: 180px;
+.seam::before { content: ""; position: absolute; left: 0; right: 0; top: -56px; height: 112px;
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--a) 0%, transparent) 0%,
     color-mix(in srgb, var(--a) 12%, transparent) 25%,
@@ -544,7 +544,21 @@ p { margin: 0; }
     color-mix(in srgb, var(--b) 12%, transparent) 75%,
     color-mix(in srgb, var(--b) 0%, transparent) 100%); }
 /* фактура бумаги поверх перехода, чтобы полоса не выглядела гладкой плёнкой */
-.seam::after { content: ""; position: absolute; left: 0; right: 0; top: -90px; height: 180px;
+.seam::after { content: ""; position: absolute; left: 0; right: 0; top: -56px; height: 112px;
   background: url("../img/paper.jpg") 0 0 / 512px 512px; mix-blend-mode: multiply; opacity: .9;
   -webkit-mask-image: linear-gradient(180deg, transparent 25%, #000 45%, #000 55%, transparent 75%);
           mask-image: linear-gradient(180deg, transparent 25%, #000 45%, #000 55%, transparent 75%); }
+
+/* ---------- Картинки не касаются стыков ----------
+   У блоков с фото — поля сверху и снизу: фото заканчивается внутри блока,
+   а плавный переход идёт только по однотонному фону. */
+.about, .saints, .place, .build, .merch { padding-block: clamp(56px, 6vw, 88px); }
+.about__media, .saints__media, .place__media, .build__media, .merch__media { border-radius: 6px; }
+.about__grid, .place__grid, .build__grid, .saints__grid, .merch__grid { min-height: 0; }
+.about__media, .place__media { min-height: 420px; }
+.saints__media { min-height: 460px; }
+.build__media, .merch__media { min-height: 360px; }
+@media (max-width: 760px) {
+  .about, .saints, .place, .build, .merch { padding-block: 40px; }
+  .about__media, .saints__media, .place__media, .build__media, .merch__media { border-radius: 0; min-height: 0; }
+}
