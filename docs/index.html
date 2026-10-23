@@ -74,19 +74,6 @@
 
   <div class="hero__media">
     <figure class="hero__slide is-active" data-slide><img src="assets/img/hero.jpg" width="1444" height="1089" alt="Образ будущего храма в осеннем закатном свете" fetchpriority="high">
-      <!-- Живая картинка: ветер в листве, птица, прохожий, падающие листья (см. main.js, «Живой первый экран») -->
-      <div class="hero__stage" aria-hidden="true">
-        <svg class="hero__fx hero__fx--back" viewBox="0 0 1444 1089" preserveAspectRatio="none"></svg>
-        <div class="hero__wind"><div class="hero__foliage"><img src="assets/img/hero.jpg" alt=""></div></div>
-        <svg class="hero__fx hero__fx--front" viewBox="0 0 1444 1089" preserveAspectRatio="none"></svg>
-      </div>
-      <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-        <filter id="hero-wind" x="-6%" y="-6%" width="112%" height="112%" color-interpolation-filters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.011 0.018" numOctaves="2" seed="7" result="noise"/>
-          <feOffset in="noise" dx="0" dy="0" result="moved"/>
-          <feDisplacementMap in="SourceGraphic" in2="moved" scale="0" xChannelSelector="R" yChannelSelector="G"/>
-        </filter>
-      </svg>
     </figure>
     <blockquote class="hero__quote">
       <p>«Где двое или трое собраны во имя Мое, там Я посреди них»</p>
@@ -586,6 +573,7 @@
   ]
 }
 </script>
+<script src="assets/js/hero-life.js" defer></script>
 <script src="assets/js/main.js" defer></script>
 </body>
 </html>
