@@ -124,10 +124,11 @@ p { margin: 0; }
 
 /* ---------- Первый экран ---------- */
 .hero { position: relative; height: min(clamp(600px, 51.4vw, 860px), calc(100vh - var(--cal-h, 145px))); height: min(clamp(600px, 51.4vw, 860px), calc(100svh - var(--cal-h, 145px))); min-height: 480px; overflow: hidden; background: var(--milk); }
-.hero__media { position: absolute; top: 83px; bottom: 0; right: 0; width: 60%; }
+.hero__media { position: absolute; top: 83px; bottom: 0; right: 0; width: auto; aspect-ratio: 1444 / 1089; max-width: 60%; }
 .hero__slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity .9s ease; }
 .hero__slide.is-active { opacity: 1; }
-.hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+/* снимок всегда виден по высоте целиком (кресты не обрезаются); если колонка уже снимка, срезаются только края по бокам */
+.hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
 .hero__badge { position: absolute; left: 24px; bottom: 30px; z-index: 3; font-size: 0.6875rem; letter-spacing: .14em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--radius-pill); background: rgba(51,80,92,.88); color: var(--on-dark); }
 .hero__inner { position: relative; z-index: 4; height: 100%; max-width: var(--page-max); margin-inline: auto; padding: 0 var(--pad); }
 .hero__copy { position: absolute; left: var(--pad); top: calc(50% + 40px); transform: translateY(-50%); width: min(33%, 500px); display: flex; flex-direction: column; gap: clamp(12px, 2.6vh, 24px); }
@@ -422,7 +423,7 @@ p { margin: 0; }
   .nav { display: none; }
   .header-actions { margin-left: auto; }
   .hero__copy { width: min(44%, 460px); }
-  .hero__media { width: 50%; }
+  .hero__media { max-width: 50%; }
   .hero__quote { display: none; }
   .calendar-strip__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-inline: var(--pad); }
   .cal-cell { border-left: 0; border-top: 1px solid var(--line); padding-inline: 0; }
@@ -455,7 +456,7 @@ p { margin: 0; }
   .hero { height: auto; display: flex; flex-direction: column; }
   .hero__inner { height: auto; padding-top: 112px; padding-bottom: 24px; }
   .hero__copy { position: static; transform: none; width: 100%; }
-  .hero__media { position: relative; top: 0; width: 100%; height: 70vw; min-height: 280px; order: 2; }
+  .hero__media { position: relative; top: 0; width: 100%; max-width: none; height: auto; aspect-ratio: 1444 / 1089; order: 2; }
   .hero__inner { order: 1; }
   .hero__controls { padding-left: 16px; }
   .hero__badge { left: var(--pad); bottom: 16px; }
@@ -638,4 +639,29 @@ main > section, body > footer { position: relative; }
   .hero__title { font-size: min(var(--fs-hero), 6.6vh); }
   .hero__text { font-size: .9375rem; line-height: 1.45; }
   .hero .eyebrow, .hero__eyebrow { margin-bottom: 0; }
+}
+
+
+/* ---------- Девизы прихода в подвале ----------
+   Бывший отдельный блок «Девизы», уплотнённый до одной строки над ссылками подвала. */
+.footer-mottos { position: relative; max-width: var(--page-max); margin-inline: auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: clamp(20px, 3vw, 44px); padding: 30px var(--pad) 26px; border-bottom: 1px solid var(--line); }
+.footer-mottos__emblem img { width: clamp(96px, 8vw, 124px); height: auto; display: block; }
+.footer-mottos .mottos__list { gap: 2px; }
+.footer-mottos .mottos__list li { font-size: clamp(1.35rem, 1.9vw, 1.75rem); line-height: 1.08; }
+.footer-mottos .mottos__text { margin-top: 10px; font-size: .9375rem; max-width: 34em; }
+.footer-mottos__cards { position: relative; display: block; width: 190px; height: 128px; text-decoration: none; }
+.footer-mottos__cards .card { position: absolute; top: 6px; width: 76px; aspect-ratio: 520 / 770; border-radius: 2px; overflow: hidden; box-shadow: 0 6px 14px rgba(33,31,26,.18); transition: transform .25s ease; }
+.footer-mottos__cards .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.footer-mottos__cards .card:nth-child(1) { left: 6px; transform: rotate(-8deg); }
+.footer-mottos__cards .card:nth-child(2) { left: 57px; top: 0; transform: rotate(1deg); z-index: 2; }
+.footer-mottos__cards .card:nth-child(3) { left: 108px; transform: rotate(8deg); }
+.footer-mottos__cards:hover .card:nth-child(1) { transform: rotate(-11deg) translateX(-4px); }
+.footer-mottos__cards:hover .card:nth-child(3) { transform: rotate(11deg) translateX(4px); }
+.site-footer__docs { display: inline-flex; flex-wrap: wrap; gap: 4px 18px; }
+.site-footer__docs a { color: inherit; text-underline-offset: 3px; }
+.site-footer__docs a:hover { color: var(--ink); }
+@media (max-width: 760px) {
+  .footer-mottos { grid-template-columns: auto minmax(0, 1fr); }
+  .footer-mottos__cards { display: none; }
+  .footer-mottos__emblem img { width: 76px; }
 }
