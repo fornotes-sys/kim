@@ -10,7 +10,7 @@ index.html            главная страница
 assets/css/styles.css стили (цвета и шрифты — в блоке :root вверху)
 assets/js/main.js     меню, слайдер, календарь, прогресс сбора, записки
 assets/img/           визуализации храма, эмблема, рисунок святых, мерч
-assets/fonts/         Playfair Display (woff, кириллица + латиница)
+assets/fonts/         Old Standard TT, Fedorovsk, Playfair Display SC (woff)
 ```
 
 ## Публикация на GitHub Pages
@@ -34,7 +34,7 @@ assets/fonts/         Playfair Display (woff, кириллица + латини�
 
 ## Шрифты и лицензии
 
-- **Playfair Display** (заголовки) — SIL Open Font License, файлы лежат в `assets/fonts/`.
+- **Old Standard TT** (заголовки) — SIL Open Font License (`assets/fonts/OldStandard-OFL.txt`), файлы лежат в `assets/fonts/`.
 - **Onest** (текст и интерфейс) — SIL Open Font License, подключается с Google Fonts в `index.html`.
 - Коммерческий TT Norms в репозиторий не входит. Если у прихода есть лицензия на веб-использование, его можно вернуть через `@font-face` в `styles.css`.
 

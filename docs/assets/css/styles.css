@@ -4,11 +4,11 @@
    асимметричные колонки в долях ширины, крупные фото с мягким переходом в фон.
    ========================================================================== */
 
-@font-face { font-family: "Playfair Display"; src: url("../fonts/PlayfairDisplay-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Old Standard TT"; src: url("../fonts/OldStandard-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "Fedorovsk Unicode"; src: url("../fonts/FedorovskUnicode.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Playfair Display"; src: url("../fonts/PlayfairDisplay-Bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Old Standard TT"; src: url("../fonts/OldStandard-Bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "Playfair Display SC"; src: url("../fonts/PlayfairDisplaySC-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Playfair Display"; src: url("../fonts/PlayfairDisplay-Italic.woff") format("woff"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Old Standard TT"; src: url("../fonts/OldStandard-Italic.woff") format("woff"); font-weight: 400; font-style: italic; font-display: swap; }
 
 :root {
   /* Цвет */
@@ -31,9 +31,9 @@
   --white: #FFFFFF;
 
   /* Шрифты */
-  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
-  --font-slav: "Fedorovsk Unicode", "Playfair Display", Georgia, serif;  /* фирменный шрифт прихода: девизы, подписи, записки */
-  --font-sc: "Playfair Display SC", "Playfair Display", Georgia, serif;
+  --font-display: "Old Standard TT", Georgia, "Times New Roman", serif;  /* русская книжная антиква начала XX века */
+  --font-slav: "Fedorovsk Unicode", "Old Standard TT", Georgia, serif;  /* фирменный шрифт прихода: девизы, подписи, записки */
+  --font-sc: "Playfair Display SC", "Old Standard TT", Georgia, serif;
   --font-body: "Onest", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
 
   /* Шкала */
