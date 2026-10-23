@@ -1,6 +1,6 @@
 /* «Живая» картинка храма на первом экране.
    Поверх фото — холст, на котором изредка и неравномерно что-то происходит:
-   ветер шевелит листву, падают листья, на крест садится птица, плывут облака,
+   ветер шевелит листву, падают листья, на крест садится птица, медленно плывут облака,
    по куполу пробегает блик, а раз в несколько минут набегают тучи, идёт лёгкий дождь
    и снова выходит солнце.
    Маски неба, листвы и золота лежат в одном файле hero-life-masks.png (каналы R, G, B).
@@ -51,7 +51,7 @@
     var ctx = cv.getContext('2d');
 
     var W = 0, H = 0, S = 1, OX = 0, OY = 0;
-    var photo, fol, sky, gold, tmp, tmp2, cloudSprite;
+    var photo, fol, sky, gold, tmp, tmp2;
     function P(ix, iy) { return [OX + ix * S, OY + iy * S]; }
 
     function layout() {
@@ -66,19 +66,43 @@
       tmp = mk(W, H); tmp2 = mk(W, H);
     }
 
-    // облако: несколько мягких пятен
-    cloudSprite = mk(420, 170);
-    (function () {
-      var c = cloudSprite.getContext('2d');
-      for (var i = 0; i < 16; i++) {
-        var x = rnd(60, 360), y = rnd(60, 115), r = rnd(30, 70);
-        var g = c.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-        c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+    // облака: три разных формы из мягких «клубов» — плоское основание, пышный верх,
+    // чуть затенённый низ, как у кучевых облаков на снимке
+    var cloudSprites = [0, 1, 2].map(function (v) {
+      var cw = 520, chh = 200, c = mk(cw, chh), x = c.getContext('2d');
+      var base = 150, n = 7 + v * 2, puffs = [];
+      for (var i = 0; i < n; i++) {
+        var px = 70 + (cw - 140) * (i + rnd(-.3, .3)) / (n - 1);
+        var mid = 1 - Math.abs(i / (n - 1) - .5) * 2;          // в середине облако выше
+        var r = rnd(34, 52) + mid * rnd(18, 34);
+        puffs.push([px, base - r * rnd(.55, .8), r]);
       }
-    })();
+      for (i = 0; i < 5; i++) puffs.push([rnd(90, cw - 90), base - rnd(10, 30), rnd(28, 40)]);
+      // тень снизу
+      puffs.forEach(function (p) {
+        var g = x.createRadialGradient(p[0], p[1] + p[2] * .35, 0, p[0], p[1] + p[2] * .35, p[2] * 1.05);
+        g.addColorStop(0, 'rgba(196,208,224,.55)'); g.addColorStop(1, 'rgba(196,208,224,0)');
+        x.fillStyle = g; x.beginPath(); x.arc(p[0], p[1] + p[2] * .35, p[2] * 1.05, 0, 7); x.fill();
+      });
+      // светлый объём сверху
+      puffs.forEach(function (p) {
+        var g = x.createRadialGradient(p[0] - p[2] * .2, p[1] - p[2] * .25, 0, p[0], p[1], p[2]);
+        g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.6, 'rgba(255,253,248,.7)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        x.fillStyle = g; x.beginPath(); x.arc(p[0], p[1], p[2], 0, 7); x.fill();
+      });
+      // мягко срезаем низ — основание ровное, как у кучевых облаков
+      x.globalCompositeOperation = 'destination-in';
+      var cut = x.createLinearGradient(0, base - 12, 0, base + 26);
+      cut.addColorStop(0, 'rgba(0,0,0,1)'); cut.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = cut; x.fillRect(0, 0, cw, chh);
+      return c;
+    });
     var clouds = [];
-    for (var i = 0; i < 5; i++) clouds.push({ x: rnd(-0.3, 1.1), y: rnd(0.02, 0.32), k: rnd(0.7, 1.4), v: rnd(0.0018, 0.004), a: rnd(0.5, 1) });
+    for (var i = 0; i < 6; i++) clouds.push(newCloud(rnd(-0.2, 1.1)));
+    function newCloud(x) {
+      // скорость — доля ширины кадра в секунду: облако пересекает небо за 2–4 минуты
+      return { x: x, y: rnd(0.0, 0.26), k: rnd(0.45, 0.85), v: rnd(0.0042, 0.0075), a: rnd(0.45, 0.75), s: (Math.random() * 3) | 0 };
+    }
 
     // ---------- состояние ----------
     var T = 0, last = 0, acc = 0;
@@ -134,7 +158,7 @@
       if (!glint.on && T > glint.next && wx.st === 'clear') startGlint(false);
       if (glint.on && T - glint.t0 > glint.dur) { glint.on = false; glint.next = T + (DEMO ? rnd(8, 14) : rnd(40, 80)); }
 
-      clouds.forEach(function (c) { c.x += c.v * dt * (1 + W8 * 0.8 + g * 0.6); if (c.x > 1.25) { c.x = -0.45; c.y = rnd(0.02, 0.32); } });
+      clouds.forEach(function (c, i) { c.x += c.v * dt * (1 + W8 * 0.8 + g * 0.4); if (c.x > 1.35) clouds[i] = newCloud(-0.4); });
       motes.forEach(function (m) { m.y -= m.v * dt * 0.6; m.x += Math.sin(T * 0.3 + m.p) * 0.0006; if (m.y < 0.1) { m.y = 0.9; m.x = Math.random(); } });
       return g;
     }
@@ -198,9 +222,9 @@
       t2.globalCompositeOperation = 'source-over'; t2.clearRect(0, 0, W, H);
       var grey = Math.round(255 - W8 * 85);
       clouds.forEach(function (c) {
-        t2.globalAlpha = (0.32 + W8 * 0.55) * c.a;
-        var cw = 420 * c.k * W / 860, ch = 170 * c.k * W / 860;
-        t2.drawImage(cloudSprite, c.x * W - cw / 2, c.y * H, cw, ch);
+        t2.globalAlpha = Math.min(1, c.a + W8 * 0.3);
+        var cw = 520 * c.k * W / 860, ch = 200 * c.k * W / 860;
+        t2.drawImage(cloudSprites[c.s], c.x * W - cw / 2, c.y * H, cw, ch);
       });
       t2.globalAlpha = 1;
       if (W8 > 0.02) { t2.globalCompositeOperation = 'source-atop'; t2.fillStyle = 'rgba(' + [grey - 10, grey - 2, grey + 6] + ',' + (W8 * 0.7) + ')'; t2.fillRect(0, 0, W, H); }
