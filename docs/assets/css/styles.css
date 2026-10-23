@@ -799,3 +799,37 @@ main > section, body > footer { position: relative; }
 .help           { --t: .7;  --m: .5;  --b: .6; }
 .merch          { --t: .6;  --m: .9;  --b: .4; }
 .site-footer    { --t: .4;  --m: .3;  --b: .25; }
+
+
+/* ---------- Подвал: тёмный колофон ----------
+   Всё по центральной оси, как последняя страница книги: эмблема, девизы,
+   меню, контакты и документы. Фон — тот же зелёный с буквами, что у «Святых». */
+.site-footer--dark { border-top: 0; color: var(--on-dark);
+  background: #0B3238 url("../img/pattern-letters.jpg") center var(--doc-y, 0px) / max(100%, 1536px) auto repeat-y; }
+.site-footer--dark::before { display: none; }
+.colophon { position: relative; z-index: 1; max-width: var(--page-max); margin-inline: auto; padding: 72px var(--pad) 30px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 26px; }
+.colophon a { color: inherit; text-decoration: none; }
+.colophon__emblem img { display: block; width: 132px; height: auto; }
+.colophon__mottos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 40px; font-family: var(--font-slav); font-size: clamp(1.5rem, 2.2vw, 2rem); line-height: 1.05; }
+.colophon__mottos b { font-weight: 400; color: #D9665F; }
+.colophon__orn { display: flex; align-items: center; gap: 14px; color: var(--gold); }
+.colophon__orn svg { width: 14px; height: 14px; }
+.colophon__orn::before, .colophon__orn::after { content: ""; width: 90px; height: 1px; background: linear-gradient(90deg, transparent, rgba(167,131,69,.8)); }
+.colophon__orn::after { transform: scaleX(-1); }
+.colophon__nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 28px; font-family: var(--font-slav); font-size: 1.1875rem; color: var(--gold-light); }
+.colophon__nav a:hover { color: var(--white); }
+.colophon__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px 40px; }
+.colophon__info { font-size: .9375rem; line-height: 1.55; color: var(--on-dark-muted); }
+.colophon__info b { display: block; font-family: var(--font-slav); font-weight: 400; font-size: 1.125rem; color: var(--gold-light); }
+.colophon .socials { margin: 0; gap: 10px; }
+.colophon .socials a { width: 44px; height: 44px; border-color: rgba(234,211,162,.45); color: var(--gold-light); }
+.colophon .socials a:hover { background: rgba(255,255,255,.08); }
+.colophon__legal { margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: .75rem; color: rgba(226,220,205,.62); }
+.colophon__docs { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; }
+.colophon__docs a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(226,220,205,.35); }
+.colophon__docs a:hover { color: var(--on-dark); }
+@media (max-width: 760px) {
+  .colophon { padding-top: 52px; gap: 22px; }
+  .colophon__emblem img { width: 104px; }
+  .colophon__mottos { flex-direction: column; gap: 4px; }
+}
