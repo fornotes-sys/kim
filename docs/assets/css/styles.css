@@ -216,7 +216,7 @@ p { margin: 0; }
 .events__copy { display: flex; flex-direction: column; gap: 12px; padding: 24px 24px 24px var(--pad); position: relative; z-index: 2; }
 .events__copy .text { font-size: 0.9375rem; }
 .events__rail { position: relative; min-width: 0; padding: 22px 0 22px 0; }
-.events__track { display: grid; grid-auto-flow: column; grid-template-columns: 26.1fr 16.7fr 28.9fr 31.3fr; grid-auto-columns: 28%; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.events__track { display: grid; grid-auto-flow: column; grid-template-columns: 34fr 15fr 19fr 32fr; grid-auto-columns: 28%; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .events__track::-webkit-scrollbar { display: none; }
 .event-card { scroll-snap-align: start; margin: 0; border-radius: 8px; overflow: hidden; height: clamp(190px, 14.6vw, 250px); background: var(--paper); }
 .event-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
