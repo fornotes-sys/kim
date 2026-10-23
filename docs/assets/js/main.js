@@ -334,3 +334,12 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
 })();
+
+/* Первый экран + полоса календаря помещаются в окно */
+(function () {
+  var cal = document.querySelector('.calendar-strip');
+  if (!cal) return;
+  function set() { document.documentElement.style.setProperty('--cal-h', cal.offsetHeight + 'px'); }
+  set(); window.addEventListener('resize', set);
+  if (window.ResizeObserver) new ResizeObserver(set).observe(cal);
+})();
