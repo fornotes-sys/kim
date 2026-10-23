@@ -308,7 +308,8 @@
       var up = blocks[i - 1], prev = colorOf(up), cur = colorOf(el);
       if (dark(prev) !== dark(cur)) { add(el, prev, false); return; }
       var d = lum(prev) - lum(cur);
-      if (Math.abs(d) < 3) return;
+      // один и тот же фон: разделяем золотистой полосой-клином, чтобы блоки не сливались
+      if (Math.abs(d) < 3) { add(el, 'rgb(196,170,122)', false); return; }
       // тот же тон, разная яркость: на более светлом блоке — полоса цвета более тёмного, чуть насыщеннее
       if (d > 0) add(up, deepen(cur, .9), true); else add(el, deepen(prev, .9), false);
     });
