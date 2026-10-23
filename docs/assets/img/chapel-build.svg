@@ -26,7 +26,7 @@
       <path d="M118 472V236"/>
       <path d="M104 262h28"/>
       <path d="M84 296h68"/>
-      <path d="M96 404l44-22"/>
+      <path d="M96 382l44 22"/>
     </g>
     <circle cx="118" cy="296" r="5" fill="#B88A3E" stroke="none"/>
 
@@ -99,7 +99,7 @@
       <path d="M658 438h64"/>
       <path d="M690 380c-22 10-34 30-30 58h60c4-28-8-48-30-58z" fill="#E6C278" stroke="#7A5A22"/>
       <path d="M690 380c-8 14-10 34-8 58M690 380c8 14 10 34 8 58" stroke="#A47F38" stroke-width="1.2"/>
-      <path d="M690 380v-46M680 346h20M674 358h32M680 374l20-8" stroke="#7A5A22" stroke-width="2.6"/>
+      <path d="M690 380v-46M680 346h20M674 358h32M680 366l20 8" stroke="#7A5A22" stroke-width="2.6"/>
     </g>
   </g>
 </svg>
