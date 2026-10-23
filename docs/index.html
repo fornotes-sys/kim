@@ -74,10 +74,6 @@
 
   <div class="hero__media">
     <figure class="hero__slide is-active" data-slide><img src="assets/img/hero-ref.jpg" width="1600" height="1377" alt="Образ будущего храма в осеннем закатном свете" fetchpriority="high"></figure>
-    <figure class="hero__slide" data-slide><img src="assets/img/hero-temple-3-4.jpg" width="2000" height="1360" alt="Визуализация храма: колокольня и золотой купол" loading="lazy"></figure>
-    <figure class="hero__slide" data-slide><img src="assets/img/hero-temple-photomontage.jpg" width="2000" height="1342" alt="Визуализация храма среди новой застройки Пулковских высот" loading="lazy"></figure>
-    <figure class="hero__slide" data-slide><img src="assets/img/hero-temple-side.jpg" width="2000" height="1360" alt="Визуализация бокового фасада храма" loading="lazy"></figure>
-    <figure class="hero__slide" data-slide><img src="assets/img/temple-aerial.jpg" width="1400" height="952" alt="Визуализация храма с высоты птичьего полёта" loading="lazy"></figure>
   </div>
 
   <div class="hero__inner">
@@ -99,14 +95,36 @@
     </blockquote>
   </div>
 
-  <div class="hero__controls">
-    <span class="hero__counter" aria-live="polite"><b data-slide-current>01</b> / <span data-slide-total>05</span></span>
-    <button class="round-btn" type="button" aria-label="Предыдущее изображение" data-slide-prev><svg aria-hidden="true"><use href="#i-prev"/></svg></button>
-    <button class="round-btn" type="button" aria-label="Следующее изображение" data-slide-next><svg aria-hidden="true"><use href="#i-next"/></svg></button>
-  </div>
 </section>
 
 <main id="main">
+
+<!-- Шапка лендинга: видна, когда обложка перелистнута (широкие экраны) -->
+<header class="site-header site-header--bar">
+    <div class="site-header__inner">
+      <a class="brand" href="#top" aria-label="К началу">
+        <img src="assets/img/emblem-small.png" width="58" height="58" alt="">
+        <span class="brand__name">Приход храма<br><span class="slav">святых Кирилла и Мефодия</span><br>на Пулковских высотах</span>
+      </a>
+      <nav class="nav" aria-label="Меню">
+        <ul class="nav__list">
+          <li><a href="#about">О храме</a></li>
+          <li><a href="#saints">Святые</a></li>
+          <li><a href="#calendar">Календарь</a></li>
+          <li><a href="#events">События</a></li>
+          <li><a href="#merch">Мерч</a></li>
+          <li><a href="#help">Как помочь</a></li>
+          <li><a href="#contacts">Контакты</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="btn btn--gold btn--small" type="button" data-modal-open="donate">Поддержать</button>
+        <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobile-menu" data-menu-open>
+          <svg aria-hidden="true"><use href="#i-burger"/></svg>
+        </button>
+      </div>
+    </div>
+</header>
 
 <!-- ============ КАЛЕНДАРНАЯ ПОЛОСА ============ -->
 <section class="calendar-strip" id="calendar" aria-label="Православный календарь на сегодня">

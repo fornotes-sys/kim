@@ -241,23 +241,25 @@ p { margin: 0; }
 .prayer__plants-left { left: 0; top: 0; width: clamp(56px, 6.6vw, 110px); }
 .prayer__plants-right { right: 0; top: 0; width: clamp(50px, 6vw, 96px); }
 .prayer__plants-left img, .prayer__plants-right img { width: 100%; height: 100%; object-fit: cover; object-position: left bottom; }
-.prayer__grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(24px, 4vw, 72px); padding: clamp(44px, 5vw, 72px) var(--pad); align-items: start; }
-.prayer__copy { display: flex; flex-direction: column; gap: 16px; padding-top: 12px; max-width: 420px; position: sticky; top: 24px; }
-.prayer__copy .text { font-size: 1.0625rem; color: #3E3A31; }
-.prayer__notes { display: flex; flex-wrap: wrap; gap: clamp(20px, 2.4vw, 36px); justify-content: flex-end; }
-.note-form { position: relative; width: clamp(300px, 24vw, 360px); background: #FDFBF6; border-radius: 3px; padding: 26px 24px 22px; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 0 0 1px rgba(214,200,174,.9), 0 18px 36px rgba(33,31,26,.10); --note: var(--cinnabar); }
+/* текст и бланки — одна ровная композиция по центру: колонка текста по центру высоты, бланки крупнее */
+.prayer__grid { position: relative; z-index: 1; max-width: 1480px; margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: clamp(36px, 4.4vw, 72px); row-gap: 40px; padding: clamp(56px, 6vw, 96px) max(var(--pad), 112px); align-items: center; }
+.prayer__copy { display: flex; flex-direction: column; gap: 20px; max-width: 480px; justify-self: end; }
+.prayer__copy h2 { font-size: clamp(2.6rem, 4.2vw, 3.75rem); }
+.prayer__copy .text { font-size: 1.1875rem; line-height: 1.6; color: #3E3A31; max-width: none; }
+.prayer__notes { display: flex; flex-wrap: wrap; gap: clamp(20px, 2.4vw, 36px); justify-content: flex-start; }
+.note-form { position: relative; width: clamp(320px, 25vw, 390px); background: #FDFBF6; border-radius: 3px; padding: 26px 24px 22px; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 0 0 1px rgba(214,200,174,.9), 0 18px 36px rgba(33,31,26,.10); --note: var(--cinnabar); }
 .note-form--repose { --note: var(--ink-blue); }
 .note-form__head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
-.note-form__seal { width: 104px; height: auto; }
-.note-form__church { font-family: var(--font-slav); font-size: .8125rem; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: var(--note); max-width: 24em; }
+.note-form__seal { width: 124px; height: auto; }
+.note-form__church { font-family: var(--font-slav); font-size: .875rem; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: var(--note); max-width: 24em; }
 .note-form__rule { display: block; width: 100%; height: 6px; border-top: 3px solid var(--note); border-bottom: 1px solid var(--note); margin: 10px 0 6px; }
-.note-form__title { font-family: var(--font-slav); font-size: clamp(2.1rem, 2.6vw, 2.6rem); letter-spacing: .02em; text-transform: uppercase; font-weight: 400; line-height: 1; color: var(--note); margin-top: 6px; }
-.note-form__prayer { font-family: var(--font-slav); font-size: 1.125rem; line-height: 1.2; color: var(--note); margin-bottom: 6px; }
+.note-form__title { font-family: var(--font-slav); font-size: clamp(2.3rem, 2.9vw, 2.9rem); letter-spacing: .02em; text-transform: uppercase; font-weight: 400; line-height: 1; color: var(--note); margin-top: 6px; }
+.note-form__prayer { font-family: var(--font-slav); font-size: 1.25rem; line-height: 1.2; color: var(--note); margin-bottom: 6px; }
 .note-form__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .note-form__lines { display: flex; flex-direction: column; counter-reset: line; }
 .note-line { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid color-mix(in srgb, var(--note) 55%, transparent); counter-increment: line; }
 .note-line::before { content: counter(line); font-family: var(--font-sc); font-size: .75rem; color: color-mix(in srgb, var(--note) 70%, transparent); width: 16px; text-align: right; flex: 0 0 auto; }
-.note-line input { flex: 1 1 auto; min-width: 0; border: 0; background: transparent; padding: 10px 0 8px; font-family: var(--font-slav); font-size: 1.25rem; line-height: 1.2; color: var(--note); }
+.note-line input { flex: 1 1 auto; min-width: 0; border: 0; background: transparent; padding: 12px 0 9px; font-family: var(--font-slav); font-size: 1.375rem; line-height: 1.2; color: var(--note); }
 .note-line input::placeholder { font-family: var(--font-body); font-size: .8125rem; color: #A39A89; }
 .note-line input:focus { outline: none; }
 .note-line:focus-within { border-bottom-color: var(--note); border-bottom-width: 2px; }
@@ -429,9 +431,9 @@ p { margin: 0; }
   .events__copy { padding-bottom: 0; padding-right: var(--pad); }
   .events__rail { padding-left: var(--pad); }
   .events__track { grid-template-columns: none; grid-auto-columns: minmax(220px, 30%); }
-  .prayer__grid { grid-template-columns: minmax(0, 1fr); }
-  .prayer__copy { position: static; max-width: none; }
-  .prayer__notes { justify-content: flex-start; }
+  .prayer__grid { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .prayer__copy { max-width: 640px; justify-self: center; text-align: center; align-items: center; }
+  .prayer__notes { justify-content: center; }
 }
 
 @media (max-width: 760px) {
@@ -468,7 +470,7 @@ p { margin: 0; }
   .merch__media { order: 2; }
   .merch__leaves { display: none; }
   .prayer__grid { padding-inline: var(--pad); }
-  .prayer__plants-right { display: none; }
+  .prayer__plants-right, .prayer__plants-left { display: none; }
   .prayer__notes { justify-content: center; }
   .note-form { width: 100%; max-width: 380px; }
   .prayer__copy { position: static; }
@@ -521,29 +523,28 @@ p { margin: 0; }
 .mottos__text, .questions__copy .text, .saints__copy .text { font-family: var(--font-display); font-style: italic; font-size: 1.125rem; }
 
 
-/* ---------- Книжный режим: блоки перелистываются как страницы книги ----------
-   Широкие экраны (body.book). Блоки собраны в страницы ровно в один экран:
-   блоки внутри растягиваются, чтобы заполнить страницу, а слишком высокий
-   блок слегка уменьшается. Прокрутка вниз = листаем вперёд: текущая страница
-   поднимается за правый край и уходит влево вокруг корешка, открывая следующую. */
-html.book-snap { scroll-snap-type: y proximity; }
-body.book main { position: fixed; inset: 0; overflow: hidden; z-index: 1; background: var(--milk); }
-body.book .book-spacer { display: block; width: 1px; }
-.book-spacer { display: none; }
-.book-spacer > div { scroll-snap-align: start; }
-.book-page { position: absolute; top: 0; left: 0; width: 100%; overflow: hidden; background: var(--milk); will-change: transform; backface-visibility: hidden; }
-.book-page.is-off { opacity: 0; pointer-events: none; }
-.book-sheet { display: flex; flex-direction: column; transform-origin: 0 0; }
-.book-sheet > * { flex-shrink: 0; display: flex; flex-direction: column; }
-.book-sheet > .hero { display: block; }
-.book-sheet > :not(.hero) > :not(.numeral):not(.prayer__plants-left):not(.prayer__plants-right):not(.merch__leaves) { flex: 1 0 auto; width: 100%; }
-.book-sheet > * > .stages, .book-sheet > * > .site-footer__legal { flex: 0 0 auto; }
-body.book .chronicle__inner { justify-content: center; }
-/* свет на переворачиваемом листе: темнеет к поднятому краю */
-.book-page::after { content: ""; position: absolute; inset: 0; z-index: 100; pointer-events: none; opacity: var(--turn, 0);
-  background: linear-gradient(90deg, rgba(20,23,15,0) 0%, rgba(20,23,15,.04) 55%, rgba(20,23,15,.30) 100%); }
-/* тень от листа на открывающейся странице */
-.book-shade { position: absolute; inset: 0; pointer-events: none; visibility: hidden;
+/* ---------- Обложка: перелистывается только первый экран ----------
+   Широкие экраны (body.cover-on). Первый экран лежит поверх сайта и уходит,
+   загибаясь с правого нижнего угла; лендинг под ним в это время закреплён. */
+html.cover-snap-on { scroll-snap-type: y proximity; }
+.cover-spacer, .site-header--bar { display: none; }
+body.cover-on .cover-spacer { display: block; width: 1px; }
+.cover-snap { scroll-snap-align: start; }
+body.cover-on .hero { position: fixed; inset: 0 0 auto 0; z-index: 50; }
+body.cover-on .hero.is-turning { opacity: 0; pointer-events: none; }
+body.cover-on .landing { position: relative; z-index: 1; background: var(--milk); }
+body.cover-on .landing.is-pinned { position: fixed; top: 0; left: 0; right: 0; }
+.cover-fx { position: fixed; inset: 0; pointer-events: none; visibility: hidden; }
+.cover-fx .book-curl { visibility: inherit; }
+/* края обложки чуть состарены, как у летописного листа */
+body.cover-on .hero::before { content: ""; position: absolute; inset: 0; z-index: 41; pointer-events: none;
+  box-shadow: inset 0 0 160px rgba(110, 80, 35, .16), inset 0 0 22px rgba(110, 80, 35, .10); }
+/* шапка лендинга */
+body.cover-on .site-header--bar { display: block; position: sticky; top: 0; z-index: 30; background: var(--milk); border-bottom: 1px solid var(--line); box-shadow: 0 6px 18px rgba(33,31,26,.05); }
+.site-header--bar .site-header__inner { padding-block: 10px; }
+.site-header--bar .brand img { width: 46px; height: 46px; }
+/* тень от загибающегося листа на открывающемся лендинге */
+.cover-shade { position: absolute; inset: 0; pointer-events: none; visibility: hidden;
   background:
     linear-gradient(var(--ang, 90deg), transparent var(--x, 0px), rgba(20,23,15,.34) var(--x, 0px), rgba(20,23,15,.10) calc(var(--x, 0px) + 90px), rgba(20,23,15,0) calc(var(--x, 0px) + 260px)),
     rgba(20,23,15, var(--dim, 0)); }
@@ -569,6 +570,7 @@ body.book .chronicle__inner { justify-content: center; }
 .curl-ramp-front { background: linear-gradient(90deg, rgba(20,23,15,0) 0%, rgba(20,23,15,.044) 25%, rgba(20,23,15,.132) 50%, rgba(20,23,15,.252) 75%, rgba(20,23,15,.40) 100%); }
 /* в копиях для изгиба фактура не нужна поверх фактуры — она уже есть у грани */
 .curl-face .hero::after, .curl-face section::after, .curl-face .site-footer::after { mix-blend-mode: normal; opacity: 0; }
+.curl-face .hero { position: absolute !important; inset: 0 !important; height: 100% !important; opacity: 1 !important; }
 .curl-face--front { background: url("../img/paper.jpg") 0 0 / 512px 512px, var(--milk); background-blend-mode: multiply; }
 
 /* ---------- Фактура бумаги ----------
@@ -583,7 +585,7 @@ body.book .chronicle__inner { justify-content: center; }
   mix-blend-mode: multiply; opacity: .95;
 }
 /* края страницы чуть состарены, как у летописного листа */
-.book-page::before, .curl-face--front::after {
+.curl-face--front::after {
   content: ""; position: absolute; inset: 0; z-index: 99; pointer-events: none;
   box-shadow: inset 0 0 160px rgba(110, 80, 35, .16), inset 0 0 22px rgba(110, 80, 35, .10);
 }

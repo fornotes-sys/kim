@@ -62,7 +62,7 @@
     if (silent) return;
     if (open) { var f = $('[data-menu-close]', menu); f && f.focus(); } else if (openBtn) { openBtn.focus({ preventScroll: true }); }
   }
-  openBtn && openBtn.addEventListener('click', function () { setMenu(true); });
+  $$('[data-menu-open]').forEach(function (btn) { btn.addEventListener('click', function () { openBtn = btn; setMenu(true); }); });
   $$('#mobile-menu [data-menu-close]').forEach(function (el) {
     el.addEventListener('click', function () { if (!el.hasAttribute('data-modal-open')) setMenu(false); });
   });
@@ -255,64 +255,29 @@
     });
   }
 
-  /* ---------- Книжный режим: блоки перелистываются как страницы книги ---------- */
-  (function book() {
+  /* ---------- Обложка: первый экран перелистывается, дальше обычный лендинг ----------
+     Широкие экраны. Первый экран лежит поверх сайта; при прокрутке он загибается
+     с правого нижнего угла и уходит, открывая лендинг, который в это время стоит на месте.
+     Когда лист ушёл, страница прокручивается как обычно. */
+  (function cover() {
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var wide = window.matchMedia ? window.matchMedia('(min-width: 900px)') : { matches: true };
     var main = $('main'), hero = $('.hero'), footer = $('.site-footer');
     if (reduce || !main || !hero || !footer) return;
 
-    var blocks = [hero].concat($$('main > section'), [footer]);
-    var spacer = document.createElement('div'); spacer.className = 'book-spacer'; spacer.setAttribute('aria-hidden', 'true');
-    var shade = document.createElement('div'); shade.className = 'book-shade';
-    var curl = document.createElement('div'); curl.className = 'book-curl'; curl.setAttribute('aria-hidden', 'true'); curl.inert = true;
-    var curlFor = -1, strips = [], idleT;
-    var on = false, pages = [], L = 0, vh = 0, cur = 0, ticking = false;
-    var TURN_SCREENS = 1.3;   // сколько экранов прокрутки уходит на одну страницу: больше — листается медленнее
-    var HOLD = 0.18;          // доля этого шага, когда страница лежит спокойно перед переворотом
+    var TURN_SCREENS = 1.1;   // сколько экранов прокрутки уходит на переворот обложки: больше — медленнее
+    var HOLD = 0.12;          // доля этого пути, когда обложка ещё лежит спокойно
 
-    function unwrap() {
-      blocks.forEach(function (b) { b.style.flexGrow = ''; main.appendChild(b); });
-      pages.forEach(function (p) { p.remove(); });
-      pages = [];
-    }
-    function build() {
-      unwrap();
-      vh = window.innerHeight;
-      var hs = blocks.map(function (b) { return b.offsetHeight; });
-      // подряд идущие блоки собираем в страницы не выше экрана
-      var groups = [], g = [], sum = 0;
-      blocks.forEach(function (b, i) {
-        if (g.length && sum + hs[i] > vh) { groups.push({ items: g, h: sum }); g = []; sum = 0; }
-        g.push(i); sum += hs[i];
-      });
-      groups.push({ items: g, h: sum });
-      var lastG = groups[groups.length - 1];
-      if (groups.length > 1 && lastG.h < vh * 0.4) {
-        var prev = groups[groups.length - 2];
-        prev.items = prev.items.concat(lastG.items); prev.h += lastG.h; groups.pop();
-      }
-      groups.forEach(function (gr) {
-        var page = document.createElement('div'); page.className = 'book-page';
-        var sheet = document.createElement('div'); sheet.className = 'book-sheet';
-        page.appendChild(sheet); main.appendChild(page); pages.push(page);
-        gr.items.forEach(function (i) { blocks[i].style.flexGrow = String(hs[i]); sheet.appendChild(blocks[i]); });
-        var sc = Math.min(1, vh / gr.h);   // слишком высокую страницу слегка уменьшаем, чтобы влезла в экран
-        page.style.height = vh + 'px';
-        sheet.style.height = (vh / sc) + 'px';
-        sheet.style.width = (100 / sc) + '%';
-        sheet.style.transform = sc < 1 ? 'scale(' + sc.toFixed(4) + ')' : '';
-      });
-      var n = pages.length;
-      pages.forEach(function (p, i) { p.style.zIndex = String(2 * (n - i) + 2); p.style.transformOrigin = '0 ' + Math.round(vh / 2) + 'px'; });
-      main.appendChild(shade); main.appendChild(curl);
-      curlFor = -1; curl.innerHTML = ''; strips = [];
-      // по одному экрану прокрутки на страницу, с точками «прилипания»
-      L = Math.round(vh * TURN_SCREENS);
-      spacer.innerHTML = '';
-      for (var k = 0; k < n; k++) { var d = document.createElement('div'); d.style.height = L + 'px'; spacer.appendChild(d); }
-      update();
-    }
+    var landing = document.createElement('div'); landing.className = 'landing';
+    var spacer = document.createElement('div'); spacer.className = 'cover-spacer'; spacer.setAttribute('aria-hidden', 'true');
+    var snapTop = document.createElement('div'), snapEnd = document.createElement('div');
+    snapTop.className = 'cover-snap'; snapEnd.className = 'cover-snap'; spacer.appendChild(snapTop); spacer.appendChild(snapEnd);
+    var fx = document.createElement('div'); fx.className = 'cover-fx'; fx.setAttribute('aria-hidden', 'true');
+    var shade = document.createElement('div'); shade.className = 'cover-shade';
+    var curl = document.createElement('div'); curl.className = 'book-curl'; curl.inert = true;
+    fx.appendChild(shade); fx.appendChild(curl);
+    var curlFor = -1, strips = [], idleT, on = false, L = 0, vh = 0, pinned = null, ticking = false;
+
     function ease(t) { return 0.5 - 0.5 * Math.cos(Math.PI * t); }   // мягко трогается и мягко ложится
 
     // полоски-копии страницы k для изгиба. Сгиб идёт по диагонали от правого нижнего угла:
@@ -321,7 +286,8 @@
     function makeStrips(k) {
       if (curlFor === k) return;
       curl.innerHTML = ''; strips = [];
-      var W = main.clientWidth, H = vh, c = Math.cos(PHI), sn = Math.sin(PHI);
+      var H = vh;
+      var W = document.documentElement.clientWidth, c = Math.cos(PHI), sn = Math.sin(PHI);
       var Cx = W / 2, Cy = H / 2, D = Math.ceil(Math.hypot(W, H)) + 6;
       var uMin = -(Cx * c + Cy * sn), uMax = -uMin;
       var frame = document.createElement('div'); frame.className = 'curl-frame';
@@ -330,7 +296,7 @@
       frame.style.transform = 'rotate(' + (PHI * 180 / Math.PI).toFixed(3) + 'deg)';
       var N = Math.max(18, Math.round((uMax - uMin) / 40)), w = (uMax - uMin) / N;
       var rcx = Cx * c + Cy * sn, rcy = -Cx * sn + Cy * c;   // центр страницы в повёрнутых координатах
-      var src = pages[k].querySelector('.book-sheet');
+      var src = hero;
       var frag = document.createDocumentFragment();
       function face(cls, xs) {
         var tx = -rcx + D / 2 - xs, ty = -rcy + D / 2;
@@ -345,6 +311,7 @@
         st.style.left = xs.toFixed(2) + 'px'; st.style.width = (w + 1.2).toFixed(2) + 'px';
         var fr = face('curl-face--front', xs), bk = face('curl-face--back', xs);
         var copy = src.cloneNode(true);
+        copy.removeAttribute('id');
         copy.querySelectorAll('[id]').forEach(function (el) { el.removeAttribute('id'); });
         fr.el.appendChild(copy);
         st.appendChild(fr.el); st.appendChild(bk.el); frag.appendChild(st);
@@ -404,29 +371,38 @@
       if (th <= Math.PI / 2) return 0.40 * Math.pow(Math.sin(th), 1.6);
       return 0.06 + 0.30 * Math.pow(Math.sin(th), 2);
     }
+    function measure() {
+      if (!on) return;
+      vh = window.innerHeight;
+      L = Math.round(vh * TURN_SCREENS);
+      hero.style.height = vh + 'px';
+      snapTop.style.height = L + 'px';
+      curlFor = -1; curl.innerHTML = ''; strips = [];
+      pinned = null;
+      update();
+    }
+    function setPinned(v) {
+      if (pinned === v) return;
+      pinned = v;
+      landing.classList.toggle('is-pinned', v);
+      // пока лендинг закреплён под обложкой, высоту страницы держит прокладка
+      spacer.style.height = (v ? L + landing.offsetHeight : L) + 'px';
+    }
     function update() {
       ticking = false;
-      if (!on || !pages.length) return;
-      var n = pages.length, y = window.scrollY, W = main.clientWidth;
-      var k = Math.max(0, Math.min(n - 1, Math.floor(y / L)));
-      var p = k < n - 1 ? Math.max(0, Math.min(1, (y / L - k - HOLD) / (1 - HOLD))) : 0;
-      var e = ease(p);
-      cur = p > 0.5 ? k + 1 : k;
-      pages.forEach(function (pg, j) {
-        var show = (j === k && p === 0) || (j === k + 1 && p > 0);
-        pg.classList.toggle('is-off', !show);
-        pg.style.transform = 'none';
-        pg.style.setProperty('--turn', '0');
-      });
-      if (p > 0) {
-        makeStrips(k);
-        // радиус сгиба: побольше в середине переворота, линия сгиба бежит от правого края к корешку и дальше
+      if (!on) return;
+      var y = window.scrollY, W = document.documentElement.clientWidth;
+      var p = Math.max(0, Math.min(1, (y / L - HOLD) / (1 - HOLD)));
+      setPinned(y < L);
+      hero.classList.toggle('is-turning', p > 0);
+      if (p > 0 && p < 1) {
+        makeStrips(0);
+        var e = ease(p);
         var r = W * (0.06 + 0.05 * Math.sin(Math.PI * e));
         var xf = geo.uMax - (geo.uMax - geo.uMin + r * 1.15) * e;   // линия сгиба: от правого нижнего угла к левому верхнему
-        curl.style.zIndex = String(2 * (n - k) + 2);
-        curl.style.visibility = 'visible';
+        fx.style.visibility = 'visible'; fx.style.zIndex = '55';
         for (var i = 0; i < strips.length; i++) {
-          var st = strips[i], a = bend(st.u, xf, r), c = bend(st.u + st.w / 2, xf, r), z = bend(st.u + st.w, xf, r), th = c[2];
+          var st = strips[i], a = bend(st.u, xf, r), c = bend(st.u + st.w / 2, xf, r), th = c[2];
           var tf = a[2] === 0 && th === 0 ? 'translateZ(0)' :
             'translate3d(' + (a[0] - st.u).toFixed(1) + 'px,0,' + a[1].toFixed(1) + 'px) rotateY(' + (-th * 180 / Math.PI).toFixed(2) + 'deg)';
           if (st._tf !== tf) { st.el.style.transform = tf; st._tf = tf; }
@@ -434,61 +410,66 @@
           if (isBack !== st.isBack) { st.el.classList.toggle('is-back', isBack); st.isBack = isBack; }
         }
         setLight(xf, r);
-        // тень от сгиба на следующей странице — справа от гребня
         var X = Math.max(0, Math.min(geo.uMax - geo.uMin, xf + r - geo.uMin));
+        shade.style.visibility = 'inherit';
         shade.style.setProperty('--ang', (90 + PHI * 180 / Math.PI).toFixed(2) + 'deg');
-        shade.style.visibility = 'visible';
-        shade.style.zIndex = String(2 * (n - k) + 1);
         shade.style.setProperty('--x', X.toFixed(1) + 'px');
         shade.style.setProperty('--dim', (0.26 * (1 - e)).toFixed(3));
-      } else {
+      } else if (p === 0) {
+        // обложка лежит: заранее готовим изгиб под ней, чтобы переворот начался без рывка
         shade.style.visibility = 'hidden';
-        // полоски для следующего переворота готовим заранее и держим под лежащей страницей,
-        // чтобы браузер успел их отрисовать и переворот начинался без рывка
-        if (curlFor === k) { curl.style.zIndex = String(2 * (n - k) + 1); curl.style.visibility = 'visible'; resetStrips(); }
-        else curl.style.visibility = 'hidden';
+        if (curlFor === 0) { resetStrips(); fx.style.zIndex = '45'; fx.style.visibility = 'visible'; }
         clearTimeout(idleT);
         idleT = setTimeout(function () {
-          if (!on || k >= n - 1 || curlFor === k) return;
-          makeStrips(k); resetStrips();
-          curl.style.zIndex = String(2 * (n - k) + 1); curl.style.visibility = 'visible';
+          if (!on || curlFor === 0) return;
+          makeStrips(0); resetStrips(); fx.style.zIndex = '45'; fx.style.visibility = 'visible';
         }, 250);
+      } else {
+        fx.style.visibility = 'hidden';   // лист ушёл
+        shade.style.visibility = 'hidden';
       }
     }
-    function pageOf(el) { for (var i = 0; i < pages.length; i++) { if (pages[i].contains(el)) return i; } return -1; }
-    function rebuildKeepingPage() { var k = cur; build(); window.scrollTo({ top: k * L, behavior: 'instant' }); update(); }
+    function landingTarget(el) {
+      var top = el.getBoundingClientRect().top - landing.getBoundingClientRect().top;
+      var bar = $('.site-header--bar');
+      return L + top - (bar ? bar.offsetHeight : 0);
+    }
 
     function enable() {
       if (on) return; on = true;
-      main.insertBefore(hero, main.firstChild); main.appendChild(footer);
-      document.body.classList.add('book'); document.documentElement.classList.add('book-snap');
-      document.body.appendChild(spacer);
-      build();
+      main.parentNode.insertBefore(landing, main);
+      landing.appendChild(main); landing.appendChild(footer);
+      landing.parentNode.insertBefore(spacer, landing);
+      document.body.appendChild(fx);
+      document.body.classList.add('cover-on'); document.documentElement.classList.add('cover-snap-on');
+      measure();
     }
     function disable() {
       if (!on) return; on = false;
-      unwrap(); shade.remove(); curl.remove(); spacer.remove();
-      main.parentNode.insertBefore(hero, main);
+      landing.parentNode.insertBefore(main, landing);
       main.parentNode.insertBefore(footer, main.nextSibling);
-      document.body.classList.remove('book'); document.documentElement.classList.remove('book-snap');
+      landing.remove(); spacer.remove(); fx.remove();
+      hero.style.height = ''; hero.classList.remove('is-turning');
+      document.body.classList.remove('cover-on'); document.documentElement.classList.remove('cover-snap-on');
     }
 
-    // ссылки-якоря: листаем к нужной странице
+    // ссылки-якоря: ведём к нужному месту лендинга с учётом перелистанной обложки
     document.addEventListener('click', function (e) {
       if (!on) return;
       var a = e.target.closest && e.target.closest('a[href^="#"]');
       if (!a) return;
       var id = a.getAttribute('href').slice(1); if (!id) return;
-      var el = document.getElementById(id); if (!el) return;
-      var k = pageOf(el); if (k < 0) return;
+      if (id === 'top') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      var el = document.getElementById(id);
+      if (!el || !landing.contains(el)) return;
       e.preventDefault();
-      window.scrollTo({ top: k * L, behavior: 'smooth' });
+      window.scrollTo({ top: landingTarget(el), behavior: 'smooth' });
     });
-    // фокус с клавиатуры ушёл на другую страницу — открываем её
+    // фокус с клавиатуры: обложка или лендинг должны быть видны
     document.addEventListener('focusin', function (e) {
       if (!on) return;
-      var k = pageOf(e.target);
-      if (k >= 0 && k !== cur) window.scrollTo({ top: k * L, behavior: 'instant' });
+      if (landing.contains(e.target) && window.scrollY < L) window.scrollTo({ top: L, behavior: 'instant' });
+      else if (hero.contains(e.target) && window.scrollY >= L) window.scrollTo({ top: 0, behavior: 'instant' });
     });
 
     window.addEventListener('scroll', function () { if (on && !ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
@@ -496,14 +477,18 @@
     window.addEventListener('resize', function () {
       clearTimeout(rt);
       rt = setTimeout(function () {
-        if (wide.matches && !on) enable(); else if (!wide.matches && on) disable();
-        else if (on) rebuildKeepingPage();
+        if (wide.matches && !on) enable(); else if (!wide.matches && on) disable(); else measure();
       }, 150);
     });
-    window.addEventListener('load', function () { if (on) rebuildKeepingPage(); });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (on) rebuildKeepingPage(); });
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(function () { if (on && pinned) spacer.style.height = (L + landing.offsetHeight) + 'px'; }).observe(main);
+    }
+    window.addEventListener('load', measure);
     if (wide.matches) enable();
-    if (on && location.hash) { var el0 = document.getElementById(location.hash.slice(1)); var k0 = el0 ? pageOf(el0) : -1; if (k0 >= 0) window.scrollTo(0, k0 * L); }
+    if (on && location.hash && location.hash !== '#top') {
+      var el0 = document.getElementById(location.hash.slice(1));
+      if (el0 && landing.contains(el0)) { setPinned(false); window.scrollTo(0, landingTarget(el0)); }
+    }
   })();
 
   setText('[data-year]', String(new Date().getFullYear()));
