@@ -16,18 +16,18 @@
   --milk-light: #F7F2E9;
   --paper: #E9DDC7;
   --paper-mid: #EEE5D5;
-  --olive: #233224;          /* малахит с фона иконы святых */
+  --olive: #3E6170;          /* сине-зелёный из логотипа прихода */
   --gold: #A78345;
   --cinnabar: #9E2B32;      /* киноварь из записок и открыток */
   --ink-blue: #1E2430;      /* тёмный из записки об упокоении */
   --gold-btn: #8E6C33;
   --gold-ink: #85642C;
-  --gold-light: #CDAE72;
+  --gold-light: #EAD3A2;
   --ink: #211F1A;
   --muted: #5E584C;
   --line: #DCCFB8;
   --on-dark: #F3EBDD;
-  --on-dark-muted: #C8C3B3;
+  --on-dark-muted: #E2DCCD;
   --white: #FFFFFF;
 
   /* Шрифты */
@@ -128,7 +128,7 @@ p { margin: 0; }
 .hero__slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity .9s ease; }
 .hero__slide.is-active { opacity: 1; }
 .hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
-.hero__badge { position: absolute; left: 24px; bottom: 30px; z-index: 3; font-size: 0.6875rem; letter-spacing: .14em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--radius-pill); background: rgba(35,50,36,.88); color: var(--on-dark); }
+.hero__badge { position: absolute; left: 24px; bottom: 30px; z-index: 3; font-size: 0.6875rem; letter-spacing: .14em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--radius-pill); background: rgba(62,97,112,.88); color: var(--on-dark); }
 .hero__inner { position: relative; z-index: 4; height: 100%; max-width: var(--page-max); margin-inline: auto; padding: 0 var(--pad); }
 .hero__copy { position: absolute; left: var(--pad); top: calc(50% + 40px); transform: translateY(-50%); width: min(36%, 540px); display: flex; flex-direction: column; gap: clamp(12px, 2.6vh, 24px); }
 .hero__title { font-size: min(var(--fs-hero), 10.2vh); line-height: 0.96; }
@@ -141,7 +141,7 @@ p { margin: 0; }
 .hero__quote { position: absolute; right: var(--pad); top: calc(83px + 32px); max-width: 320px; margin: 0; padding: 20px 24px; background: var(--milk-light); border-radius: 8px; box-shadow: 0 10px 28px rgba(33,31,26,.12); }
 .hero__quote p { font-family: var(--font-display); font-style: italic; font-size: clamp(1.1rem, 1.6vw, 1.45rem); line-height: 1.38; }
 .hero__quote cite { display: block; margin-top: 16px; font-style: normal; font-size: var(--fs-small); color: #3E3A31; }
-.hero__controls { position: absolute; right: var(--pad); bottom: 22px; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 20px; border-radius: var(--radius-pill); background: rgba(35,50,36,.88); }
+.hero__controls { position: absolute; right: var(--pad); bottom: 22px; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 20px; border-radius: var(--radius-pill); background: rgba(62,97,112,.88); }
 .hero__counter { font-family: var(--font-display); font-size: 1rem; color: var(--white); font-variant-numeric: tabular-nums; margin-right: 8px; }
 .hero__counter b { font-weight: 400; font-size: 1.25rem; }
 
@@ -365,7 +365,7 @@ p { margin: 0; }
 .questions__art img { width: 100%; height: auto; }
 .q-form { display: flex; flex-direction: column; gap: 14px; }
 .q-form .field { color: var(--on-dark-muted); }
-.q-form .field input, .q-form .field select, .q-form .field textarea { background: rgba(255,255,255,.04); border: 1px solid #5B6556; color: var(--on-dark); font: inherit; font-size: 1rem; padding: 12px 14px; border-radius: 8px; }
+.q-form .field input, .q-form .field select, .q-form .field textarea { background: rgba(255,255,255,.04); border: 1px solid rgba(243,235,221,.35); color: var(--on-dark); font: inherit; font-size: 1rem; padding: 12px 14px; border-radius: 8px; }
 .q-form .field textarea { min-height: 110px; resize: vertical; }
 .q-form .field select option { color: var(--ink); }
 .q-form .field input:focus, .q-form .field select:focus, .q-form .field textarea:focus { outline: 2px solid var(--gold-light); outline-offset: 0; }
@@ -569,3 +569,4 @@ p { margin: 0; }
 
 /* переходы фон-в-фон без градиента */
 .seam { display: none; }
+.q-form .field input::placeholder, .q-form .field textarea::placeholder { color: rgba(243,235,221,.6); }
