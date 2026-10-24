@@ -7,7 +7,7 @@
    на сруб, криво или мимо — скатилось. Без подсказок. Несколько венцов —
    и короткая фраза про профессионалов с кнопкой поддержки.
 
-   Кнопка «Заняться строительством по-серьёзному» открывает полную игру
+   Переключатель «Простой режим / Сложный режим» сверху: сложный открывает полную игру
    (assets/js/chapel-game.js). На телефоне остаётся обычная картинка.
    ========================================================================== */
 (function () {
@@ -135,11 +135,14 @@
     ui.say.className = 'ct-say';
     ui.say.setAttribute('role', 'status');
     media.appendChild(ui.say);
-    ui.more = document.createElement('button');
-    ui.more.type = 'button';
-    ui.more.className = 'ct-more';
-    ui.more.innerHTML = 'Заняться строительством по-серьёзному <svg aria-hidden="true"><use href="#i-arrow"/></svg>';
-    media.appendChild(ui.more);
+    // переключатель режимов: простой — здесь, в блоке; сложный — полная игра в окне
+    ui.modes = document.createElement('div');
+    ui.modes.className = 'ct-modes kim-modes';
+    ui.modes.setAttribute('role', 'group');
+    ui.modes.setAttribute('aria-label', 'Режим игры');
+    ui.modes.innerHTML = '<button type="button" aria-pressed="true">Простой режим</button><button type="button" aria-pressed="false" data-hard>Сложный режим</button>';
+    media.appendChild(ui.modes);
+    ui.more = ui.modes.querySelector('[data-hard]');
     ui.card = document.createElement('div');
     ui.card.className = 'ct-card';
     ui.card.hidden = true;

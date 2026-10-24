@@ -144,6 +144,7 @@
         '<header class="cg__head">' +
           '<div class="cg__title"><span class="eyebrow">Строим вместе</span><h2 id="cg-title">Сложи сруб</h2></div>' +
           '<div class="cg__tools">' +
+            '<div class="kim-modes cg-modes" role="group" aria-label="Режим игры"><button type="button" aria-pressed="false" data-cg-easy>Простой режим</button><button type="button" aria-pressed="true">Сложный режим</button></div>' +
             '<button class="cg-icon" type="button" data-cg-sound aria-pressed="true" title="Звук"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path class="cg-icon__wave" d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path class="cg-icon__mute" d="M16 9.5l5 5M21 9.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span class="visually-hidden">Звук</span></button>' +
             '<button class="cg-icon" type="button" data-cg-close aria-label="Закрыть"><svg aria-hidden="true"><use href="#i-close"/></svg></button>' +
           '</div>' +
@@ -171,6 +172,7 @@
     ['crown', 'perfect', 'fails', 'wall', 'butt', 'tip', 'wind', 'say', 'card', 'scene', 'sound'].forEach(function (k) { ui[k] = root.querySelector('[data-cg-' + k + ']'); });
 
     root.querySelector('[data-cg-close]').addEventListener('click', closeGame);
+    root.querySelector('[data-cg-easy]').addEventListener('click', closeGame);   // простой режим — в блоке на странице
     root.addEventListener('click', function (e) { if (e.target === root) closeGame(); });
     ui.sound.addEventListener('click', function () {
       muted = !muted;
