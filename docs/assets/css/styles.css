@@ -1294,3 +1294,8 @@ main > section, body > footer { position: relative; }
 
 /* над головой батюшки — ровное светло-бежевое небо, как по бокам кадра, без размытых тёмных пятен */
 .questions__art--photo::before { background: linear-gradient(180deg, #FBF4E6 0%, #F9EEDC 55%, #F7EAD5 100%); filter: none; transform: none; height: 22%; }
+
+/* «Этапы» → «Фото и события»: меньше пустого места на стыке */
+.events__grid { padding-top: clamp(32px, 3vw, 52px); }
+.build .stages { padding-bottom: clamp(10px, 1vw, 16px); }
+.build { padding-bottom: clamp(18px, 1.6vw, 26px); }
