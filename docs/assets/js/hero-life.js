@@ -65,34 +65,34 @@
       wind: 1, gust: [3, 14], leaves: ['#D9A531', '#C7841F', '#E4B84C', '#B8721C'], leafRate: 1,
       clouds: { n: 6, y: [0, 0.26], k: [0.45, 0.85], a: [0.45, 0.75], tint: null },
       wx: { first: [150, 260], every: [180, 300], rain: 'rain', rainDur: 20, after: 'glint' },
-      sunbreak: [35, 60], walker: [30, 50],
+      sunbreak: [35, 60],
       bird: [20, 40], glint: [20, 35], motes: 14, light: 0
     },
     'late-autumn': {
       wind: 0.9, gust: [4, 16], leaves: ['#8E6B3C', '#7A5A33', '#A07C4A', '#6C5233', '#93743F'], leafRate: 0.3,
       clouds: { n: 7, y: [-0.04, 0.3], k: [0.8, 1.35], a: [0.3, 0.5], tint: [112, 118, 127, 0.6] },
       wx: { first: [35, 80], every: [90, 170], rain: 'drizzle', rainDur: [28, 50], after: null, overcast: 0.5 },
-      sunbreak: [30, 55], walker: [30, 50],
+      sunbreak: [30, 55],
       bird: [35, 60], glint: null, motes: 0, light: 0
     },
     'winter': {
       wind: 0.22, gust: [6, 20], leaves: null, leafRate: 0,
       clouds: { n: 4, y: [0, 0.2], k: [0.6, 1.0], a: [0.22, 0.38], tint: [226, 231, 239, 0.35] },
-      wx: null, snow: true, sunbreak: [30, 55], walker: [35, 55],
+      wx: null, snow: true, sunbreak: [30, 55],
       bird: [40, 70], glint: null, motes: 0, light: 0
     },
     'spring': {
       wind: 0.85, gust: [3, 12], leaves: null, petals: true, leafRate: 0,
       clouds: { n: 5, y: [0, 0.24], k: [0.45, 0.85], a: [0.45, 0.75], tint: null },
       wx: { first: [120, 220], every: [180, 300], rain: 'rain', rainDur: 14, after: 'rainbow' },
-      sunbreak: [45, 80], walker: [30, 50],
+      sunbreak: [45, 80],
       bird: [15, 30], glint: [25, 45], motes: 6, light: 0
     },
     'summer': {
       wind: 0.7, gust: [4, 15], leaves: null, leafRate: 0,
       clouds: { n: 5, y: [-0.02, 0.2], k: [0.55, 1.0], a: [0.55, 0.85], tint: null },
       wx: { first: [200, 320], every: [240, 400], rain: 'rain', rainDur: 12, after: 'glint' },
-      sunbreak: [35, 60], walker: [30, 50],
+      sunbreak: [35, 60],
       bird: [20, 40], glint: [20, 35], motes: 18, light: 1
     }
   };
@@ -268,7 +268,7 @@
 
     // ---------- состояние ----------
     var T = 0, last = 0, held = false;
-    var gust, leaves, drops, motes, flakes, dust, bird, glint, wx, sunb, bow, clouds, walker;
+    var gust, leaves, drops, motes, flakes, dust, bird, glint, wx, sunb, bow, clouds;
     var W8 = 0, RAIN = 0, lastTint = -1, snowI = 0.5, snowPhase = rnd(0, 100), puffNext = 0;
 
     function reset() {
@@ -277,7 +277,6 @@
       leaves = []; drops = []; motes = []; flakes = []; dust = [];
       bird = { st: 'off', next: T + (C.bird ? (DEMO ? 3 : rnd(C.bird[0] * 0.3, C.bird[0])) : 1e9) };
       glint = { on: false, t0: 0, dur: 2.6, big: false, warm: 0, next: T + (C.glint ? (DEMO ? 6 : rnd(8, 20)) : 1e9) };
-      walker = { on: false, t0: 0, next: T + (C.walker ? (DEMO ? 2 : rnd(5, 15)) : 1e9) };
       wx = { st: 'clear', t0: 0, next: T + (C.wx ? (DEMO ? rnd(2, 4) : r2(C.wx.first)) : 1e9) };
       sunb = { on: false, t0: 0, dur: 12, next: T + (C.sunbreak ? (DEMO ? 8 : rnd(C.sunbreak[0] * 0.5, C.sunbreak[1] * 0.6)) : 1e9) };
       bow = { on: false, t0: 0, dur: 16 };
@@ -425,8 +424,6 @@
       }
 
       updateBird(dt);
-      if (!walker.on && T > walker.next && RAIN < 0.3) { walker.on = true; walker.t0 = T; walker.dur = rnd(26, 34); walker.dir = Math.random() < 0.6 ? 1 : -1; walker.h = rnd(0.94, 1.06); }
-      if (walker.on && T - walker.t0 > walker.dur) { walker.on = false; walker.next = T + (DEMO ? 4 : rnd(C.walker[0], C.walker[1])); }
 
       // небольшой блик время от времени
       if (C.glint && !glint.on && T > glint.next && clearSky()) startGlint(false);
@@ -458,34 +455,6 @@
         if (e > b.stay || !clearSky()) { b.st = 'out'; b.t0 = T; b.dur = rnd(2.6, 3.6); b.to = [-30, rnd(-20, H * 0.15)]; b.ctrl = [W * rnd(0.15, 0.45), rnd(-H * 0.1, H * 0.1)]; }
       }
       else if (b.st === 'out' && e > b.dur) { b.st = 'off'; b.next = T + (DEMO ? rnd(6, 10) : rnd(C.bird[0], C.bird[1])); }
-    }
-
-    /* Прохожий: идёт по дорожке перед храмом, ноги скрыты кустами (маска листвы). */
-    var PATH = [-40, 860, 1047];                       // x от, x до, уровень дорожки (пиксели снимка)
-    function drawWalker() {
-      if (!walker.on) return;
-      var p = (T - walker.t0) / walker.dur, x0 = walker.dir > 0 ? PATH[0] : PATH[1], x1 = walker.dir > 0 ? PATH[1] : PATH[0];
-      var ix = x0 + (x1 - x0) * p, ft = P(ix, PATH[2]), hh = 112 * walker.h * S;
-      var a = Math.min(1, p * 8, (1 - p) * 8), ph = T * 4.2, sw = Math.sin(ph);
-      var c = tmp.getContext('2d'); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W, H);
-      c.save(); c.translate(ft[0], ft[1]); c.scale(walker.dir, 1); c.translate(0, Math.abs(Math.cos(ph)) * -hh * 0.012);
-      var col = season === 'winter' ? '#2E2A2C' : '#3A3029';
-      c.fillStyle = col; c.strokeStyle = col; c.lineCap = 'round';
-      c.lineWidth = hh * 0.085;                                                    // ноги
-      c.beginPath(); c.moveTo(0, -hh * 0.47); c.lineTo(sw * hh * 0.13, 0); c.stroke();
-      c.beginPath(); c.moveTo(0, -hh * 0.47); c.lineTo(-sw * hh * 0.13, 0); c.stroke();
-      c.beginPath();                                                               // пальто
-      c.moveTo(-hh * 0.07, -hh * 0.8); c.lineTo(hh * 0.075, -hh * 0.8); c.lineTo(hh * 0.1, -hh * 0.38); c.lineTo(-hh * 0.1, -hh * 0.38); c.closePath(); c.fill();
-      c.lineWidth = hh * 0.055;                                                    // руки
-      c.beginPath(); c.moveTo(0, -hh * 0.77); c.lineTo(-sw * hh * 0.1, -hh * 0.5); c.stroke();
-      c.beginPath(); c.arc(hh * 0.01, -hh * 0.88, hh * 0.065, 0, 7); c.fill();       // голова
-      c.restore();
-      if (chan[1]) {                                                               // кусты впереди закрывают ноги
-        c.globalCompositeOperation = 'destination-out';
-        c.drawImage(chan[1], 0, 0, MW, MH * 0.5, OX, OY + IH * S * 0.5, IW * S, IH * S * 0.5);
-        c.globalCompositeOperation = 'source-over';
-      }
-      ctx.globalAlpha = a; ctx.drawImage(tmp, 0, 0); ctx.globalAlpha = 1;
     }
 
     /* Лучи солнца сквозь воздух во время просвета: несколько мягких полос сверху справа. */
@@ -625,7 +594,6 @@
         ctx.restore();
       });
 
-      drawWalker();
       drawBird();
 
       // снег: дальние слои — точки, ближние хлопья — мягкие пятна
@@ -693,7 +661,6 @@
       if (what === 'sun') { sunb.on = true; sunb.t0 = T; sunb.dur = 12; }
       if (what === 'glint') startGlint(true);
       if (what === 'bird') { bird.st = 'off'; bird.next = T; }
-      if (what === 'walker') { walker.on = false; walker.next = T; }
       if (what === 'gust') { gust.on = true; gust.t0 = T; gust.dur = 3.5; gust.amp = 1; }
     };
 
