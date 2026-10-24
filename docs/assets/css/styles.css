@@ -1287,3 +1287,10 @@ main > section, body > footer { position: relative; }
   .mx-idea:nth-child(3) .mx-idea__stage { aspect-ratio: 2.1 / 1; }
 }
 @media (max-width: 760px) { .mx-idea__text b { font-size: .9375rem; } }
+
+/* ---------- «Этапы»: меньше пустого места до следующего блока ---------- */
+.build { padding-bottom: clamp(22px, 2vw, 32px); }
+.build .stages { padding-bottom: clamp(16px, 1.6vw, 24px); }
+
+/* над головой батюшки — ровное светло-бежевое небо, как по бокам кадра, без размытых тёмных пятен */
+.questions__art--photo::before { background: linear-gradient(180deg, #FBF4E6 0%, #F9EEDC 55%, #F7EAD5 100%); filter: none; transform: none; height: 22%; }
