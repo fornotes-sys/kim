@@ -1057,10 +1057,10 @@ main > section, body > footer { position: relative; }
 /* ---------- «Спросите священника»: фото тает в паттерне, как икона святых ----------
    Без рамки и тени: края мягко растворяются, буквы фона проступают по краям,
    в углах края складываются и тают сильнее. */
-.questions__art--photo { border-radius: 0; background: none; box-shadow: none; overflow: visible; width: min(100%, 400px);
+.questions__art--photo { border-radius: 0; background: none; box-shadow: none; overflow: visible; width: min(100%, 400px); aspect-ratio: 1 / 1.14; display: block;
   --qm: linear-gradient(90deg, transparent 0, rgba(0,0,0,.35) 9%, rgba(0,0,0,.8) 20%, #000 30%, #000 72%, rgba(0,0,0,.8) 82%, rgba(0,0,0,.35) 92%, transparent 100%),
-        linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 8%, rgba(0,0,0,.8) 18%, #000 28%, #000 74%, rgba(0,0,0,.8) 84%, rgba(0,0,0,.35) 93%, transparent 100%),
-        radial-gradient(ellipse 62% 64% at 54% 46%, #000 62%, rgba(0,0,0,.6) 84%, transparent 100%);
+        linear-gradient(180deg, transparent 0, rgba(0,0,0,.4) 7%, rgba(0,0,0,.85) 17%, #000 26%, #000 76%, rgba(0,0,0,.8) 85%, rgba(0,0,0,.35) 94%, transparent 100%),
+        radial-gradient(ellipse 64% 70% at 54% 44%, #000 62%, rgba(0,0,0,.6) 84%, transparent 100%);
   -webkit-mask-image: var(--qm); mask-image: var(--qm);
   -webkit-mask-composite: source-in, source-in;
           mask-composite: intersect, intersect; }
@@ -1196,3 +1196,26 @@ main > section, body > footer { position: relative; }
 /* сцены чуть выше: справа от открытки помещаются три сюжета и кнопка «Оборот», ничего не перекрывает рисунок */
 @media (min-width: 1001px) { .mx-stage { height: clamp(470px, 33vw, 540px); } }
 .pc-thumbs { gap: 10px; }
+/* светлое небо продолжается над головой: под фото — его же размытая копия, выше кадра */
+.questions__art--photo::before { content: ""; position: absolute; inset: 0 0 auto; height: 60%;
+  background: url("../img/rector.webp") 50% 0 / 100% auto no-repeat; filter: blur(18px) saturate(1.1); transform: scaleY(1.25); transform-origin: 50% 100%; }
+.questions__art--photo img { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 0;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 12%); mask-image: linear-gradient(180deg, transparent 0, #000 12%); }
+
+/* ---------- Первый экран: скругление «внутрь» ----------
+   Скруглены углы не у фото, а у светлого блока с текстом: фото лежит фоном и заходит
+   под его правые углы. Фото чуть шире (на радиус) и обрезано маской: слева — полоса
+   шириной в радиус, кроме двух уголков сверху и снизу. */
+@media (min-width: 761px) {
+  .hero { --hr: 32px; }
+  .hero__media { border-radius: 0; overflow: visible; }
+  .hero__slide { left: calc(-1 * var(--hr));
+    --hm: linear-gradient(90deg, transparent var(--hr), #000 var(--hr)),
+          radial-gradient(circle at 0 100%, transparent calc(var(--hr) - .5px), #000 var(--hr)),
+          radial-gradient(circle at 0 0, transparent calc(var(--hr) - .5px), #000 var(--hr));
+    -webkit-mask: var(--hm); mask: var(--hm);
+    -webkit-mask-size: 100% 100%, var(--hr) var(--hr), var(--hr) var(--hr);
+            mask-size: 100% 100%, var(--hr) var(--hr), var(--hr) var(--hr);
+    -webkit-mask-position: 0 0, 0 0, 0 100%; mask-position: 0 0, 0 0, 0 100%;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+}

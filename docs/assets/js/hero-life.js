@@ -353,10 +353,10 @@
       stepWeather();
 
       // короткий просвет солнца (поздняя осень, зима): тёплый свет и блик по куполу
-      if (!sunb.on && T > sunb.next && clearSky() && (!C.snow || snowI < 0.45)) { sunb.on = true; sunb.t0 = T; sunb.dur = rnd(10, 15); }
+      if (!sunb.on && T > sunb.next && clearSky() && (!C.snow || snowI < 0.45)) { sunb.on = true; sunb.t0 = T; sunb.dur = rnd(34, 42); }
       if (sunb.on) {
         var se = T - sunb.t0;
-        if (se > sunb.dur * 0.35 && !glint.on) startGlint(true, true);
+        if (se > sunb.dur * 0.12 && !glint.on) startGlint(true, true);
         if (se > sunb.dur) { sunb.on = false; sunb.next = T + r2(C.sunbreak); }
       }
 
@@ -435,7 +435,7 @@
       return g;
     }
 
-    function startGlint(big, warm) { glint.on = true; glint.t0 = T; glint.big = big; glint.warm = warm ? 1 : 0; glint.dur = big ? (warm ? 4.2 : 3.2) : 2.4; }
+    function startGlint(big, warm) { glint.on = true; glint.t0 = T; glint.big = big; glint.warm = warm ? 1 : 0; glint.dur = (big ? (warm ? 4.2 : 3.2) : 2.4) * 7; }   // блик идёт по куполу медленно-медленно
 
     function updateBird(dt) {
       var b = bird;
@@ -457,18 +457,39 @@
       else if (b.st === 'out' && e > b.dur) { b.st = 'off'; b.next = T + (DEMO ? rnd(6, 10) : rnd(C.bird[0], C.bird[1])); }
     }
 
-    /* Лучи солнца сквозь воздух во время просвета: несколько мягких полос сверху справа. */
+    /* Лучи солнца сквозь воздух во время просвета — не отдельные «прожекторы», а свечение:
+       много широких полос разной силы рисуются в маленький холст и сильно размываются,
+       получается мягкий веер света из-за правого верхнего угла. Холст готовится один раз
+       на размер кадра, дальше только медленно «дышит» и чуть поворачивается. */
+    var raysCv = null, raysKey = '';
+    function makeRays() {
+      var q = 0.25, w = Math.max(2, Math.round(W * q)), h = Math.max(2, Math.round(H * q));
+      var c = mk(w, h), x = c.getContext('2d'), tmpc = mk(w, h), y = tmpc.getContext('2d');
+      var ox = w * 0.97, oy = -h * 0.12, L = Math.hypot(w, h) * 1.2;
+      y.globalCompositeOperation = 'lighter';
+      for (var k = 0; k < 16; k++) {
+        var ang = 2.2 + 0.65 * (k + Math.random() * 0.8) / 16, wd = rnd(0.02, 0.06), str = rnd(0.25, 1);
+        var g = y.createLinearGradient(ox, oy, ox + Math.cos(ang) * L, oy + Math.sin(ang) * L);
+        g.addColorStop(0, 'rgba(255,236,192,0)'); g.addColorStop(0.15, 'rgba(255,236,192,' + (0.32 * str).toFixed(3) + ')'); g.addColorStop(0.8, 'rgba(255,236,192,0)');
+        y.fillStyle = g; y.beginPath(); y.moveTo(ox, oy);
+        y.lineTo(ox + Math.cos(ang - wd) * L, oy + Math.sin(ang - wd) * L); y.lineTo(ox + Math.cos(ang + wd) * L, oy + Math.sin(ang + wd) * L); y.closePath(); y.fill();
+      }
+      // общее мягкое свечение под полосами
+      var rg = y.createRadialGradient(ox, oy, 0, ox, oy, L * 0.7);
+      rg.addColorStop(0, 'rgba(255,236,192,.4)'); rg.addColorStop(1, 'rgba(255,236,192,0)');
+      y.fillStyle = rg; y.fillRect(0, 0, w, h);
+      x.filter = 'blur(' + Math.max(4, Math.round(w * 0.018)) + 'px)';
+      x.drawImage(tmpc, 0, 0);
+      return c;
+    }
     function rays(a) {
       if (a < 0.01) return;
-      var ox = W * 0.97, oy = -H * 0.12, L = Math.hypot(W, H) * 1.1;
-      ctx.save(); ctx.globalCompositeOperation = 'screen';
-      [[2.32, 0.035, 1], [2.45, 0.05, 0.8], [2.6, 0.03, 0.9], [2.75, 0.045, 0.6]].forEach(function (r, i) {
-        var ang = r[0] + 0.02 * Math.sin(T * 0.15 + i * 1.7), w = r[1];
-        var g = ctx.createLinearGradient(ox, oy, ox + Math.cos(ang) * L, oy + Math.sin(ang) * L);
-        g.addColorStop(0, 'rgba(255,236,190,0)'); g.addColorStop(0.18, 'rgba(255,236,190,' + (0.32 * r[2] * a).toFixed(3) + ')'); g.addColorStop(0.75, 'rgba(255,236,190,0)');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(ox, oy);
-        ctx.lineTo(ox + Math.cos(ang - w) * L, oy + Math.sin(ang - w) * L); ctx.lineTo(ox + Math.cos(ang + w) * L, oy + Math.sin(ang + w) * L); ctx.closePath(); ctx.fill();
-      });
+      var key = W + 'x' + H;
+      if (key !== raysKey) { raysCv = makeRays(); raysKey = key; }
+      var ox = W * 0.97, oy = -H * 0.12;
+      ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = Math.min(1, a * 1.3 * (0.85 + 0.15 * noise1(T * 0.11)));
+      ctx.translate(ox, oy); ctx.rotate(0.015 * Math.sin(T * 0.05)); ctx.translate(-ox, -oy);
+      ctx.drawImage(raysCv, 0, 0, W, H);
       ctx.restore();
     }
 
@@ -658,7 +679,7 @@
     if (DEMO) window.KimHero.trigger = function (what) {
       if (what === 'rain' && C.wx) { wx.st = 'clear'; wx.next = T; }
       if (what === 'rainbow') { bow.on = true; bow.t0 = T; }
-      if (what === 'sun') { sunb.on = true; sunb.t0 = T; sunb.dur = 12; }
+      if (what === 'sun') { sunb.on = true; sunb.t0 = T; sunb.dur = 38; }
       if (what === 'glint') startGlint(true);
       if (what === 'bird') { bird.st = 'off'; bird.next = T; }
       if (what === 'gust') { gust.on = true; gust.t0 = T; gust.dur = 3.5; gust.amp = 1; }
