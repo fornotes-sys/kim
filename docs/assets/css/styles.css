@@ -837,3 +837,62 @@ main > section, body > footer { position: relative; }
 .hero__slide .hero__life, .hero__slide .hero__weather { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .hero__slide .hero__weather { background: rgb(58, 70, 84); mix-blend-mode: multiply; opacity: 0; }
 .hero__slide .hero__windgl { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .6s ease; }
+
+
+/* ---------- Тёмные блоки: плавный переход градиентом ----------
+   Вместо резкой границы тёмный блок с буквами медленно растворяется в светлом
+   фоне соседа — длинная растяжка с мягким «ease-in-out», без видимого края.
+   --fade-up / --fade-down — цвет соседа сверху и снизу (тройкой r g b). */
+.saints, .questions, .site-footer--dark {
+  --fade: clamp(200px, 22vw, 380px);
+  --fade-up: 243 235 221; --fade-down: 243 235 221; }
+.saints { --fade-up: 247 242 233; }            /* сверху полоса календаря */
+.questions { --fade-up: 238 229 213; }         /* сверху «События» */
+.saints, .questions {
+  background:
+    linear-gradient(180deg,
+      rgb(var(--fade-up) / 1) 0, rgb(var(--fade-up) / 0.987) calc(var(--fade) * 0.081), rgb(var(--fade-up) / 0.951) calc(var(--fade) * 0.155),
+      rgb(var(--fade-up) / 0.896) calc(var(--fade) * 0.225), rgb(var(--fade-up) / 0.825) calc(var(--fade) * 0.290), rgb(var(--fade-up) / 0.741) calc(var(--fade) * 0.353),
+      rgb(var(--fade-up) / 0.648) calc(var(--fade) * 0.412), rgb(var(--fade-up) / 0.55) calc(var(--fade) * 0.471), rgb(var(--fade-up) / 0.45) calc(var(--fade) * 0.529),
+      rgb(var(--fade-up) / 0.352) calc(var(--fade) * 0.588), rgb(var(--fade-up) / 0.259) calc(var(--fade) * 0.647), rgb(var(--fade-up) / 0.175) calc(var(--fade) * 0.710),
+      rgb(var(--fade-up) / 0.104) calc(var(--fade) * 0.775), rgb(var(--fade-up) / 0.049) calc(var(--fade) * 0.845), rgb(var(--fade-up) / 0.013) calc(var(--fade) * 0.919),
+      rgb(var(--fade-up) / 0) calc(var(--fade) * 1.000)),
+    linear-gradient(0deg,
+      rgb(var(--fade-down) / 1) 0, rgb(var(--fade-down) / 0.987) calc(var(--fade) * 0.081), rgb(var(--fade-down) / 0.951) calc(var(--fade) * 0.155),
+      rgb(var(--fade-down) / 0.896) calc(var(--fade) * 0.225), rgb(var(--fade-down) / 0.825) calc(var(--fade) * 0.290), rgb(var(--fade-down) / 0.741) calc(var(--fade) * 0.353),
+      rgb(var(--fade-down) / 0.648) calc(var(--fade) * 0.412), rgb(var(--fade-down) / 0.55) calc(var(--fade) * 0.471), rgb(var(--fade-down) / 0.45) calc(var(--fade) * 0.529),
+      rgb(var(--fade-down) / 0.352) calc(var(--fade) * 0.588), rgb(var(--fade-down) / 0.259) calc(var(--fade) * 0.647), rgb(var(--fade-down) / 0.175) calc(var(--fade) * 0.710),
+      rgb(var(--fade-down) / 0.104) calc(var(--fade) * 0.775), rgb(var(--fade-down) / 0.049) calc(var(--fade) * 0.845), rgb(var(--fade-down) / 0.013) calc(var(--fade) * 0.919),
+      rgb(var(--fade-down) / 0) calc(var(--fade) * 1.000)),
+    #0B3238 url("../img/pattern-letters.jpg") center var(--doc-y, 0px) / max(100%, 1536px) auto repeat-y; }
+/* место под растяжку: содержимое начинается там, где фон уже тёмный */
+.saints { padding-block: calc(var(--fade) * .72) calc(var(--fade) * .72); }
+.questions__grid { padding-block: calc(var(--fade) * .72); }
+/* у подвала растяжка только сверху */
+.site-footer--dark {
+  background:
+    linear-gradient(180deg,
+      rgb(var(--fade-up) / 1) 0, rgb(var(--fade-up) / 0.987) calc(var(--fade) * 0.081), rgb(var(--fade-up) / 0.951) calc(var(--fade) * 0.155),
+      rgb(var(--fade-up) / 0.896) calc(var(--fade) * 0.225), rgb(var(--fade-up) / 0.825) calc(var(--fade) * 0.290), rgb(var(--fade-up) / 0.741) calc(var(--fade) * 0.353),
+      rgb(var(--fade-up) / 0.648) calc(var(--fade) * 0.412), rgb(var(--fade-up) / 0.55) calc(var(--fade) * 0.471), rgb(var(--fade-up) / 0.45) calc(var(--fade) * 0.529),
+      rgb(var(--fade-up) / 0.352) calc(var(--fade) * 0.588), rgb(var(--fade-up) / 0.259) calc(var(--fade) * 0.647), rgb(var(--fade-up) / 0.175) calc(var(--fade) * 0.710),
+      rgb(var(--fade-up) / 0.104) calc(var(--fade) * 0.775), rgb(var(--fade-up) / 0.049) calc(var(--fade) * 0.845), rgb(var(--fade-up) / 0.013) calc(var(--fade) * 0.919),
+      rgb(var(--fade-up) / 0) calc(var(--fade) * 1.000)),
+    #0B3238 url("../img/pattern-letters.jpg") center var(--doc-y, 0px) / max(100%, 1536px) auto repeat-y; }
+.site-footer--dark .colophon { padding-top: calc(var(--fade) * .72); }
+/* островки букв и полосы-клинья на этих стыках больше не нужны */
+.saints__spill, .questions__spill { display: none; }
+.saints > .joint, .about > .joint, .questions > .joint, .help > .joint:not(.joint--bottom), .site-footer > .joint { display: none; }
+.calendar-strip { border-bottom: 0; }
+@media (max-width: 760px) {
+  .saints, .questions, .site-footer--dark { --fade: clamp(140px, 38vw, 220px); }
+  .saints { padding-block: calc(var(--fade) * .6); }
+  .questions__grid { padding-block: calc(var(--fade) * .6); }
+  .site-footer--dark .colophon { padding-top: calc(var(--fade) * .6); }
+}
+/* буквы светлых блоков у растяжки появляются с нуля, чтобы и они не обрывались краем */
+.calendar-strip { --lb: 0; --rb: 0; --cb: 0; }
+.about          { --lt: 0; --rt: 0; --ct: 0; }
+.events         { --lb: 0; --rb: 0; --cb: 0; }
+.help           { --lt: 0; --rt: 0; --ct: 0; }
+.merch          { --lb: 0; --rb: 0; --cb: 0; }

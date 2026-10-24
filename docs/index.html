@@ -45,33 +45,35 @@
 
 <a class="visually-hidden skip-link" href="#main">Перейти к содержанию</a>
 
-<!-- ============ ШАПКА + ПЕРВЫЙ ЭКРАН ============ -->
-<section class="hero" id="top" aria-label="Храм, который строится сердцами">
-  <header class="site-header">
-    <div class="site-header__inner">
-      <a class="brand" href="#top" aria-label="Приход храма святых Кирилла и Мефодия — на главную">
-        <img src="assets/img/emblem-small.png" width="58" height="58" alt="">
-        <span class="brand__name">Приход храма<br><span class="slav">святых Кирилла и Мефодия</span><br>на Пулковских высотах</span>
-      </a>
-      <nav class="nav" aria-label="Основное меню">
-        <ul class="nav__list">
-          <li><a href="#about"><span class="cap">О</span> храме</a></li>
-          <li><a href="#saints"><span class="cap">С</span>вятые</a></li>
-          <li><a href="#calendar"><span class="cap">К</span>алендарь</a></li>
-          <li><a href="#events"><span class="cap">С</span>обытия</a></li>
-          <li><a href="#merch"><span class="cap">М</span>ерч</a></li>
-          <li><a href="#help"><span class="cap">К</span>ак помочь</a></li>
-          <li><a href="#contacts"><span class="cap">К</span>онтакты</a></li>
-        </ul>
-      </nav>
-      <div class="header-actions">
-        <button class="btn btn--gold btn--small" type="button" data-modal-open="donate">Поддержать</button>
-        <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobile-menu" data-menu-open>
-          <svg aria-hidden="true"><use href="#i-burger"/></svg>
-        </button>
-      </div>
+<!-- ============ ШАПКА (закреплена на всех блоках) ============ -->
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href="#top" aria-label="Приход храма святых Кирилла и Мефодия — на главную">
+      <img src="assets/img/emblem-small.png" width="58" height="58" alt="">
+      <span class="brand__name">Приход храма<br><span class="slav">святых Кирилла и Мефодия</span><br>на Пулковских высотах</span>
+    </a>
+    <nav class="nav" aria-label="Основное меню">
+      <ul class="nav__list">
+        <li><a href="#about"><span class="cap">О</span> храме</a></li>
+        <li><a href="#saints"><span class="cap">С</span>вятые</a></li>
+        <li><a href="#calendar"><span class="cap">К</span>алендарь</a></li>
+        <li><a href="#events"><span class="cap">С</span>обытия</a></li>
+        <li><a href="#merch"><span class="cap">М</span>ерч</a></li>
+        <li><a href="#help"><span class="cap">К</span>ак помочь</a></li>
+        <li><a href="#contacts"><span class="cap">К</span>онтакты</a></li>
+      </ul>
+    </nav>
+    <div class="header-actions">
+      <button class="btn btn--gold btn--small" type="button" data-modal-open="donate">Поддержать</button>
+      <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobile-menu" data-menu-open>
+        <svg aria-hidden="true"><use href="#i-burger"/></svg>
+      </button>
     </div>
-  </header>
+  </div>
+</header>
+
+<!-- ============ ПЕРВЫЙ ЭКРАН ============ -->
+<section class="hero" id="top" aria-label="Храм, который строится сердцами">
 
   <div class="hero__media">
     <figure class="hero__slide is-active" data-slide><img src="assets/img/hero.jpg" width="1444" height="1089" alt="Образ будущего храма в осеннем закатном свете" fetchpriority="high">
