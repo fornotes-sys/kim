@@ -136,8 +136,7 @@
     root = h('div', 'cg');
     root.id = 'chapel-game';
     root.hidden = true;
-    root.setAttribute('role', 'dialog');
-    root.setAttribute('aria-modal', 'true');
+    root.setAttribute('role', 'region');
     root.setAttribute('aria-labelledby', 'cg-title');
     root.innerHTML =
       '<div class="cg__box">' +
@@ -167,13 +166,16 @@
           '</aside>' +
         '</div>' +
       '</div>';
-    document.body.appendChild(root);
+    // сложный режим разворачивается прямо в блоке «Строим вместе», без всплывающего окна
+    section = document.querySelector('.build');
+    if (section) { root.classList.add('cg--inline'); section.insertBefore(root, section.querySelector('.stages')); }
+    else document.body.appendChild(root);
 
     ['crown', 'perfect', 'fails', 'wall', 'butt', 'tip', 'wind', 'say', 'card', 'scene', 'sound'].forEach(function (k) { ui[k] = root.querySelector('[data-cg-' + k + ']'); });
 
     root.querySelector('[data-cg-close]').addEventListener('click', closeGame);
     root.querySelector('[data-cg-easy]').addEventListener('click', closeGame);   // простой режим — в блоке на странице
-    root.addEventListener('click', function (e) { if (e.target === root) closeGame(); });
+
     ui.sound.addEventListener('click', function () {
       muted = !muted;
       ui.sound.setAttribute('aria-pressed', String(!muted));
@@ -270,11 +272,16 @@
   }
 
   /* ---------- Открыть / закрыть ---------- */
+  var section = null;
   function openGame() {
     if (!built) buildDom();
     open = true;
     root.hidden = false;
-    document.documentElement.classList.add('cg-open');
+    if (section) {
+      section.classList.add('is-hard');
+      var y = section.getBoundingClientRect().top + window.pageYOffset - 20;
+      window.scrollTo({ top: y, behavior: REDUCED.matches ? 'auto' : 'smooth' });
+    } else document.documentElement.classList.add('cg-open');
     reset();
     fitView();
     lastT = now();
@@ -286,6 +293,7 @@
     open = false;
     root.hidden = true;
     document.documentElement.classList.remove('cg-open');
+    if (section) section.classList.remove('is-hard');
     cancelAnimationFrame(raf);
     timers.forEach(clearTimeout); timers = [];
     hold = null; fall = null;

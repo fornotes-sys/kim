@@ -250,5 +250,12 @@ html.cg-open, html.cg-open body { overflow: hidden; }
 .kim-modes button:hover { color: var(--ink); }
 .kim-modes button[aria-pressed="true"] { background: var(--gold-btn); color: var(--white); cursor: default; }
 .ct-modes { display: none; }
-.build__media.is-toy .ct-modes { display: inline-flex; position: absolute; right: 14px; top: 14px; z-index: 3; }
+.build__media.is-toy .ct-modes { display: inline-flex; position: absolute; left: 14px; bottom: 10px; z-index: 3; box-shadow: 0 0 0 1px var(--line); }
 .cg-modes { margin-right: 8px; }
+
+/* сложный режим прямо в блоке: игра встаёт на место картинки и текста */
+.build.is-hard .build__grid { display: none; }
+.cg.cg--inline { position: relative; inset: auto; z-index: 1; display: block; padding: 0 var(--pad); background: none; animation: none; }
+.cg--inline .cg__box { width: 100%; max-width: none; height: clamp(560px, calc(100vh - 190px), 760px); box-shadow: 0 0 0 1px var(--line), 0 16px 44px rgba(33,31,26,.10); animation: cg-unfold .45s cubic-bezier(.2,.7,.2,1); }
+@keyframes cg-unfold { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { .cg--inline .cg__box { animation: none; } }

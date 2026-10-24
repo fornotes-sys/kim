@@ -2,9 +2,10 @@
    «Сложи сруб» для телефона: пирамидка, которую держат наклоном.
    На компьютере не включается — там живая иллюстрация (chapel-toy.js).
 
-   Кран качает бревно над срубом, касание — бревно падает. Где упало —
-   там и легло: сдвиг от середины смещает центр тяжести, и сруб начинает
-   клониться. Наклон телефона наклоняет «землю» — им сруб и удерживают.
+   Кран качает бревно над срубом. Держишь палец — бревно плавно опускается,
+   отпустил — висит. Где коснулось — там и легло, а коснуться надо при ровном
+   телефоне, иначе бревно ляжет одним концом и соскочит. Сдвиг от середины
+   смещает центр тяжести, и сруб начинает клониться. Наклон телефона наклоняет «землю» — им сруб и удерживают.
    Наклон читается с датчика движения (на iPhone — после разрешения),
    без датчика его задают пальцем по полоске-уровню внизу.
    Сруб наклонился слишком сильно — верхние брёвна раскатываются.
@@ -150,11 +151,16 @@
     ui.level.addEventListener('pointerup', function () { dragging = false; });
     ui.level.addEventListener('pointercancel', function () { dragging = false; });
 
-    // касание сцены — сбросить бревно
+    // держишь палец на сцене — бревно опускается; отпустил — висит
+    var holdId = null;
     ui.scene.addEventListener('pointerdown', function (e) {
-      if (e.target.closest('.cm-card, button')) return;
-      if (S.phase === 'play') drop();
+      if (e.target.closest('.cm-card, button') || S.phase !== 'play') return;
+      holdId = e.pointerId; S.holding = true; e.preventDefault();
     });
+    function release(e) { if (e.pointerId === holdId) { holdId = null; if (S) S.holding = false; } }
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    ui.scene.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
     svg = sv('svg', { 'class': 'cm-svg', role: 'img', 'aria-label': 'Сруб часовни на фундаменте, над ним кран с бревном' });
     ui.scene.insertBefore(svg, ui.scene.firstChild);
@@ -167,7 +173,6 @@
     L.world = sv('g', { fill: 'none', stroke: '#3E3122', 'stroke-width': 2.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, svg);
     sv('g', null, L.world,
       '<path d="M-400 600c150 4 300-4 420 0s300-4 400 0 300-2 400 0"/><g stroke="#7E7A4E" stroke-width="1.4"><path d="M30 608l4-10M56 610l3-9M340 609l4-10M370 607l5-11"/></g>' +
-      '<g stroke="#5A3F22" stroke-width="3"><path d="M366 600V430"/><path d="M355 448h22"/><path d="M340 472h52"/><path d="M349 528l34 15"/></g><circle cx="366" cy="472" r="4" fill="#B88A3E" stroke="none"/>' +
       '<g fill="#DAD0BC" stroke-width="2"><rect x="96" y="580" width="34" height="20" rx="2"/><rect x="189" y="580" width="34" height="20" rx="2"/><rect x="282" y="580" width="34" height="20" rx="2"/></g>');
     L.stack = sv('g', null, L.world);
     L.top = sv('g', null, L.world);
@@ -218,10 +223,10 @@
     parts.forEach(function (p) { p.el.remove(); }); parts = [];
     [L.stack, L.top, L.hang, L.fly, L.fx].forEach(function (g) { while (g.firstChild) g.firstChild.remove(); });
     S = { phase: 'intro', mode: S ? S.mode : null, view: S && S.view, logs: [], perfect: 0, fails: 0, t: 0, tilt: 0, finger: 0,
-          lean: 0, leanV: 0, swingT: rnd(0, 6), falling: null, gust: 0, gustT: 0, warned: 0, creakT: 0 };
+          lean: 0, leanV: 0, swingT: rnd(0, 6), falling: null, low: 0, holding: false, gust: 0, gustT: 0, warned: 0, creakT: 0 };
     svg.classList.remove('is-final');
     if (root) root.classList.remove('is-final');
-    L.crane.style.display = '';
+    L.crane.style.display = ''; L.hang.style.display = '';   // новое бревно снова на крюке
     ui.say.classList.remove('is-on');
     hud();
   }
@@ -242,8 +247,8 @@
     var html;
     if (kind === 'intro') {
       html = '<span class="eyebrow">Мини-игра</span><h3>Сложи сруб</h3>' +
-        '<p>Кран качает бревно над срубом. <b>Коснитесь экрана</b> — бревно упадёт. Где упало, там и легло.</p>' +
-        '<p>Легло со сдвигом — сруб начнёт клониться. <b>Наклоняйте телефон</b>, чтобы удержать его, как пирамидку на ладони.</p>' +
+        '<p>Кран качает бревно над срубом. <b>Держите палец на экране</b> — бревно плавно опускается, отпустите — остановится. Где коснулось, там и легло.</p>' +
+        '<p>Пока опускаете, <b>держите телефон ровно</b>: криво — бревно ляжет одним концом и соскочит. Легло со сдвигом — сруб начнёт клониться, удерживайте его наклоном.</p>' +
         '<button class="btn btn--gold" type="button" data-cm="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
         '<p class="cm-card__small">Игра попросит доступ к датчику наклона. Без него наклон задаётся пальцем по полоске внизу.</p>';
     } else {
@@ -267,7 +272,7 @@
       root.classList.toggle('is-finger', !ok);
       S.phase = 'play';
       hud();
-      say(ok ? 'Коснитесь — бревно упадёт' : 'Наклон — пальцем по полоске внизу', null, 2600);
+      say(ok ? 'Держите палец — бревно опускается' : 'Наклон — пальцем по полоске внизу', null, 2600);
     }
     if (again && S.mode) { if (S.mode === 'sensor') sensor.zero = null; go(S.mode === 'sensor'); return; }
     startSensor(go);
@@ -287,50 +292,63 @@
   }
   function hookY() { return Math.min(topY() - 120, 360); }
 
-  /* ---------- Сбросить бревно ---------- */
-  function drop() {
-    if (S.falling || L.hang.style.display === 'none') return;
-    var x = hookX(), y = hookY();
-    var el = sv('g', null, L.fly, logMarkup());
-    S.falling = { el: el, x: x, y: y, vy: 0, r: Math.sin(S.swingT) * 3 };
-    L.hang.style.display = 'none';
-    sfx.creak();
+  /* ---------- Опускание бревна: держишь палец — кран травит трос ----------
+     Бревно висит на тросе ровно, а сруб наклонён вместе с «землёй». Пока бревно
+     опускается, наклон телефона ещё и отводит его в сторону. Коснулось сруба
+     при наклоне — ляжет одним концом и соскочит, поэтому телефон держат ровно. */
+  var LOWER = 72;                              // скорость опускания, пикс/с
+  var LAND_DEG = 4.5;                          // допустимый наклон в момент касания, °
+  function logPos() {
+    var tx = hookX(), rope = 80 + S.low;
+    return { x: tx + rope * Math.sin(S.tilt * .5 / DEG), y: hookY() + S.low, tx: tx };
   }
   // где на верхнем венце окажется точка экрана: переводим в систему сруба
   function toStack(x, y) {
     var a = -worldAngle() / DEG, dx = x - CX, dy = y - GY;
     return { x: CX + dx * Math.cos(a) - dy * Math.sin(a), y: GY + dx * Math.sin(a) + dy * Math.cos(a) };
   }
-  function landCheck() {
-    var f = S.falling, p = toStack(f.x, f.y + LR);
-    var ty = topY() + LR;                      // верх сруба в его системе
-    if (p.y < ty) return;
-    S.falling = null;
-    var below = S.logs.length ? S.logs[S.logs.length - 1].x : 0, off = p.x - CX - below;
+  function lowerTick(dt) {
+    if (L.hang.style.display === 'none') return;
+    if (S.holding) {
+      S.low += LOWER * dt;
+      S.creakT2 = (S.creakT2 || 0) - dt;
+      if (S.creakT2 <= 0) { S.creakT2 = .28; sfx.creak(); }
+    }
+    var p = logPos(), q = toStack(p.x, p.y + LR);
+    if (q.y >= topY() + LR) touchDown(p, q);
+  }
+  function touchDown(p, q) {
+    L.hang.style.display = 'none';
+    S.low = 0;
+    var ty = topY() + LR, ang = worldAngle();
+    var below = S.logs.length ? S.logs[S.logs.length - 1].x : 0, off = q.x - CX - below;
     if (Math.abs(off) > OVERLAP) {             // мимо — бревно соскальзывает
-      f.el.remove();
-      flyOff(f.x, ty, off > 0 ? 1 : -1);
+      flyOff(p.x, p.y, off > 0 ? 1 : -1);
       S.fails++; hud(); say('Мимо — бревно скатилось', 'warn'); sfx.soft(); buzz(40);
-      later(respawn, 600);
+      later(respawn, 700);
       return;
     }
-    f.el.remove();
+    if (Math.abs(ang) > LAND_DEG) {            // телефон держали криво — легло одним концом
+      flyOff(p.x, p.y, ang > 0 ? 1 : -1);
+      S.fails++; hud(); say('Легло одним концом — держите телефон ровно', 'warn', 2400); sfx.soft(); buzz(40);
+      later(respawn, 700);
+      return;
+    }
     var el = sv('g', null, L.stack, logMarkup());
     var lg = { x: below + off, el: el };
     S.logs.push(lg);
     placeLog(lg, S.logs.length - 1);
-    // «чашки» в углах — сруб
     sfx.thud(); buzz(15);
-    S.leanV += off * 0.012;                   // удар толкает сруб
+    S.leanV += off * 0.012 + ang * 0.08;      // касание толкает сруб
     if (Math.abs(off) < PERFECT) { S.perfect++; say('Ровно!', 'ok', 1100); sfx.perfect(); }
     else if (Math.abs(off) > OVERLAP * .55) say('Сильно сдвинуто — держите наклоном!', 'warn', 1800);
-    dust(f.x - 100, f.y + 10, 5); dust(f.x + 100, f.y + 10, 5);
+    dust(p.x - 100, p.y + 10, 5); dust(p.x + 100, p.y + 10, 5);
     hud();
     if (S.logs.length >= GOAL) { later(finale, 600); S.phase = 'done'; return; }
-    later(respawn, 380);
+    later(respawn, 420);
   }
   function placeLog(lg, i) { setT(lg.el, CX + lg.x, BASE_Y - LR - i * STEP, 0); }
-  function respawn() { L.hang.style.display = ''; }
+  function respawn() { S.low = 0; L.hang.style.display = ''; }
 
   // бревно падает с края
   function flyOff(x, y, dir) {
@@ -386,18 +404,17 @@
   function render() {
     var a = worldAngle();
     L.world.setAttribute('transform', 'rotate(' + a.toFixed(2) + ' ' + CX + ' ' + GY + ')');
-    // кран
-    var hx = hookX(), hy = hookY(), vy = S.view ? S.view.y - 10 : -10;
-    L.rope.setAttribute('d', 'M' + hx.toFixed(1) + ' ' + vy.toFixed(1) + 'V' + (hy - 22).toFixed(1));
-    L.straps.setAttribute('d', L.hang.style.display === 'none' ? '' : 'M' + hx.toFixed(1) + ' ' + (hy - 22).toFixed(1) + 'l-70 ' + (22 - LR) + 'M' + hx.toFixed(1) + ' ' + (hy - 22).toFixed(1) + 'l70 ' + (22 - LR));
-    setT(L.hook, hx, hy - 26, 0);
+    // кран: тележка качается, бревно висит на тросе
+    var lp = logPos(), vy = S.view ? S.view.y - 10 : -10, hy = lp.y;
+    L.rope.setAttribute('d', 'M' + lp.tx.toFixed(1) + ' ' + vy.toFixed(1) + 'L' + lp.x.toFixed(1) + ' ' + (hy - 22).toFixed(1));
+    var on = L.hang.style.display !== 'none';
+    L.straps.setAttribute('d', !on ? '' : 'M' + lp.x.toFixed(1) + ' ' + (hy - 22).toFixed(1) + 'l-70 ' + (22 - LR) + 'M' + lp.x.toFixed(1) + ' ' + (hy - 22).toFixed(1) + 'l70 ' + (22 - LR));
+    setT(L.hook, lp.x, hy - 26, 0);
     if (!L.hang.firstChild) sv('g', null, L.hang, logMarkup());
-    setT(L.hang, hx, hy, Math.sin(S.swingT * 1.3) * 2.5);
-    // куда упадёт
-    if (S.phase === 'play' && !S.falling && L.hang.style.display !== 'none') {
-      L.aim.setAttribute('d', 'M' + hx.toFixed(1) + ' ' + (hy + LR + 8).toFixed(1) + 'V' + (hy + LR + 52).toFixed(1));
-    } else L.aim.setAttribute('d', '');
-    if (S.falling) setT(S.falling.el, S.falling.x, S.falling.y, S.falling.r);
+    setT(L.hang, lp.x, hy, Math.sin(S.swingT * 1.3) * 1.5);
+    // куда опустится
+    if (S.phase === 'play' && on) L.aim.setAttribute('d', 'M' + lp.x.toFixed(1) + ' ' + (hy + LR + 8).toFixed(1) + 'V' + (hy + LR + 44).toFixed(1));
+    else L.aim.setAttribute('d', '');
     // уровень и телефон
     var shown = clamp(S.lean, -FALL_LEAN, FALL_LEAN), k = shown / FALL_LEAN;
     ui.bubble.style.left = (50 + k * 44).toFixed(1) + '%';
@@ -449,14 +466,12 @@
       tw.fn(easeOut(k)); if (k >= 1) { tweens.splice(i, 1); tw.done && tw.done(); }
     }
     if (S.phase === 'play') {
-      S.swingT += dt;
+      S.swingT += dt * (S.holding ? .55 : 1);   // пока опускают — кран качается медленнее
       physics(dt);
     } else if (S.phase === 'done' || S.phase === 'final') {
       S.lean *= Math.pow(.05, dt); S.tilt *= Math.pow(.05, dt); S.risk = 0;   // сруб сложен — выпрямляется
     }
-    if (S.phase === 'play') {
-      if (S.falling) { var f = S.falling; f.vy += 1900 * dt; f.y += f.vy * dt; f.r *= Math.pow(.2, dt); landCheck(); }
-    }
+    if (S.phase === 'play') lowerTick(dt);
     render();
     for (var j = parts.length - 1; j >= 0; j--) {
       var p = parts[j]; p.life += dt;
