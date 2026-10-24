@@ -416,19 +416,284 @@
 
 <!-- ============ МЕРЧ ============ -->
 <section class="merch" id="merch" aria-labelledby="merch-title">
-  <div class="merch__in">
-    <div class="merch__copy">
-      <span class="eyebrow">Мерч прихода</span>
-      <h2 id="merch-title">Вещи<br>с девизами прихода</h2>
-      <p class="text">Шоперы и открытки со словами славянской азбуки. Их можно получить за пожертвование — все средства идут на строительство храма.</p>
-      <!-- TODO: ссылка на страницу со всем мерчем -->
-      <a class="link-arrow" href="#" data-soon>Смотреть весь мерч <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  <div class="mx">
+
+    <header class="mx-head">
+      <div class="mx-head__title">
+        <span class="eyebrow">Мерч храма</span>
+        <h2 id="merch-title">Больше,<br>чем вещи</h2>
+      </div>
+      <div class="mx-head__side">
+        <p class="text">Шопер и открытки с девизами прихода. Девизы сложены из слов славянской азбуки, которую дали нам святые Кирилл и Мефодий. Покупая их, вы поддерживаете приход.</p>
+        <p class="mx-head__note"><span class="mx-dot" aria-hidden="true"></span>Продажа пока не открыта: цены и способ покупки появятся здесь.</p>
+      </div>
+    </header>
+
+    <div class="mx-ready">
+
+      <!-- Шопер: макет из файла KM_шоппер_350х380, две стороны -->
+      <article class="mx-item" data-mx-bag aria-labelledby="mx-bag-title">
+        <div class="mx-stage mx-stage--bag">
+          <span class="mx-badge">Макет готов</span>
+          <svg class="tote" viewBox="0 0 440 560" role="img" aria-label="Шопер «Человек Слова», сторона с эмблемой храма" data-tote>
+            <defs>
+              <clipPath id="mx-tote-clip"><path d="M40 150H400V533Q400 541 392 541H48Q40 541 40 533Z"/></clipPath>
+              <linearGradient id="mx-tote-h" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#fff" stop-opacity=".07"/>
+                <stop offset=".3" stop-color="#fff" stop-opacity="0"/>
+                <stop offset=".7" stop-color="#000" stop-opacity="0"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".3"/>
+              </linearGradient>
+              <linearGradient id="mx-tote-v" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#000" stop-opacity=".28"/>
+                <stop offset=".1" stop-color="#000" stop-opacity="0"/>
+                <stop offset=".86" stop-color="#000" stop-opacity="0"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".26"/>
+              </linearGradient>
+              <filter id="mx-weave" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency=".95 .6" numOctaves="2" seed="7"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .11 0"/>
+              </filter>
+              <filter id="mx-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter>
+            </defs>
+            <!-- задняя ручка -->
+            <path d="M154 152C154 66 286 66 286 152" fill="none" stroke="#151313" stroke-width="15"/>
+            <!-- полотно с печатью -->
+            <g clip-path="url(#mx-tote-clip)">
+              <rect x="40" y="150" width="360" height="391" fill="#231F20"/>
+              <image class="tote__print is-on" data-side="emblem" href="assets/img/merch/shopper-emblem.jpg" x="40" y="150" width="360" height="391" preserveAspectRatio="none"/>
+              <image class="tote__print" data-side="motto" href="assets/img/merch/shopper-motto.jpg" x="40" y="150" width="360" height="391" preserveAspectRatio="none"/>
+              <rect x="40" y="150" width="360" height="391" filter="url(#mx-weave)"/>
+              <rect x="40" y="150" width="360" height="391" fill="url(#mx-tote-h)"/>
+              <rect x="40" y="150" width="360" height="391" fill="url(#mx-tote-v)"/>
+              <g fill="none" stroke="#fff" stroke-opacity=".06" stroke-width="14" filter="url(#mx-soft)">
+                <path d="M86 186C100 260 92 360 104 470"/>
+                <path d="M352 196C340 280 350 380 336 500"/>
+              </g>
+              <rect x="40" y="150" width="360" height="22" fill="#000" fill-opacity=".2"/>
+              <path d="M40 168H400" stroke="#fff" stroke-opacity=".18" stroke-dasharray="4 3"/>
+              <path d="M44 154V537M396 154V537" stroke="#fff" stroke-opacity=".05" stroke-width="2"/>
+            </g>
+            <!-- передняя ручка, пришита поверх канта -->
+            <path d="M128 180V150C128 36 312 36 312 150V180" fill="none" stroke="#2D292A" stroke-width="17"/>
+            <path d="M121 178V150C121 27 319 27 319 150V178M135 178V150C135 45 305 45 305 150V178" fill="none" stroke="#fff" stroke-opacity=".16" stroke-dasharray="3 3"/>
+            <g fill="none" stroke="#fff" stroke-opacity=".22" stroke-dasharray="2.5 2.5">
+              <path d="M122 158h12v18h-12zM122 158l12 18M134 158l-12 18"/>
+              <path d="M306 158h12v18h-12zM306 158l12 18M318 158l-12 18"/>
+            </g>
+          </svg>
+          <div class="mx-switch" role="group" aria-label="Сторона шопера">
+            <button type="button" aria-pressed="true" data-bag-side="emblem">Эмблема</button>
+            <button type="button" aria-pressed="false" data-bag-side="motto">Девиз</button>
+          </div>
+        </div>
+        <div class="mx-info">
+          <h3 id="mx-bag-title">Шопер «Человек Слова»</h3>
+          <p class="mx-desc">Чёрная сумка с печатью на обеих сторонах. На одной эмблема храма: крест с раскрытой книгой «Въ началѣ бѣ Слово» и полное название храма по кругу. На другой девиз «Я человек Слова» и QR-код, он ведёт на сайт храма.</p>
+          <dl class="mx-specs">
+            <div><dt>Размер</dt><dd>35 × 38 см</dd></div>
+            <div><dt>Цвет</dt><dd>Чёрный</dd></div>
+            <div><dt>Печать</dt><dd>С двух сторон</dd></div>
+          </dl>
+          <p class="mx-status"><span class="mx-dot" aria-hidden="true"></span>Скоро в продаже</p>
+        </div>
+      </article>
+
+      <!-- Открытки: макеты Открытка_100х150_2, _3, _4; оборот у всех один -->
+      <article class="mx-item" data-mx-cards aria-labelledby="mx-cards-title">
+        <div class="mx-stage mx-stage--cards">
+          <span class="mx-badge">Макеты готовы</span>
+          <div class="pc-wrap">
+            <div class="pc-holder">
+              <button class="pc" type="button" aria-pressed="false" aria-label="Показать оборот открытки" data-pc>
+              <span class="pc__inner">
+                <img class="pc__face pc__front" src="assets/img/merch/postcard-chelovek-slova.jpg" width="600" height="900" alt="Открытка «Я человек Слова»: святые Кирилл и Мефодий с книгой и крестом" data-pc-front>
+                <img class="pc__face pc__back" src="assets/img/merch/postcard-back.jpg" width="600" height="900" alt="Оборот открытки: поле в линейку для письма, эмблема храма и QR-код на сайт храма" loading="lazy">
+              </span>
+            </button>
+              
+            </div>
+            <div class="pc-side">
+              <div class="pc-thumbs" role="group" aria-label="Выбор открытки">
+                <button type="button" class="pc-thumb" aria-pressed="true"
+                  data-src="assets/img/merch/postcard-chelovek-slova.jpg"
+                  data-alt="Открытка «Я человек Слова»: святые Кирилл и Мефодий с книгой и крестом"
+                  data-title="«Я человек Слова»"
+                  data-text="Святые Кирилл и Мефодий. Святой Кирилл держит раскрытую книгу «Въ началѣ бѣ Слово», это первые слова Евангелия от Иоанна. Святой Мефодий держит крест.">
+                  <img src="assets/img/merch/postcard-chelovek-slova.jpg" width="600" height="900" alt="" loading="lazy"><span>Человек Слова</span>
+                </button>
+                <button type="button" class="pc-thumb" aria-pressed="false"
+                  data-src="assets/img/merch/postcard-pochitayu-knigi.jpg"
+                  data-alt="Открытка «Я почитаю книги»: крест и раскрытая книга «Въ началѣ бѣ Слово»"
+                  data-title="«Я почитаю книги»"
+                  data-text="Игра слов: «почитаю» значит и «уважаю», и «читаю». Слово «читаю» выделено киноварью. Внизу крест и раскрытая книга «Въ началѣ бѣ Слово».">
+                  <img src="assets/img/merch/postcard-pochitayu-knigi.jpg" width="600" height="900" alt="" loading="lazy"><span>Почитаю книги</span>
+                </button>
+                <button type="button" class="pc-thumb" aria-pressed="false"
+                  data-src="assets/img/merch/postcard-glagolyu-dobro.jpg"
+                  data-alt="Открытка «Я глаголю добро»: надпись, буква Д выделена киноварью"
+                  data-title="«Я глаголю добро»"
+                  data-text="«Глаголь» и «добро» — названия букв Г и Д в славянской азбуке. Вместе они читаются как «говори добро». На открытке только надпись, буква Д выделена киноварью.">
+                  <img src="assets/img/merch/postcard-glagolyu-dobro.jpg" width="600" height="900" alt="" loading="lazy"><span>Глаголю добро</span>
+                </button>
+              </div>
+              <button class="mx-flip" type="button" aria-pressed="false" data-pc-flip>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6.5 6.5 0 0 1 11.6-2.4M16 12a6.5 6.5 0 0 1-11.6 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M15.8 2.6v3.2h-3.2M4.2 17.4v-3.2h3.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span data-pc-flip-label>Оборот</span>
+              </button>
+              
+            </div>
+          </div>
+        </div>
+        <div class="mx-info">
+          <h3 id="mx-cards-title">Открытки с девизами</h3>
+          <p class="mx-desc"><b class="mx-desc__lead" data-pc-title>«Я человек Слова»</b> <span data-pc-text>Святые Кирилл и Мефодий. Святой Кирилл держит раскрытую книгу «Въ началѣ бѣ Слово», это первые слова Евангелия от Иоанна. Святой Мефодий держит крест.</span></p>
+          <dl class="mx-specs">
+            <div><dt>Размер</dt><dd>10 × 15 см</dd></div>
+            <div><dt>Сюжеты</dt><dd>3 девиза</dd></div>
+            <div><dt>Оборот</dt><dd>Линейки для письма, эмблема, QR-код</dd></div>
+          </dl>
+          <p class="mx-status"><span class="mx-dot" aria-hidden="true"></span>Скоро в продаже</p>
+        </div>
+      </article>
     </div>
-    <div class="merch__examples">
-      <figure class="merch-ex"><div class="merch-ex__ph"><img src="assets/img/shopper-chelovek-slova.webp" width="571" height="620" alt="Шопер «Я человек Слова», чёрный" loading="lazy" decoding="async"></div><figcaption>Шопер «Я человек Слова»</figcaption></figure>
-      <figure class="merch-ex"><div class="merch-ex__ph"><img src="assets/img/shopper-emblem.webp" width="571" height="620" alt="Шопер с эмблемой храма, чёрный" loading="lazy" decoding="async"></div><figcaption>Шопер с эмблемой</figcaption></figure>
-      <figure class="merch-ex"><div class="merch-ex__ph merch-ex__ph--fan"><img src="assets/img/postcard-pochitayu-knigi.webp" width="520" height="770" alt="" loading="lazy" decoding="async"><img src="assets/img/postcard-chelovek-slova.webp" width="520" height="770" alt="Открытки с девизами прихода" loading="lazy" decoding="async"><img src="assets/img/postcard-glagolyu-dobro.webp" width="520" height="770" alt="" loading="lazy" decoding="async"></div><figcaption>Открытки с девизами</figcaption></figure>
+
+    <!-- Эскизы: вещи с чертежом храма (макетов для печати пока нет) -->
+    <div class="mx-ideas">
+      <div class="mx-ideas__head">
+        <span class="eyebrow">Эскизы</span>
+        <h3 class="mx-ideas__title">Вещи с чертежом храма</h3>
+        <p class="text">На них линейный чертёж будущего храма. Это эскизы: макетов для печати пока нет.</p>
+      </div>
+      <ul class="mx-ideas__list">
+        <li class="mx-idea">
+          <div class="mx-idea__stage">
+            <span class="mx-badge mx-badge--sketch">Эскиз</span>
+            <svg class="mx-hoodie" viewBox="0 0 600 600" role="img" aria-label="Эскиз худи: чертёж храма и надпись «Пулковские высоты» на груди">
+              <defs>
+                <clipPath id="mx-hoodie-clip"><path d="M300 30C352 30 384 64 384 110C412 118 444 128 470 140C500 222 528 352 548 458L554 516Q522 524 490 520L486 464C472 392 458 330 448 286L452 520L448 566H152L148 520L152 286C142 330 128 392 114 464L110 520Q78 524 46 516L52 458C72 352 100 222 130 140C156 128 188 118 216 110C216 64 248 30 300 30Z"/></clipPath>
+                <linearGradient id="mx-hoodie-h" x1="0" x2="1">
+                  <stop offset="0" stop-color="#fff" stop-opacity=".06"/>
+                  <stop offset=".45" stop-color="#fff" stop-opacity="0"/>
+                  <stop offset="1" stop-color="#000" stop-opacity=".3"/>
+                </linearGradient>
+                <filter id="mx-knit" x="0" y="0" width="100%" height="100%">
+                  <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="3"/>
+                  <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .08 0"/>
+                </filter>
+                <filter id="mx-hoodie-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>
+              </defs>
+              <g clip-path="url(#mx-hoodie-clip)">
+                <rect width="600" height="600" fill="#2B2826"/>
+                <rect width="600" height="600" filter="url(#mx-knit)"/>
+                <rect width="600" height="600" fill="url(#mx-hoodie-h)"/>
+                <g fill="none" stroke="#fff" stroke-opacity=".05" stroke-width="16" filter="url(#mx-hoodie-soft)">
+                  <path d="M104 230C92 310 82 390 78 460M496 230C508 310 518 390 522 460M200 440C240 470 290 480 350 474"/>
+                </g>
+              </g>
+              <!-- капюшон лежит на плечах; внутри подкладка -->
+              <path d="M238 120C232 76 262 52 300 52C338 52 368 76 362 120C346 140 322 152 300 154C278 152 254 140 238 120Z" fill="#161413"/>
+              <g fill="none" stroke="#EFE3CB" stroke-opacity=".17" stroke-width="1.6" stroke-linecap="round">
+                <path d="M238 120C232 76 262 52 300 52C338 52 368 76 362 120C346 140 322 152 300 154C278 152 254 140 238 120Z"/>
+                <path d="M216 110C226 140 252 160 300 168C348 160 374 140 384 110"/>
+                <path d="M300 30V52"/>
+                <path d="M234 146C200 192 172 240 152 286M366 146C400 192 428 240 448 286"/>
+                <path d="M51 466L113 471M487 471L549 466"/>
+                <path d="M149 524H451"/>
+                <path d="M190 512L202 420Q300 412 398 420L410 512"/>
+              </g>
+              <g fill="none" stroke="#EFE3CB" stroke-opacity=".07" stroke-width="1.2"><path d="M58 474V514M65 474V515M72 475V516M79 475V516M86 476V517M93 476V517M100 477V518M107 477V518M493 477V518M500 477V518M507 476V517M514 476V517M521 475V516M528 475V516M535 474V515M542 474V514"/><path d="M158 528V562M166 528V562M174 528V562M182 528V562M190 528V562M198 528V562M206 528V562M214 528V562M222 528V562M230 528V562M238 528V562M246 528V562M254 528V562M262 528V562M270 528V562M278 528V562M286 528V562M294 528V562M302 528V562M310 528V562M318 528V562M326 528V562M334 528V562M342 528V562M350 528V562M358 528V562M366 528V562M374 528V562M382 528V562M390 528V562M398 528V562M406 528V562M414 528V562M422 528V562M430 528V562M438 528V562"/></g>
+              <path d="M208 426L198 506M392 426L402 506M208 426Q300 418 392 426" fill="none" stroke="#EFE3CB" stroke-opacity=".14" stroke-dasharray="3 3"/>
+              <!-- печать: чертёж храма и надпись -->
+              <image href="assets/img/merch/temple-print-cream.webp" x="215" y="198" width="170" height="144"/>
+              <text x="300" y="370" text-anchor="middle" class="mx-print-text" fill="#EFE3CB">ПУЛКОВСКИЕ</text>
+              <text x="300" y="393" text-anchor="middle" class="mx-print-text" fill="#EFE3CB">ВЫСОТЫ</text>
+              <!-- шнурки -->
+              <g fill="none" stroke-linecap="round">
+                <path d="M289 152C287 166 291 176 287 186M311 152C313 166 309 174 314 184" stroke="#E6D7BC" stroke-width="4"/>
+                <path d="M287 186l-1 8M314 184l1 8" stroke="#B9A57F" stroke-width="5"/>
+              </g>
+            </svg>
+          </div>
+          <div class="mx-idea__text"><b>Худи «Пулковские высоты»</b><span>Чертёж храма и надпись на груди</span></div>
+        </li>
+        <li class="mx-idea">
+          <div class="mx-idea__stage">
+            <span class="mx-badge mx-badge--sketch">Эскиз</span>
+            <svg class="mx-mug" viewBox="0 0 420 360" role="img" aria-label="Эскиз кружки с чертежом храма">
+              <defs>
+                <linearGradient id="mx-mug-body" x1="0" x2="1">
+                  <stop offset="0" stop-color="#D3CABA"/>
+                  <stop offset=".22" stop-color="#F3EEE4"/>
+                  <stop offset=".42" stop-color="#FFFDF8"/>
+                  <stop offset=".75" stop-color="#ECE5D8"/>
+                  <stop offset="1" stop-color="#C7BDAC"/>
+                </linearGradient>
+                <linearGradient id="mx-mug-wrap" x1="0" x2="1">
+                  <stop offset="0" stop-color="#F3EEE4" stop-opacity=".85"/>
+                  <stop offset=".18" stop-color="#F3EEE4" stop-opacity="0"/>
+                  <stop offset=".82" stop-color="#E6DFD2" stop-opacity="0"/>
+                  <stop offset="1" stop-color="#D9D0C0" stop-opacity=".9"/>
+                </linearGradient>
+                <linearGradient id="mx-mug-in" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#BFB4A1"/>
+                  <stop offset="1" stop-color="#E9E2D5"/>
+                </linearGradient>
+                <clipPath id="mx-mug-clip"><path d="M70 70V296A115 24 0 0 0 300 296V70Z"/></clipPath>
+                <filter id="mx-mug-shadow" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="8"/></filter>
+              </defs>
+              <ellipse cx="190" cy="306" rx="128" ry="16" fill="#34261A" fill-opacity=".2" filter="url(#mx-mug-shadow)"/>
+              <!-- ручка -->
+              <path d="M296 112C376 108 384 240 296 250" fill="none" stroke="#DCD3C4" stroke-width="26"/>
+              <path d="M298 112C368 110 376 236 298 246" fill="none" stroke="#F5F1E9" stroke-width="12" transform="translate(-2 -3)"/>
+              <!-- корпус -->
+              <path d="M70 70V296A115 24 0 0 0 300 296V70Z" fill="url(#mx-mug-body)"/>
+              <g clip-path="url(#mx-mug-clip)">
+                <image href="assets/img/merch/temple-print-sepia.webp" x="104" y="112" width="162" height="137"/>
+                <text x="185" y="276" text-anchor="middle" class="mx-print-text mx-print-text--mug" fill="#34261A">ПУЛКОВСКИЕ ВЫСОТЫ</text>
+                <rect x="70" y="60" width="230" height="270" fill="url(#mx-mug-wrap)"/>
+              </g>
+              <!-- край -->
+              <ellipse cx="185" cy="70" rx="115" ry="24" fill="#F6F2EA" stroke="#D5CBBA" stroke-width="1.2"/>
+              <ellipse cx="185" cy="72" rx="104" ry="19" fill="url(#mx-mug-in)"/>
+            </svg>
+          </div>
+          <div class="mx-idea__text"><b>Кружка</b><span>Чертёж храма и подпись «Пулковские высоты»</span></div>
+        </li>
+        <li class="mx-idea">
+          <div class="mx-idea__stage">
+            <span class="mx-badge mx-badge--sketch">Эскиз</span>
+            <svg class="mx-notebook" viewBox="0 0 520 440" role="img" aria-label="Эскиз блокнота на пружине: на обложке лист с чертежом главного фасада храма">
+              <defs>
+                <clipPath id="mx-nb-clip"><rect x="38" y="66" width="440" height="332" rx="5"/></clipPath>
+                <linearGradient id="mx-nb-gloss" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0" stop-color="#fff" stop-opacity=".18"/>
+                  <stop offset=".4" stop-color="#fff" stop-opacity="0"/>
+                  <stop offset="1" stop-color="#5E4A2E" stop-opacity=".12"/>
+                </linearGradient>
+              </defs>
+              <g transform="rotate(-3 258 232)">
+                <rect x="46" y="76" width="440" height="336" rx="5" fill="#FBF7EE" stroke="#DCCFB8"/>
+                <rect x="42" y="71" width="440" height="334" rx="5" fill="#F6EFE2" stroke="#DCCFB8"/>
+                <g clip-path="url(#mx-nb-clip)">
+                  <image href="assets/img/merch/notebook-sheet.jpg" x="38" y="66" width="440" height="332" preserveAspectRatio="xMidYMid slice"/>
+                  <rect x="38" y="66" width="440" height="332" fill="url(#mx-nb-gloss)"/>
+                </g>
+                <rect x="38" y="66" width="440" height="332" rx="5" fill="none" stroke="#B9A57F" stroke-opacity=".7"/>
+                <!-- пружина -->
+                <g>
+                  <circle cx="62" cy="80" r="3.4" fill="#3B342A"/><circle cx="78" cy="80" r="3.4" fill="#3B342A"/><circle cx="94" cy="80" r="3.4" fill="#3B342A"/><circle cx="110" cy="80" r="3.4" fill="#3B342A"/><circle cx="126" cy="80" r="3.4" fill="#3B342A"/><circle cx="142" cy="80" r="3.4" fill="#3B342A"/><circle cx="158" cy="80" r="3.4" fill="#3B342A"/><circle cx="174" cy="80" r="3.4" fill="#3B342A"/><circle cx="190" cy="80" r="3.4" fill="#3B342A"/><circle cx="206" cy="80" r="3.4" fill="#3B342A"/><circle cx="222" cy="80" r="3.4" fill="#3B342A"/><circle cx="238" cy="80" r="3.4" fill="#3B342A"/><circle cx="254" cy="80" r="3.4" fill="#3B342A"/><circle cx="270" cy="80" r="3.4" fill="#3B342A"/><circle cx="286" cy="80" r="3.4" fill="#3B342A"/><circle cx="302" cy="80" r="3.4" fill="#3B342A"/><circle cx="318" cy="80" r="3.4" fill="#3B342A"/><circle cx="334" cy="80" r="3.4" fill="#3B342A"/><circle cx="350" cy="80" r="3.4" fill="#3B342A"/><circle cx="366" cy="80" r="3.4" fill="#3B342A"/><circle cx="382" cy="80" r="3.4" fill="#3B342A"/><circle cx="398" cy="80" r="3.4" fill="#3B342A"/><circle cx="414" cy="80" r="3.4" fill="#3B342A"/><circle cx="430" cy="80" r="3.4" fill="#3B342A"/><circle cx="446" cy="80" r="3.4" fill="#3B342A"/><circle cx="462" cy="80" r="3.4" fill="#3B342A"/>
+                  <path d="M62 80C61 58 71 56 70 74M78 80C77 58 87 56 86 74M94 80C93 58 103 56 102 74M110 80C109 58 119 56 118 74M126 80C125 58 135 56 134 74M142 80C141 58 151 56 150 74M158 80C157 58 167 56 166 74M174 80C173 58 183 56 182 74M190 80C189 58 199 56 198 74M206 80C205 58 215 56 214 74M222 80C221 58 231 56 230 74M238 80C237 58 247 56 246 74M254 80C253 58 263 56 262 74M270 80C269 58 279 56 278 74M286 80C285 58 295 56 294 74M302 80C301 58 311 56 310 74M318 80C317 58 327 56 326 74M334 80C333 58 343 56 342 74M350 80C349 58 359 56 358 74M366 80C365 58 375 56 374 74M382 80C381 58 391 56 390 74M398 80C397 58 407 56 406 74M414 80C413 58 423 56 422 74M430 80C429 58 439 56 438 74M446 80C445 58 455 56 454 74M462 80C461 58 471 56 470 74" fill="none" stroke="#7D7466" stroke-width="3.2" stroke-linecap="round"/>
+                  <path d="M61 70C61 60 66 59 68 62M77 70C77 60 82 59 84 62M93 70C93 60 98 59 100 62M109 70C109 60 114 59 116 62M125 70C125 60 130 59 132 62M141 70C141 60 146 59 148 62M157 70C157 60 162 59 164 62M173 70C173 60 178 59 180 62M189 70C189 60 194 59 196 62M205 70C205 60 210 59 212 62M221 70C221 60 226 59 228 62M237 70C237 60 242 59 244 62M253 70C253 60 258 59 260 62M269 70C269 60 274 59 276 62M285 70C285 60 290 59 292 62M301 70C301 60 306 59 308 62M317 70C317 60 322 59 324 62M333 70C333 60 338 59 340 62M349 70C349 60 354 59 356 62M365 70C365 60 370 59 372 62M381 70C381 60 386 59 388 62M397 70C397 60 402 59 404 62M413 70C413 60 418 59 420 62M429 70C429 60 434 59 436 62M445 70C445 60 450 59 452 62M461 70C461 60 466 59 468 62" fill="none" stroke="#E4DED3" stroke-width="1.1" stroke-linecap="round"/>
+                </g>
+              </g>
+            </svg>
+          </div>
+          <div class="mx-idea__text"><b>Блокнот на пружине</b><span>На обложке лист с чертежом главного фасада</span></div>
+        </li>
+      </ul>
     </div>
+
   </div>
 </section>
 
@@ -582,6 +847,7 @@
 </script>
 <script src="assets/js/hero-life.js" defer></script>
 <script src="assets/js/main.js" defer></script>
+<script src="assets/js/merch.js" defer></script>
 <script src="assets/js/chapel-game.js" defer></script>
 <script src="assets/js/chapel-toy.js" defer></script>
 <script src="assets/js/chapel-tilt.js" defer></script>
