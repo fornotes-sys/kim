@@ -11,7 +11,32 @@
 <meta property="og:description" content="Храм, который строится сердцами.">
 <meta property="og:image" content="assets/img/hero.webp">
 <link rel="preload" href="assets/fonts/OldStandard-Regular.woff" as="font" type="font/woff" crossorigin>
-<link rel="preload" href="assets/img/hero.webp" as="image" type="image/webp">
+<script>
+/* Время года для картинки храма на первом экране — выбирается до отрисовки, чтобы сразу
+   грузилось только нужное фото. По дате по московскому времени: сентябрь – 15 октября —
+   ранняя осень, 16 октября – ноябрь — поздняя осень, декабрь – февраль — зима,
+   март – май — весна, июнь – август — лето. ?season=winter (и т. п.) в адресе — показать любой.
+   В AUTO можно подменить сезон, который не готов к показу, ближайшим хорошим. */
+(function () {
+  var ALL = ['early-autumn', 'late-autumn', 'winter', 'spring', 'summer'];
+  var AUTO = {};
+  var q = (location.search.match(/[?&]season=([a-z-]+)/) || [])[1], s = ALL.indexOf(q) >= 0 ? q : '';
+  if (!s) {
+    var d = new Date(Date.now() + 3 * 3600e3), m = d.getUTCMonth() + 1, day = d.getUTCDate();
+    s = m === 12 || m <= 2 ? 'winter' : m <= 5 ? 'spring' : m <= 8 ? 'summer' : (m === 9 || (m === 10 && day <= 15)) ? 'early-autumn' : 'late-autumn';
+    s = AUTO[s] || s;
+  }
+  var src = s === 'early-autumn' ? 'assets/img/hero.webp' : 'assets/img/seasons/' + s + '.webp';
+  window.KIM_SEASON = { name: s, src: src };
+  window.KIM_ALT = { 'early-autumn': 'Образ будущего храма в осеннем закатном свете', 'late-autumn': 'Образ будущего храма в пасмурный ноябрьский день',
+    'winter': 'Образ будущего храма зимой, в снегу и инее', 'spring': 'Образ будущего храма весной, среди цветущих деревьев', 'summer': 'Образ будущего храма летним днём' };
+  var de = document.documentElement, l = document.createElement('link');
+  de.setAttribute('data-season', s);
+  l.rel = 'preload'; l.as = 'image'; l.type = 'image/webp'; l.href = src; l.setAttribute('fetchpriority', 'high');
+  document.head.appendChild(l);
+  try { de.style.setProperty('--hero-img', 'url("' + new URL(src, document.baseURI).href + '")'); } catch (e) {}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700&amp;display=swap">
@@ -77,8 +102,17 @@
 
   <div class="hero__glow" aria-hidden="true"></div>
   <div class="hero__media">
-    <figure class="hero__slide is-active" data-slide><img src="assets/img/hero.webp" width="1444" height="1089" alt="Образ будущего храма в осеннем закатном свете" fetchpriority="high">
+    <figure class="hero__slide is-active" data-slide><img data-hero-img width="1444" height="1089" alt="Образ будущего храма" fetchpriority="high">
+      <script>(function (i, k) { i.src = k ? k.src : 'assets/img/hero.webp'; if (k && window.KIM_ALT) i.alt = KIM_ALT[k.name]; })(document.querySelector('[data-hero-img]'), window.KIM_SEASON);</script>
+      <noscript><img src="assets/img/hero.webp" width="1444" height="1089" alt="Образ будущего храма в осеннем закатном свете"></noscript>
     </figure>
+    <div class="hero__seasons" data-seasons role="group" aria-label="Время года на картинке">
+      <button type="button" data-season-btn="winter" aria-label="Зима" title="Зима"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8v12.4M2.6 4.9l10.8 6.2M2.6 11.1l10.8-6.2M6.4 2.9 8 4.4l1.6-1.5M6.4 13.1 8 11.6l1.6 1.5"/></svg></button>
+      <button type="button" data-season-btn="spring" aria-label="Весна" title="Весна"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="1.6"/><path d="M8 6.4C6.6 4.6 7 2.6 8 2c1 .6 1.4 2.6 0 4.4ZM9.5 7.5c1.1-2 3.1-2.5 4-1.9-.1 1.1-1.7 2.5-4 1.9ZM9 9.4c2.2.4 3.2 2.2 2.9 3.2-1.1.3-2.9-.6-2.9-3.2ZM7 9.4c0 2.6-1.8 3.5-2.9 3.2-.3-1 .7-2.8 2.9-3.2ZM6.5 7.5c-2.3.6-3.9-.8-4-1.9.9-.6 2.9-.1 4 1.9Z"/></svg></button>
+      <button type="button" data-season-btn="summer" aria-label="Лето" title="Лето"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.9"/><path d="M8 1.3v1.6M8 13.1v1.6M1.3 8h1.6M13.1 8h1.6M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M3.3 12.7l1.1-1.1M11.6 4.4l1.1-1.1"/></svg></button>
+      <button type="button" data-season-btn="early-autumn" aria-label="Ранняя осень" title="Ранняя осень"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 12.8C3 7.6 6.2 3.6 12.8 3.2c.3 6.4-3.7 9.6-9.6 9.6ZM3.2 12.8 9.4 6.6"/></svg></button>
+      <button type="button" data-season-btn="late-autumn" aria-label="Поздняя осень" title="Поздняя осень"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 9.6h7a2.5 2.5 0 0 0 .2-5 3.6 3.6 0 0 0-6.9.9 2.1 2.1 0 0 0-.3 4.1ZM5.6 11.6l-.6 1.6M8.4 11.6l-.6 1.6M11.2 11.6l-.6 1.6"/></svg></button>
+    </div>
     <blockquote class="hero__quote">
       <p>«Где двое или трое собраны во имя Мое, там Я посреди них»</p>
       <cite>— Евангелие от Матфея 18:20</cite>

@@ -1029,9 +1029,27 @@ main > section, body > footer { position: relative; }
    За фото лежит его же сильно размытая копия: цвета листвы и неба мягко
    расходятся по бумаге влево. Размер и положение — те же, что у .hero__media. */
 .hero__glow { position: absolute; top: 83px; bottom: 0; right: 0; aspect-ratio: 1444 / 1089; max-width: 60%; z-index: 0; pointer-events: none;
-  background: url("../img/hero.webp") 50% 0 / cover;
+  background: var(--hero-img, url("../img/hero.webp")) 50% 0 / cover;
   transform-origin: 100% 50%; transform: translateX(-110px) scale(1.14);
   filter: blur(80px) saturate(1.7); opacity: .75; }
 .hero__media { z-index: 1; }
 @media (max-width: 1200px) { .hero__glow { max-width: 50%; } }
 @media (max-width: 760px) { .hero__glow { display: none; } }
+
+/* ---------- Времена года на картинке (assets/js/hero-life.js) ---------- */
+.hero__slide img:not([src]) { visibility: hidden; }
+.hero__slide .hero__img-next { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; opacity: 0; transition: opacity .9s ease; }
+/* переключатель: маленькие кружки в правом верхнем углу фото, на стекле как у цитаты */
+.hero__seasons { position: absolute; z-index: 3; top: clamp(12px, 1.6vw, 20px); right: clamp(12px, 1.6vw, 20px); display: flex; gap: 2px; padding: 3px;
+  border-radius: 999px; background: rgba(247, 242, 233, .34); -webkit-backdrop-filter: blur(7px) saturate(1.3); backdrop-filter: blur(7px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, .32); box-shadow: 0 6px 16px rgba(33, 31, 26, .10); opacity: .72; transition: opacity .3s ease; }
+.hero__seasons:hover, .hero__seasons:focus-within { opacity: 1; }
+.hero__seasons button { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #3E3A31; cursor: pointer; transition: background-color .25s ease, color .25s ease; }
+.hero__seasons button:hover { background: rgba(255, 255, 255, .45); }
+.hero__seasons button[aria-pressed="true"] { background: rgba(255, 252, 245, .92); color: #8A6A1E; box-shadow: 0 1px 3px rgba(33, 31, 26, .14); }
+.hero__seasons button:focus-visible { outline: 2px solid #8A6A1E; outline-offset: 1px; }
+.hero__seasons svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 760px) { .hero__seasons button { width: 30px; height: 30px; } .hero__seasons svg { width: 15px; height: 15px; } }
+/* слой с текстом лежит поверх фото на всю ширину — пропускаем клики к переключателю сезонов */
+.hero__inner { pointer-events: none; }
+.hero__inner > * { pointer-events: auto; }
