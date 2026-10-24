@@ -905,3 +905,14 @@ main > section, body > footer { position: relative; }
     linear-gradient(180deg, rgb(235 223 201) 0, rgb(235 223 201 / .85) 60px, rgb(235 223 201 / .5) 140px, rgb(235 223 201 / .18) 220px, rgb(235 223 201 / 0) 300px),
     radial-gradient(120% 140% at 20% 30%, #EFE4D0 0%, #E6D8BE 60%, #DECDAE 100%); }
 .prayer > .joint:not(.joint--bottom) { display: none; }
+/* «Записки» ближе к «Святым»: снизу у «Святых» растяжка короче, у «Записок» меньше отступ сверху */
+.saints { padding-bottom: calc(var(--fade) * .3); }
+.prayer__grid { padding-top: clamp(20px, 2vw, 36px); }
+@media (max-width: 760px) {
+  .saints { padding-bottom: calc(var(--fade) * .35); }
+  .prayer__grid { padding-top: 16px; }
+}
+/* текстура бумаги привязана к странице, а не к блоку — на стыках она не сбивается */
+.hero::after, .calendar-strip::after, .saints::after, .mottos::after, .place::after,
+.chronicle::after, .build::after, .events::after, .merch::after, .prayer::after, .questions::after,
+.help::after, .site-footer::after { background-position: 0 var(--doc-y, 0px); }
