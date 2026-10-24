@@ -115,7 +115,7 @@
   <div class="hero__inner">
     <div class="hero__copy">
       <span class="eyebrow">Во имя вечных дел</span>
-      <h1 class="hero__title">Храм,<br>который<br>строится<br>сердцами</h1>
+      <h1 class="hero__title">Храм, <br>который <br>строится <br>сердцами</h1>
       <p class="hero__text">Создаём приход во имя святых равноапостольных Кирилла и Мефодия на Пулковских высотах — место для молитвы, веры, просвещения и добрых дел.</p>
       <div class="hero__actions">
         <button class="btn btn--gold" type="button" data-modal-open="donate">Поддержать строительство <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
@@ -165,7 +165,7 @@
       </span>
     </div>
     <div class="cal-cell cal-open">
-      <a href="https://azbyka.ru/days/" target="_blank" rel="noopener" data-cal-link>Открыть<br>календарь <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <a href="https://azbyka.ru/days/" target="_blank" rel="noopener" data-cal-link>Открыть <br>календарь <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
 </section>
@@ -198,8 +198,12 @@
       <a class="link-arrow" href="#" data-soon>Попросить молитвы общины <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
 
-    <div class="prayer__notes">
-      <form class="note-form" data-note-form="health" novalidate aria-labelledby="note-health-title">
+    <div class="note-switch" role="tablist" aria-label="Какую записку подать" data-note-switch>
+      <button type="button" role="tab" aria-selected="true" aria-controls="note-health-form" data-note-tab="0">О здравии</button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="note-repose-form" data-note-tab="1" tabindex="-1">Об упокоении</button>
+    </div>
+    <div class="prayer__notes" data-note-track>
+      <form class="note-form" id="note-health-form" data-note-form="health" novalidate aria-labelledby="note-health-title">
         <div class="note-form__paper">
         <div class="note-form__head">
           <img class="note-form__seal" src="assets/img/seal-red.webp" loading="lazy" decoding="async" width="104" height="97" alt="">
@@ -225,7 +229,7 @@
         <button class="btn btn--gold" type="submit">Подать записку <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
         <p class="note-form__status" data-note-status role="status" hidden></p>
       </form>
-      <form class="note-form note-form--repose" data-note-form="repose" novalidate aria-labelledby="note-repose-title">
+      <form class="note-form note-form--repose" id="note-repose-form" data-note-form="repose" novalidate aria-labelledby="note-repose-title">
         <div class="note-form__paper">
         <div class="note-form__head">
           <img class="note-form__seal" src="assets/img/seal-dark.webp" loading="lazy" decoding="async" width="104" height="97" alt="">
@@ -260,7 +264,7 @@
   <div class="place__grid">
     <div class="place__copy">
       <span class="eyebrow">Расположение</span>
-      <h2 id="place-title">Пулковские<br>высоты</h2>
+      <h2 id="place-title">Пулковские <br>высоты</h2>
       <p class="text">Место с особой историей и духовным значением. От рубежа обороны Ленинграда до символа мира и возрождения. Здесь, на этой земле, будет воздвигнут храм — как благодарность за жизнь, мир и будущее.</p>
       <div class="place__actions">
         <a class="btn btn--gold btn--small" href="https://yandex.ru/maps/?text=%D0%9F%D1%83%D0%BB%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B5%20%D0%B2%D1%8B%D1%81%D0%BE%D1%82%D1%8B%2C%20%D0%A1%D0%B0%D0%BD%D0%BA%D1%82-%D0%9F%D0%B5%D1%82%D0%B5%D1%80%D0%B1%D1%83%D1%80%D0%B3" target="_blank" rel="noopener">Как добраться <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -401,7 +405,7 @@
       <p class="text">Храм поднимают руки, знания и время прихожан. Предложите свой труд, материалы, технику или профессиональную консультацию — координатор свяжется с вами.</p>
       <button class="btn btn--gold" type="button" data-modal-open="volunteer" style="align-self: flex-start">Хочу помочь <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
     </div>
-    <ol class="help-toc">
+    <ol class="help-toc" id="help-toc" data-help-toc>
       <li><span class="help-toc__n" aria-hidden="true">а҃</span><b>Строительство</b><i aria-hidden="true"></i><span class="help-toc__d">Работы на участке</span></li>
       <li><span class="help-toc__n" aria-hidden="true">в҃</span><b>Проектирование</b><i aria-hidden="true"></i><span class="help-toc__d">Архитектура, расчёты, надзор</span></li>
       <li><span class="help-toc__n" aria-hidden="true">г҃</span><b>Электрика</b><i aria-hidden="true"></i><span class="help-toc__d">Монтаж и консультации</span></li>
@@ -411,6 +415,7 @@
       <li><span class="help-toc__n" aria-hidden="true">з҃</span><b>Материалы</b><i aria-hidden="true"></i><span class="help-toc__d">Передать материалы и технику</span></li>
       <li><span class="help-toc__n" aria-hidden="true">и҃</span><b>Фото и видео</b><i aria-hidden="true"></i><span class="help-toc__d">Снимать жизнь прихода</span></li>
     </ol>
+    <button class="help__more" type="button" aria-expanded="false" aria-controls="help-toc" data-help-more><span data-help-more-label>Все направления помощи</span> <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
   </div>
 </section>
 
@@ -778,7 +783,7 @@
     </div>
     <label class="field" for="donate-amount">Другая сумма, ₽<input id="donate-amount" name="amount" type="number" inputmode="numeric" min="100" step="100" value="1000"></label>
     <label class="field" for="donate-purpose">Назначение
-      <select id="donate-purpose" name="purpose">
+      <select id="donate-purpose" name="purpose" data-parchment>
         <option>На строительство храма</option>
         <option>На нужды прихода</option>
       </select>
@@ -852,5 +857,6 @@
 <script src="assets/js/chapel-game.js" defer></script>
 <script src="assets/js/chapel-toy.js" defer></script>
 <script src="assets/js/chapel-tilt.js" defer></script>
+<script src="assets/js/mobile.js" defer></script>
 </body>
 </html>

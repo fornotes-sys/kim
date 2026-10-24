@@ -1,10 +1,8 @@
 /* Выпадающий список «на пергаменте» для <select data-parchment>.
    Настоящий <select> остаётся в форме (скрыт) и всегда хранит выбранное значение.
-   На телефонах и планшетах остаётся системный список — там он удобнее. */
+   Работает и на телефонах: все формы сайта в одном стиле «пергамента». */
 (function () {
   'use strict';
-  var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-  if (coarse) return;
 
   var uid = 0;
   [].forEach.call(document.querySelectorAll('select[data-parchment]'), function (sel) {

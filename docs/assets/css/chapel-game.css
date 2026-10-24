@@ -266,3 +266,24 @@ html.cg-open, html.cg-open body { overflow: hidden; }
 .cm-rules { margin: 0; padding: 0 0 0 1.25em; display: flex; flex-direction: column; gap: 7px; font-size: .875rem; line-height: 1.45; color: var(--muted); }
 .cm-rules li::marker { font-family: var(--font-display); color: var(--gold-ink); }
 .cm-rules b { color: var(--ink); font-weight: 500; }
+
+/* ---------- Правила «Сложи сруб» помещаются на один экран, без прокрутки ----------
+   Карточка шире, три правила в ряд (на узкой сцене — столбиком, плотнее),
+   шрифты и поля подстраиваются под высоту окна. */
+.cg-card--intro { width: min(760px, calc(100% - 32px)); gap: clamp(8px, 1.4vh, 14px); padding: clamp(18px, 3vh, 30px) clamp(20px, 2.4vw, 32px); }
+.cg-card--intro h3 { font-size: clamp(1.75rem, 4.2vh, 2.5rem); }
+.cg-card--intro > p { font-size: .9375rem; line-height: 1.5; margin: 0; }
+.cg-card--intro .cg-rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 22px; font-size: .875rem; line-height: 1.45; }
+.cg-card--intro .cg-rules b { display: block; margin-bottom: 2px; }
+.cg-card--intro .btn { margin-top: 2px; min-height: 44px; }
+@media (max-height: 640px) {
+  .cg-card--intro .eyebrow { display: none; }
+  .cg-card--intro .cg-rules { font-size: .8125rem; line-height: 1.4; }
+}
+@media (max-width: 860px) {
+  .cg-card--intro { padding: 16px 16px 14px; gap: 8px; }
+  .cg-card--intro h3 { font-size: 1.625rem; }
+  .cg-card--intro > p { font-size: .8125rem; line-height: 1.45; }
+  .cg-card--intro .cg-rules { grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: .8125rem; line-height: 1.4; }
+  .cg-card--intro .cg-rules b { display: inline; }
+}
