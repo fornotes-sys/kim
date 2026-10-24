@@ -1299,3 +1299,28 @@ main > section, body > footer { position: relative; }
 .events__grid { padding-top: clamp(32px, 3vw, 52px); }
 .build .stages { padding-bottom: clamp(10px, 1vw, 16px); }
 .build { padding-bottom: clamp(18px, 1.6vw, 26px); }
+
+/* ---------- Выпадающий список «на пергаменте» (assets/js/parchment-select.js) ---------- */
+.ps { position: relative; }
+.ps__native { position: absolute !important; inset: 0; opacity: 0; pointer-events: none; }
+.ps__btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 12px 14px; border-radius: 8px; cursor: pointer; text-align: left;
+  font: inherit; font-size: 1rem; background: rgba(255,255,255,.04); border: 1px solid rgba(243,235,221,.35); color: var(--on-dark); transition: border-color .2s ease, background-color .2s ease; }
+.ps__btn:hover { border-color: rgba(234,211,162,.7); }
+.ps__btn:focus-visible, .ps.is-open .ps__btn { outline: 2px solid var(--gold-light); outline-offset: 0; border-color: var(--gold-light); }
+.ps__chev { width: 12px; height: 8px; flex: none; color: var(--gold-light); transition: transform .2s ease; }
+.ps.is-open .ps__chev { transform: rotate(180deg); }
+.ps__list { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 30; margin: 0; padding: 8px; list-style: none; max-height: 320px; overflow-y: auto; border-radius: 10px;
+  background: url("../img/paper.webp") 0 0 / 512px 512px repeat, linear-gradient(170deg, #FFFDF7 0%, #F7F0E2 60%, #F0E6D2 100%);
+  border: 1px solid #C9AE7A; box-shadow: 0 0 0 4px rgba(234,211,162,.12), 0 18px 40px rgba(0,0,0,.35); color: var(--ink); outline: none;
+  animation: ps-in .18s ease-out; }
+@keyframes ps-in { from { opacity: 0; transform: translateY(-4px); } }
+.ps__opt { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 6px; cursor: pointer; font-size: 1rem; line-height: 1.3; color: var(--ink); }
+.ps__opt + .ps__opt { box-shadow: inset 0 1px 0 rgba(167,131,69,.18); }
+.ps__mark { width: 14px; flex: none; font-size: .875rem; color: var(--cinnabar); opacity: 0; transition: opacity .15s ease; }
+.ps__opt.is-active { background: rgba(167,131,69,.16); }
+.ps__opt.is-active .ps__mark { opacity: .45; }
+.ps__opt[aria-selected="true"] { color: var(--cinnabar); }
+.ps__opt[aria-selected="true"] .ps__mark { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .ps__list { animation: none; } }
+/* системный список на телефонах — хотя бы в тонах пергамента */
+.q-form .field select option { background: #F7F0E2; color: var(--ink); }
