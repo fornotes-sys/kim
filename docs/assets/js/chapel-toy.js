@@ -104,7 +104,21 @@
     L.act = sv('g', { fill: 'none', stroke: '#3E3122', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, svg);
     L.aim = sv('g', { fill: 'none' }, svg);
     L.fx = sv('g', null, svg);
+    // подсказка, что это игра: курсор «переносит» бревно с подкладок на сруб
+    L.guide = sv('g', { 'class': 'ct-guide', 'pointer-events': 'none' }, svg);
+    var GP = 'M' + PILE_X + ' ' + (SLEEPER - 14) + 'Q' + ((PILE_X + WX) / 2) + ' ' + (BASE - 150) + ' ' + WX + ' ' + (BASE - 72);
+    sv('path', { d: GP, fill: 'none', stroke: '#B88A3E', 'stroke-width': 2, 'stroke-dasharray': '7 7', 'stroke-linecap': 'round', 'class': 'ct-guide__path' }, L.guide);
+    sv('path', { d: 'M' + (WX - 11) + ' ' + (BASE - 84) + 'L' + WX + ' ' + (BASE - 72) + 'L' + (WX - 15) + ' ' + (BASE - 69), fill: 'none', stroke: '#B88A3E', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, L.guide);
+    sv('circle', { cx: PILE_X, cy: SLEEPER - 14, r: 14, fill: 'none', stroke: '#B88A3E', 'stroke-width': 2, 'class': 'ct-guide__pulse' }, L.guide);
+    var cur = sv('g', null, L.guide);
+    sv('path', { d: 'M0 0L0 19L4.6 14.6L8 22L11.2 20.6L8 13.4L14 13.4Z', fill: '#FFFDF7', stroke: '#3E3122', 'stroke-width': 1.6, 'stroke-linejoin': 'round' }, cur);
+    sv('animateMotion', { dur: '3.2s', repeatCount: 'indefinite', path: GP, keyPoints: '0;0;1;1', keyTimes: '0;0.2;0.75;1', calcMode: 'linear' }, cur);
     media.appendChild(svg);
+
+    ui.hint = document.createElement('p');
+    ui.hint.className = 'ct-hint';
+    ui.hint.innerHTML = '<b>Это игра.</b> Возьмите бревно мышкой, перенесите и положите ровно на сруб.';
+    media.appendChild(ui.hint);
 
     ui.say = document.createElement('p');
     ui.say.className = 'ct-say';
