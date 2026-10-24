@@ -1024,3 +1024,14 @@ main > section, body > footer { position: relative; }
 
 /* шапка: глубокая мягкая тень — меню отчётливо «парит» над страницей */
 .site-header { box-shadow: 0 2px 6px rgba(33, 31, 26, .10), 0 12px 28px rgba(33, 31, 26, .16), 0 28px 60px rgba(33, 31, 26, .14), inset 0 -1px 0 rgba(220, 207, 184, .6); }
+
+/* ---------- Первый экран: свечение от фото, как Ambilight ----------
+   За фото лежит его же сильно размытая копия: цвета листвы и неба мягко
+   расходятся по бумаге влево. Размер и положение — те же, что у .hero__media. */
+.hero__glow { position: absolute; top: 83px; bottom: 0; right: 0; aspect-ratio: 1444 / 1089; max-width: 60%; z-index: 0; pointer-events: none;
+  background: url("../img/hero.jpg") 50% 0 / cover;
+  transform-origin: 100% 50%; transform: translateX(-110px) scale(1.14);
+  filter: blur(80px) saturate(1.7); opacity: .75; }
+.hero__media { z-index: 1; }
+@media (max-width: 1200px) { .hero__glow { max-width: 50%; } }
+@media (max-width: 760px) { .hero__glow { display: none; } }
