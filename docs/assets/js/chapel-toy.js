@@ -23,6 +23,7 @@
   var D_TILT = 80, ROPE = 54, G = 1500;
   var WX = 470, BASE = 385, GROUND = 405, PILE_X = 215, SLEEPER = 392;
   var PREBUILT = 3, GOAL = 5;           // три венца уже стоят, игрок кладёт ещё пять — всего восемь
+  var MU_S = 0.20, MU_K = 0.15;         // трение стропы о бревно: покоя и скольжения
   var OK_DEG = 6, OK_DX = 24, GOOD_DEG = 2.5, GOOD_DX = 10;
   var COM = LOG_L * (0.5 - (RB * RB + 2 * RB * RT + 3 * RT * RT) / (4 * (RB * RB + RB * RT + RT * RT)));
 
@@ -51,6 +52,16 @@
       o.frequency.setValueAtTime(soft ? 140 : 105, t); o.frequency.exponentialRampToValueAtTime(48, t + .3);
       g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(soft ? .12 : .25, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + .32);
       o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .4);
+    } catch (e) { /* без звука */ }
+  }
+
+  function creak() {
+    try {
+      if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return; AC = new C(); }
+      var t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(rnd(380, 520), t); o.frequency.exponentialRampToValueAtTime(260, t + .08);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.025, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + .09);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .1);
     } catch (e) { /* без звука */ }
   }
 
@@ -233,7 +244,8 @@
     e.preventDefault();
     try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ничего */ }
     var gx = clamp(toLocal(p).x, -LOG_L / 2 + 8, LOG_L / 2 - 8), gp = gripWorld(gx);
-    hold = { gx: gx, px: p.x, py: p.y, tx: gp.x, ty: gp.y - ROPE, th: 0, om: 0, phi: cur.r / DEG, phiV: 0, vs: 0, vp: 0, lx: gp.x, hvx: 0 };
+    hold = { gx: gx, px: p.x, py: p.y, tx: gp.x, ty: gp.y - ROPE, th: 0, om: 0, phi: cur.r / DEG, phiV: 0, vs: 0, vp: 0, lx: gp.x, hvx: 0, startY: cur.y, ly: gp.y, hvy: 0, sv: 0, slipping: false, creak: 0 };
+    cur.strap.setAttribute('fill', '#8C6A3E');
     clear(L.aim);
     cur.strap.style.display = ''; setT(cur.strap, gx, 0, 0);
     L.crane.style.display = '';
@@ -287,7 +299,27 @@
       hd.phiV += phA * h; hd.phi = clamp(hd.phi + hd.phiV * h, -1.1, 1.1);
     }
     var hx = hd.tx + ROPE * Math.sin(hd.th), hy = hd.ty + ROPE * Math.cos(hd.th);
+    // строп держит бревно только трением. Тяжесть в системе крюка направлена вдоль троса,
+    // поэтому бревно едет, когда его перекос относительно троса больше угла трения:
+    // от резкого рывка (трос раскачался) или от захвата далеко от центра тяжести
     hd.hvx = (hx - hd.lx) / dt; hd.lx = hx;
+    hd.hvy = (hy - hd.ly) / dt; hd.ly = hy;
+    if (hd.startY - cur.y > 6) {
+      var rel = hd.phi + hd.th;
+      var par = G * Math.sin(rel), nor = G * Math.cos(rel);
+      if (hd.sv === 0 && Math.abs(par) > MU_S * nor) hd.sv = 1e-3 * Math.sign(par);
+      if (hd.sv !== 0) {
+        var sd = Math.sign(hd.sv);
+        hd.sv += (par - sd * MU_K * nor) * dt;
+        if (Math.sign(hd.sv) !== sd) hd.sv = 0;             // трение остановило
+      }
+      hd.gx -= hd.sv * dt;                                  // бревно едет, точка стропы смещается к краю
+      if (Math.abs(hd.gx) > LOG_L / 2 - 10) { slipOut(hd); return; }
+    }
+    var sl = Math.abs(hd.sv) > 4;
+    if (sl !== hd.slipping) { hd.slipping = sl; cur.strap.setAttribute('fill', sl ? '#9E2B32' : '#8C6A3E'); }
+    if (sl) { hd.creak -= dt; if (hd.creak <= 0) { hd.creak = .11; creak(); } }
+    setT(cur.strap, hd.gx, 0, 0);
     var a = hd.phi, ly = -rAt(lg, hd.gx);
     cur.x = hx - (hd.gx * Math.cos(a) - ly * Math.sin(a));
     cur.y = hy - (hd.gx * Math.sin(a) + ly * Math.cos(a));
@@ -298,6 +330,16 @@
     var err = Math.abs(hd.phi * DEG - wallDeg());
     L.target.classList.toggle('is-ready', err <= GOOD_DEG && Math.abs(hd.phiV) < .6 && Math.abs(cur.x - WX) <= GOOD_DX);
   }
+  // бревно выскользнуло из стропы и падает
+  function slipOut(hd) {
+    hold = null;
+    svg.classList.remove('is-grabbing');
+    L.crane.style.display = 'none';
+    cur.strap.style.display = 'none';
+    fall = { vx: clamp(hd.hvx * .6, -300, 300), vy: Math.max(0, hd.hvy), w: hd.phiV + (hd.gx > 0 ? -1.6 : 1.6), phi: hd.phi, slip: true };
+    creak(); kick();
+  }
+
   function fallTick(dt) {
     var f = fall, lg = cur.lg;
     f.vy += 2400 * dt; f.vx *= Math.pow(.2, dt); f.w *= Math.pow(.4, dt);
@@ -315,9 +357,9 @@
     L.target.classList.remove('is-ready');
     var me = cur, dx = me.x - WX, err = f.phi * DEG - wallDeg();
     me.busy = true;
-    if (Math.abs(dx) > OK_DX || Math.abs(err) > OK_DEG) {
-      var dir = Math.abs(dx) > OK_DX ? Math.sign(dx) : Math.sign(err);
-      say(Math.abs(dx) > OK_DX ? 'Мимо — бревно скатилось' : 'Легло одним концом и соскочило');
+    if (f.slip || Math.abs(dx) > OK_DX || Math.abs(err) > OK_DEG) {
+      var dir = f.slip ? (Math.sign(dx) || 1) : Math.abs(dx) > OK_DX ? Math.sign(dx) : Math.sign(err);
+      say(f.slip ? 'Бревно выскользнуло из стропы' : Math.abs(dx) > OK_DX ? 'Мимо — бревно скатилось' : 'Легло одним концом и соскочило');
       thud();
       var x0 = me.x, y0 = me.y, r0 = me.r;
       tween(760, function (k) {

@@ -31,6 +31,7 @@
   var WX = 610, BASE = 500, GROUND = 520;
   var PILE_X = 310, SLEEPER_TOP = 506;
   var ROPE = 64, G = 1500;
+  var MU_S = 0.20, MU_K = 0.15;         // трение стропы о бревно: покоя и скольжения
 
   /* ---------- Утилиты ---------- */
   var NS = 'http://www.w3.org/2000/svg', PI = Math.PI, DEG = 180 / PI;
@@ -85,7 +86,7 @@
     knock: function () { tone(720, 0.06, 'triangle', 0.08, 480); noise(0.04, 0.12, 3200); },
     perfect: function () { tone(784, 0.18, 'sine', 0.05); tone(1175, 0.3, 'sine', 0.04, null, 0.08); },
     err: function () { tone(190, 0.22, 'triangle', 0.07, 130); },
-    flip: function () { noise(0.12, 0.08, 1400); },
+    creak: function () { tone(rnd(380, 520), 0.09, 'sawtooth', 0.022, 260); },
     bell: function () {
       [[0.5, .10, 5], [1, .13, 3.6], [1.19, .06, 2.4], [1.5, .05, 2], [2, .045, 1.6], [2.52, .03, 1.2], [3, .02, 1]].forEach(function (p) { tone(196 * p[0], p[2], 'sine', p[1]); });
     }
@@ -496,8 +497,10 @@
     hold = {
       gx: gx, lift: touch ? 80 : 26, px: p.x, py: p.y,
       tx: gp.x, ty: gp.y - ROPE, startY: it.y,
-      th: 0, om: 0, phi: it.r / DEG, phiV: 0, lx: gp.x, vs: 0, vp: 0, hvx: 0, lifted: 0
+      th: 0, om: 0, phi: it.r / DEG, phiV: 0, lx: gp.x, vs: 0, vp: 0, hvx: 0, lifted: 0,
+      ly: gp.y, hvy: 0, sv: 0, slipping: false, creak: 0
     };
+    it.strap.setAttribute('fill', '#8C6A3E');
     clear(L.aim);
     it.strap.style.display = '';
     setT(it.strap, gx, 0, 0);
@@ -579,7 +582,27 @@
       hd.phiV += phA * hh; hd.phi = clamp(hd.phi + hd.phiV * hh, -1.1, 1.1);
     }
     var hx = hd.tx + ROPE * Math.sin(hd.th), hy = hd.ty + ROPE * Math.cos(hd.th);
+    // строп держит бревно только трением. Тяжесть в системе крюка направлена вдоль троса,
+    // поэтому бревно едет, когда его перекос относительно троса больше угла трения:
+    // от резкого рывка (трос раскачался) или от захвата далеко от центра тяжести
     hd.hvx = (hx - hd.lx) / dt; hd.lx = hx;
+    hd.hvy = (hy - hd.ly) / dt; hd.ly = hy;
+    if (hd.lifted > 6) {
+      var rel = hd.phi + hd.th;
+      var par = G * Math.sin(rel), nor = G * Math.cos(rel);
+      if (hd.sv === 0 && Math.abs(par) > MU_S * nor) hd.sv = 1e-3 * Math.sign(par);
+      if (hd.sv !== 0) {
+        var sd = Math.sign(hd.sv);
+        hd.sv += (par - sd * MU_K * nor) * dt;
+        if (Math.sign(hd.sv) !== sd) hd.sv = 0;             // трение остановило
+      }
+      hd.gx -= hd.sv * dt;                                  // бревно едет, точка стропы смещается к краю
+      if (Math.abs(hd.gx) > LOG_L / 2 - 10) { slipOut(hd); return; }
+    }
+    var sl = Math.abs(hd.sv) > 4;
+    if (sl !== hd.slipping) { hd.slipping = sl; cur.strap.setAttribute('fill', sl ? '#9E2B32' : '#8C6A3E'); }
+    if (sl) { hd.creak -= dt; if (hd.creak <= 0) { hd.creak = .11; sfx.creak(); } }
+    setT(cur.strap, hd.gx, 0, 0);
     var a = hd.phi, ly = -rAt(lg, hd.gx);
     cur.x = hx - (hd.gx * Math.cos(a) - ly * Math.sin(a));
     cur.y = hy - (hd.gx * Math.sin(a) + ly * Math.cos(a));
@@ -602,7 +625,20 @@
     if (hd.lifted > 30) {
       if (Math.abs(eq * DEG) > 8) tipOnce('tilt', 'Бревно перевешивает в сторону ' + (lg.e - hd.gx > 0 ? 'правого' : 'левого') + ' конца. Опустите его обратно на подкладки и перехватите ближе к тяжёлой стороне.');
       else tipOnce('aim', 'Подведите бревно к срубу и отпустите, когда пузырёк уровня станет зелёным.');
+      if (hd.slipping) tipOnce('slide', 'Бревно поехало по стропе! Замедлитесь — дайте ему успокоиться.');
     }
+  }
+
+  // бревно выскользнуло из стропы и падает
+  function slipOut(hd) {
+    hold = null;
+    svg.classList.remove('is-grabbing');
+    L.crane.style.display = 'none';
+    L.ghost.classList.remove('is-ready');
+    cur.strap.style.display = 'none';
+    fall = { vx: clamp(hd.hvx * .6, -300, 300), vy: Math.max(0, hd.hvy), w: hd.phiV + (hd.gx > 0 ? -1.6 : 1.6), phi: hd.phi, slip: true };
+    sfx.creak(); sfx.err();
+    renderStats();
   }
 
   /* ---------- Падение и приземление ---------- */
@@ -626,6 +662,11 @@
     var f = fall; fall = null;
     var lg = cur.lg, dx = cur.x - WX, err = f.phi * DEG - wallDeg();
     cur.busy = true;
+    if (f.slip) {
+      tumble(Math.sign(dx) || 1, 'Бревно выскользнуло из стропы');
+      setTip('Бревно держится в стропе только трением. Резкий рывок, сильная качка или захват далеко от центра тяжести — и оно поедет. Ведите кран плавно.');
+      return;
+    }
     if (Math.abs(dx) > OK_DX || Math.abs(err) > OK_DEG) {
       var off = Math.abs(dx) > OK_DX;
       tumble(off ? Math.sign(dx) : Math.sign(err), off ? 'Мимо паза — бревно скатилось со сруба' : 'Легло одним концом и соскочило. Бревно должно висеть ровно');
