@@ -259,3 +259,10 @@ html.cg-open, html.cg-open body { overflow: hidden; }
 .cg--inline .cg__box { width: 100%; max-width: none; height: clamp(560px, calc(100vh - 190px), 760px); box-shadow: 0 0 0 1px var(--line), 0 16px 44px rgba(33,31,26,.10); animation: cg-unfold .45s cubic-bezier(.2,.7,.2,1); }
 @keyframes cg-unfold { from { opacity: 0; transform: translateY(10px); } }
 @media (prefers-reduced-motion: reduce) { .cg--inline .cg__box { animation: none; } }
+
+/* долгое нажатие в игре на телефоне: без системного меню и выделения */
+.cm, .cm * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.cm svg, .cm img { -webkit-user-drag: none; }
+.cm-rules { margin: 0; padding: 0 0 0 1.25em; display: flex; flex-direction: column; gap: 7px; font-size: .875rem; line-height: 1.45; color: var(--muted); }
+.cm-rules li::marker { font-family: var(--font-display); color: var(--gold-ink); }
+.cm-rules b { color: var(--ink); font-weight: 500; }

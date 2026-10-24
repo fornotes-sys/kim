@@ -2,8 +2,8 @@
    «Сложи сруб» для телефона: пирамидка, которую держат наклоном.
    На компьютере не включается — там живая иллюстрация (chapel-toy.js).
 
-   Кран качает бревно над срубом. Держишь палец — бревно плавно опускается,
-   отпустил — висит. Где коснулось — там и легло, а коснуться надо при ровном
+   Кран качает бревно над срубом. Ведёшь пальцем вниз — трос опускается,
+   вверх — поднимается (не быстрее лебёдки). Где коснулось — там и легло, а коснуться надо при ровном
    телефоне, иначе бревно ляжет одним концом и соскочит. Сдвиг от середины
    смещает центр тяжести, и сруб начинает клониться. Наклон телефона наклоняет «землю» — им сруб и удерживают.
    Наклон читается с датчика движения (на iPhone — после разрешения),
@@ -151,16 +151,32 @@
     ui.level.addEventListener('pointerup', function () { dragging = false; });
     ui.level.addEventListener('pointercancel', function () { dragging = false; });
 
-    // держишь палец на сцене — бревно опускается; отпустил — висит
-    var holdId = null;
+    // ведёшь пальцем вниз — трос травится, вверх — выбирается; бревно идёт за пальцем,
+    // но не быстрее лебёдки
+    var holdId = null, lastY = 0;
     ui.scene.addEventListener('pointerdown', function (e) {
       if (e.target.closest('.cm-card, button') || S.phase !== 'play') return;
-      holdId = e.pointerId; S.holding = true; e.preventDefault();
+      holdId = e.pointerId; lastY = e.clientY; S.holding = true; e.preventDefault();
+      try { ui.scene.setPointerCapture(e.pointerId); } catch (er) { /* */ }
+    });
+    ui.scene.addEventListener('pointermove', function (e) {
+      if (e.pointerId !== holdId || !S.view) return;
+      var k = S.view.h / ui.scene.getBoundingClientRect().height;
+      S.target = Math.max(0, S.target + (e.clientY - lastY) * k * 1.15);
+      lastY = e.clientY;
     });
     function release(e) { if (e.pointerId === holdId) { holdId = null; if (S) S.holding = false; } }
     window.addEventListener('pointerup', release);
     window.addEventListener('pointercancel', release);
-    ui.scene.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    // долгое нажатие на телефоне: без выделения, лупы и меню «Скопировать / Сохранить»
+    function noNative(e) { if (!e.target.closest('.cm-card button, .cm__head button')) e.preventDefault(); }
+    [ui.scene, ui.level].forEach(function (el) {
+      el.addEventListener('touchstart', noNative, { passive: false });
+      el.addEventListener('touchmove', noNative, { passive: false });
+    });
+    root.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    root.addEventListener('selectstart', function (e) { e.preventDefault(); });
+    root.addEventListener('dragstart', function (e) { e.preventDefault(); });
 
     svg = sv('svg', { 'class': 'cm-svg', role: 'img', 'aria-label': 'Сруб часовни на фундаменте, над ним кран с бревном' });
     ui.scene.insertBefore(svg, ui.scene.firstChild);
@@ -223,7 +239,7 @@
     parts.forEach(function (p) { p.el.remove(); }); parts = [];
     [L.stack, L.top, L.hang, L.fly, L.fx].forEach(function (g) { while (g.firstChild) g.firstChild.remove(); });
     S = { phase: 'intro', mode: S ? S.mode : null, view: S && S.view, logs: [], perfect: 0, fails: 0, t: 0, tilt: 0, finger: 0,
-          lean: 0, leanV: 0, swingT: rnd(0, 6), falling: null, low: 0, holding: false, gust: 0, gustT: 0, warned: 0, creakT: 0 };
+          lean: 0, leanV: 0, swingT: rnd(0, 6), falling: null, low: 0, target: 0, holding: false, gust: 0, gustT: 0, warned: 0, creakT: 0 };
     svg.classList.remove('is-final');
     if (root) root.classList.remove('is-final');
     L.crane.style.display = ''; L.hang.style.display = '';   // новое бревно снова на крюке
@@ -247,8 +263,13 @@
     var html;
     if (kind === 'intro') {
       html = '<span class="eyebrow">Мини-игра</span><h3>Сложи сруб</h3>' +
-        '<p>Кран качает бревно над срубом. <b>Держите палец на экране</b> — бревно плавно опускается, отпустите — остановится. Где коснулось, там и легло.</p>' +
-        '<p>Пока опускаете, <b>держите телефон ровно</b>: криво — бревно ляжет одним концом и соскочит. Легло со сдвигом — сруб начнёт клониться, удерживайте его наклоном.</p>' +
+        '<p>Восемь венцов — и часовня у поклонного креста готова. Кран качает бревно над срубом.</p>' +
+        '<ol class="cm-rules">' +
+          '<li><b>Ведите пальцем вниз</b> — трос опускается, вверх — поднимается. Бревно идёт за пальцем, но не быстрее лебёдки.</li>' +
+          '<li><b>Поймайте момент</b>, когда бревно над срубом: где коснётся, там и ляжет.</li>' +
+          '<li><b>Держите телефон ровно.</b> Наклон отводит висящее бревно, а коснувшись сруба криво, оно ляжет одним концом и соскочит.</li>' +
+          '<li><b>Удерживайте сруб.</b> Легло со сдвигом — сруб клонится, выравнивайте его наклоном. Слишком сильно — верх рассыплется.</li>' +
+        '</ol>' +
         '<button class="btn btn--gold" type="button" data-cm="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
         '<p class="cm-card__small">Игра попросит доступ к датчику наклона. Без него наклон задаётся пальцем по полоске внизу.</p>';
     } else {
@@ -272,7 +293,7 @@
       root.classList.toggle('is-finger', !ok);
       S.phase = 'play';
       hud();
-      say(ok ? 'Держите палец — бревно опускается' : 'Наклон — пальцем по полоске внизу', null, 2600);
+      say(ok ? 'Ведите пальцем вниз — трос опускается' : 'Наклон — пальцем по полоске внизу', null, 2600);
     }
     if (again && S.mode) { if (S.mode === 'sensor') sensor.zero = null; go(S.mode === 'sensor'); return; }
     startSensor(go);
@@ -296,7 +317,7 @@
      Бревно висит на тросе ровно, а сруб наклонён вместе с «землёй». Пока бревно
      опускается, наклон телефона ещё и отводит его в сторону. Коснулось сруба
      при наклоне — ляжет одним концом и соскочит, поэтому телефон держат ровно. */
-  var LOWER = 72;                              // скорость опускания, пикс/с
+  var LOWER = 95;                              // скорость лебёдки, пикс/с
   var LAND_DEG = 4.5;                          // допустимый наклон в момент касания, °
   function logPos() {
     var tx = hookX(), rope = 80 + S.low;
@@ -309,8 +330,9 @@
   }
   function lowerTick(dt) {
     if (L.hang.style.display === 'none') return;
-    if (S.holding) {
-      S.low += LOWER * dt;
+    var d = S.target - S.low, step = LOWER * dt;
+    if (Math.abs(d) > .5) {
+      S.low += clamp(d, -step, step);
       S.creakT2 = (S.creakT2 || 0) - dt;
       if (S.creakT2 <= 0) { S.creakT2 = .28; sfx.creak(); }
     }
@@ -319,7 +341,7 @@
   }
   function touchDown(p, q) {
     L.hang.style.display = 'none';
-    S.low = 0;
+    S.low = 0; S.target = 0;
     var ty = topY() + LR, ang = worldAngle();
     var below = S.logs.length ? S.logs[S.logs.length - 1].x : 0, off = q.x - CX - below;
     if (Math.abs(off) > OVERLAP) {             // мимо — бревно соскальзывает
@@ -348,7 +370,7 @@
     later(respawn, 420);
   }
   function placeLog(lg, i) { setT(lg.el, CX + lg.x, BASE_Y - LR - i * STEP, 0); }
-  function respawn() { S.low = 0; L.hang.style.display = ''; }
+  function respawn() { S.low = 0; S.target = 0; L.hang.style.display = ''; }
 
   // бревно падает с края
   function flyOff(x, y, dir) {
@@ -466,7 +488,7 @@
       tw.fn(easeOut(k)); if (k >= 1) { tweens.splice(i, 1); tw.done && tw.done(); }
     }
     if (S.phase === 'play') {
-      S.swingT += dt * (S.holding ? .55 : 1);   // пока опускают — кран качается медленнее
+      S.swingT += dt * (S.holding ? .55 : 1);   // пока палец на экране — кран качается медленнее
       physics(dt);
     } else if (S.phase === 'done' || S.phase === 'final') {
       S.lean *= Math.pow(.05, dt); S.tilt *= Math.pow(.05, dt); S.risk = 0;   // сруб сложен — выпрямляется
