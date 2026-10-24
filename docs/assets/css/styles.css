@@ -896,3 +896,12 @@ main > section, body > footer { position: relative; }
 .events         { --lb: 0; --rb: 0; --cb: 0; }
 .help           { --lt: 0; --rt: 0; --ct: 0; }
 .merch          { --lb: 0; --rb: 0; --cb: 0; }
+
+/* «О храме» убран: под «Святыми» сразу «Записки». Верх «Записок» выровнен
+   в один тон, и тёмный блок растворяется именно в нём. */
+.saints { --fade-down: 235 223 201; }
+.prayer { --lt: 0; --rt: 0; --ct: 0;
+  background:
+    linear-gradient(180deg, rgb(235 223 201) 0, rgb(235 223 201 / .85) 60px, rgb(235 223 201 / .5) 140px, rgb(235 223 201 / .18) 220px, rgb(235 223 201 / 0) 300px),
+    radial-gradient(120% 140% at 20% 30%, #EFE4D0 0%, #E6D8BE 60%, #DECDAE 100%); }
+.prayer > .joint:not(.joint--bottom) { display: none; }
