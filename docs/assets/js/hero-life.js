@@ -29,8 +29,8 @@
     function done() { if (++n === 2) init(masks, wind); }
     masks.onload = wind.onload = done;
     wind.onerror = function () { wind = null; done(); };
-    masks.src = 'assets/img/hero-life-masks.png';
-    wind.src = 'assets/img/hero-wind.png';
+    masks.src = 'assets/img/hero-life-masks.webp';
+    wind.src = 'assets/img/hero-wind.webp';
   }
 
   function init(masks, windMap) {
