@@ -1053,3 +1053,15 @@ main > section, body > footer { position: relative; }
 /* слой с текстом лежит поверх фото на всю ширину — пропускаем клики к переключателю сезонов */
 .hero__inner { pointer-events: none; }
 .hero__inner > * { pointer-events: auto; }
+
+/* ---------- «Спросите священника»: фото тает в паттерне, как икона святых ----------
+   Без рамки и тени: края мягко растворяются, буквы фона проступают по краям,
+   в углах края складываются и тают сильнее. */
+.questions__art--photo { border-radius: 0; background: none; box-shadow: none; overflow: visible; width: min(100%, 400px);
+  --qm: linear-gradient(90deg, transparent 0, rgba(0,0,0,.35) 9%, rgba(0,0,0,.8) 20%, #000 30%, #000 72%, rgba(0,0,0,.8) 82%, rgba(0,0,0,.35) 92%, transparent 100%),
+        linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 8%, rgba(0,0,0,.8) 18%, #000 28%, #000 74%, rgba(0,0,0,.8) 84%, rgba(0,0,0,.35) 93%, transparent 100%),
+        radial-gradient(ellipse 62% 64% at 54% 46%, #000 62%, rgba(0,0,0,.6) 84%, transparent 100%);
+  -webkit-mask-image: var(--qm); mask-image: var(--qm);
+  -webkit-mask-composite: source-in, source-in;
+          mask-composite: intersect, intersect; }
+.questions__art--photo img { border-radius: 0; }
