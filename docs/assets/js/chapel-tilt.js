@@ -21,6 +21,7 @@
 
   /* ---------- Параметры ---------- */
   var GOAL = 8;
+  var MID = 6;      // после этого венца — карточка «видите, как непросто», дальше можно доиграть
   var LL = 232, LR = 11, STEP = 21;          // бревно: длина, радиус, шаг венца
   var CX = 206, GY = 600;                    // центр сруба и уровень земли (мир 412 × 600)
   var BASE_Y = GY - 20;                      // верх фундамента
@@ -135,6 +136,7 @@
       var a = b.getAttribute('data-cm');
       if (a === 'start') begin();
       else if (a === 'again') { reset(); begin(true); }
+      else if (a === 'continue') { ui.card.hidden = true; S.phase = 'play'; hud(); respawn(); }
       else if (a === 'donate') { close(); var d = document.querySelector('[data-modal-open="donate"]'); if (d) d.click(); }
       else if (a === 'volunteer') { close(); var v = document.querySelector('[data-modal-open="volunteer"]'); if (v) v.click(); }
     });
@@ -272,6 +274,13 @@
         '</ol>' +
         '<button class="btn btn--gold" type="button" data-cm="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
         '<p class="cm-card__small">Игра попросит доступ к датчику наклона. Без него наклон задаётся пальцем по полоске внизу.</p>';
+    } else if (kind === 'mid') {
+      html = '<span class="eyebrow">' + MID + ' ' + plural(MID, ['венец', 'венца', 'венцов']) + ' из ' + GOAL + '</span>' +
+        '<h3>' + (S.fails >= 2 ? 'Не всё получается?' : 'Осталось совсем немного') + '</h3>' +
+        '<p class="cm-card__lead">' + (S.fails >= 2 ? 'Видите, как это непросто — даже в игре.' : 'Видите, как это непросто?') +
+        ' Настоящий сруб кладут плотники, и им можно помочь. А потом, если хочется, доложите последние венцы.</p>' +
+        '<button class="btn btn--gold" type="button" data-cm="donate">Поддержать строительство <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
+        '<div class="cm-links"><button type="button" data-cm="volunteer">Помочь руками</button><button type="button" class="is-strong" data-cm="continue">Продолжить игру</button></div>';
     } else {
       var stars = S.perfect >= 6 && S.fails <= 1 ? 3 : S.fails <= 4 ? 2 : 1;
       html = '<div class="cm-stars">' + [1, 2, 3].map(function (i) { return '<span' + (i <= stars ? ' class="is-on"' : '') + '>✦</span>'; }).join('') + '</div>' +
@@ -367,6 +376,8 @@
     dust(p.x - 100, p.y + 10, 5); dust(p.x + 100, p.y + 10, 5);
     hud();
     if (S.logs.length >= GOAL) { later(finale, 600); S.phase = 'done'; return; }
+    // после шестого венца — передышка: как это непросто и чем можно помочь; дальше можно доиграть
+    if (S.logs.length === MID && !S.midShown) { S.midShown = 1; S.phase = 'pause'; L.hang.style.display = 'none'; later(function () { showCard('mid'); }, 900); return; }
     later(respawn, 420);
   }
   function placeLog(lg, i) { setT(lg.el, CX + lg.x, BASE_Y - LR - i * STEP, 0); }

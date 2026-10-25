@@ -287,3 +287,5 @@ html.cg-open, html.cg-open body { overflow: hidden; }
   .cg-card--intro .cg-rules { grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: .8125rem; line-height: 1.4; }
   .cg-card--intro .cg-rules b { display: inline; }
 }
+/* карточка на шестом венце: «Продолжить игру» — заметнее остальных ссылок */
+.cg-link--strong, .cm-links .is-strong { color: var(--ink); font-weight: 500; }

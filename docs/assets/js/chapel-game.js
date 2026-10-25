@@ -31,6 +31,7 @@
   var WX = 610, BASE = 500, GROUND = 520;
   var PILE_X = 310, SLEEPER_TOP = 506;
   var ROPE = 64, G = 1500;
+  var MID = 6;                          // после этого венца — карточка «видите, как непросто»
   var MU_S = 0.20, MU_K = 0.15;         // трение стропы о бревно: покоя и скольжения
 
   /* ---------- Утилиты ---------- */
@@ -352,6 +353,7 @@
     else if (a === 'donate') openSiteModal('donate');
     else if (a === 'volunteer') openSiteModal('volunteer');
     else if (a === 'restart') { reset(); hideCard(); startPlay(); }
+    else if (a === 'continue') { hideCard(); S.phase = 'play'; afterCrown(); }
   }
 
   /* ---------- Карточки ---------- */
@@ -366,6 +368,15 @@
           '<li><b>Какое взять.</b> Брёвна в штабеле лежат по-разному. Выбирайте так, чтобы комель лёг над вершиной предыдущего, — иначе стена пойдёт вкось.</li>' +
         '</ul>' +
         '<button class="btn btn--gold" type="button" data-act="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>';
+    } else if (kind === 'mid') {
+      html = '<span class="eyebrow">' + MID + ' ' + plural(MID, ['венец', 'венца', 'венцов']) + ' из ' + CROWNS + '</span>' +
+        '<h3>' + (S.fails >= 2 ? 'Не всё получается?' : 'Осталось совсем немного') + '</h3>' +
+        '<p class="cg-card__lead">' + (S.fails >= 2
+          ? 'Видите, как это непросто — даже в игре. Настоящий сруб кладут плотники, и им можно помочь.'
+          : 'Видите, как это непросто? Настоящий сруб кладут плотники, и им можно помочь.') +
+        ' Поддержите строительство или приходите помочь руками — а потом, если хочется, доложите последние венцы.</p>' +
+        '<div class="cg-actions"><button class="btn btn--gold" type="button" data-act="donate">Поддержать строительство <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
+        '<button class="cg-link" type="button" data-act="volunteer">Помочь руками</button><button class="cg-link cg-link--strong" type="button" data-act="continue">Продолжить игру</button></div>';
     } else if (kind === 'final') {
       var stars = starCount();
       html = '<div class="cg-stars" aria-label="Оценка: ' + stars + ' из 3">' + [1, 2, 3].map(function (i) { return '<span class="' + (i <= stars ? 'is-on' : '') + '">✦</span>'; }).join('') + '</div>' +
@@ -712,10 +723,16 @@
       renderStats();
       if (S.crown >= CROWNS) { later(finale, 700); return; }
       drawGhost();
+      // после шестого венца — передышка: как это непросто и чем можно помочь; дальше можно доиграть
+      if (S.crown === MID && !S.midShown) { S.midShown = 1; S.phase = 'pause'; renderStats(); later(function () { showCard('mid'); }, 900); return; }
+      afterCrown();
+    });
+  }
+  function afterCrown() {
       if (S.crown >= 4 && S.wind === 0) { S.wind = 0.45; if (tipOnce('wind', 'Наверху поднялся ветер. Бревно раскачивает сильнее — опускайте между порывами.')) say('Поднялся ветер', null, 2000); }
       if (S.crown >= 6) S.wind = 0.85;
+      renderStats();
       later(refill, 300);
-    });
   }
   function tumble(dir, msg) {
     S.fails++; S.streak = 0;
