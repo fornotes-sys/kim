@@ -115,3 +115,22 @@ html.wg-open, html.wg-open body { overflow: hidden; }
 .wg-render img { display: block; width: 100%; height: auto; border-radius: 8px; box-shadow: 0 0 0 1px var(--line); }
 .wg-render figcaption { margin-top: 4px; font-size: .75rem; color: var(--muted); }
 .wg-host--easy .wg-render { display: none; }
+
+/* ---------- «Сложи часовню»: контур храма, ряд, места под блоки ---------- */
+.wg-ghost { transition: opacity .8s ease; pointer-events: none; }
+.wg-outline path { fill: none; stroke: #8C7A5E; stroke-width: 1.6; stroke-dasharray: 6 5; }
+.wg-band { fill: rgba(167,131,69,.07); stroke: none; pointer-events: none; }
+.wg-slot { fill: rgba(255,255,255,.35); stroke: #A78345; stroke-width: 1.6; stroke-dasharray: 5 4; pointer-events: none; animation: wg-slot 1.4s ease-in-out infinite; }
+.wg-slot.is-target { fill: rgba(79,107,58,.16); stroke: #4F6B3A; stroke-width: 2.6; stroke-dasharray: none; animation: none; }
+@keyframes wg-slot { 50% { stroke-opacity: .45; } }
+.wg-spot { fill: rgba(167,131,69,.08); stroke: #A78345; stroke-width: 2; stroke-dasharray: 6 5; pointer-events: none; animation: wg-slot 1.4s ease-in-out infinite; }
+.is-near .wg-spot { fill: rgba(79,107,58,.16); stroke: #4F6B3A; stroke-dasharray: none; animation: none; }
+.wg-take { cursor: grab; }
+.wg-pal-label { font-size: 15px; fill: #85642C; font-style: italic; }
+.wg-held { pointer-events: none; filter: drop-shadow(0 8px 6px rgba(62,49,34,.22)); }
+.wg-svg.is-final .wg-outline { display: none; }
+/* телефон: шапка с переключателем помещается в узкий экран */
+@media (max-width: 480px) {
+  .wg-over__head h2 { font-size: 1.125rem; }
+  .wg-over .kim-modes button { padding: 6px 9px; font-size: .75rem; }
+}

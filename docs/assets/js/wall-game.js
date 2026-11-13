@@ -1,20 +1,17 @@
 /* ==========================================================================
-   «Сложи стену» — игра про кладку часовни из газобетона.
+   «Сложи часовню» — игра про стройку газобетонной часовни.
 
-   Блоки ровные, поэтому дело не в перекосе, а в точности:
-   • блок ведут по ряду — он идёт по клею с запаздыванием; подвёл мягко —
-     встал в стык; толкнул с разгона или передавил — сдвинул соседний;
-   • после укладки блок слегка «садится»: щель добивают киянкой по торцу,
-     уступ — киянкой сверху. Перестарался — соседний выбит, блок просел
-     (поднять нельзя, только снять и уложить заново);
-   • перевязка: швы соседних рядов не должны совпадать — иначе трещина;
-   • последний блок ряда подрезают по рулетке пилой.
-   Сложный режим: стена длиннее, первый ряд на растворе выставляют по уровню,
-   клей схватывается за несколько секунд — после этого блок уже не поправить.
+   На сцене — бледный контур будущего храма (вид сбоку, по рендеру проекта).
+   Подсвечен текущий ряд с местами под блоки. Блок тянут с поддона и
+   отпускают рядом с местом — он встаёт ровно (с допуском). Ряд заполнен —
+   он превращается в настоящую стену: штукатурка, цоколь, окна с кирпичными
+   арками. Следующий ряд — только после текущего, на пустоту блок не встанет.
+   Потом кровля, барабан с куполом и последним — крест.
 
-   Компьютер: простой режим — прямо в блоке «Строим вместе», сложный —
-   разворачивается на его месте. Телефон: игра на весь экран.
-   Без библиотек и сборки. Сцена — SVG, единицы — миллиметры.
+   Простой режим: крупные блоки, три ряда, окна одним проёмом.
+   Сложный: блоки мельче, рядов больше, узкие простенки, допуск точнее.
+   Компьютер: простой режим — в блоке «Строим вместе», сложный — на его месте.
+   Телефон: кнопка под картинкой и игра на весь экран. Без библиотек.
    ========================================================================== */
 (function () {
   'use strict';
@@ -25,23 +22,13 @@
   var DESKTOP = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)');
   var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  /* ---------- Параметры ---------- */
-  // Цена одного блока для финальной фразы. Пока сметы нет — null, и цена не показывается.
-  var BLOCK_PRICE = null;
-
-  var MM = 0.2;                 // пикселей мира в миллиметре
-  var BL = 600, BH = 250;       // блок 600 × 250 мм (как настоящий газоблок)
-  var HALF = 300;
-  var EXAG = 5, EXAG_CAP = 12;  // щели до 12 мм рисуем впятеро шире — иначе их не видно
-  var STEPX = 5;                // уступы тоже
-  var GAP_OK = 1, GAP_BAD = 3;  // мм: «в стык» / «щель»
-  var STEP_OK = 1, STEP_BAD = 2.5;
-  var SEAM_MIN = 150;           // швы соседних рядов — не ближе четверти блока
-  var V_BUMP = 520;             // мм/с: быстрее — удар по соседнему блоку
-  var P_MAX = 90;               // мм «передавливания» мышью/пальцем
-  var MODES = {
-    easy: { len: 2250, rows: 5, seat: [-.3, 1.6], first: [-.3, 1.6], setTime: 0, rebarAfter: 0 },
-    hard: { len: 3150, rows: 6, seat: [-.4, 2.0], first: [-.8, 4.6], setTime: 12, rebarAfter: 0 }
+  /* ---------- Режимы ----------
+     bh, bw — высота и длина блока в единицах чертежа (стена 600 × 300);
+     tolX, tolY — насколько можно промахнуться мимо места; tolTop — для кровли,
+     купола и креста; porchH — высота притвора (кратна ряду). */
+  var CFG = {
+    easy: { bh: 100, bw: 200, porchH: 200, tolX: 40, tolY: 50, tolTop: 70 },
+    hard: { bh: 60, bw: 144, porchH: 180, tolX: 10, tolY: 16, tolTop: 32 }
   };
 
   var NS = 'http://www.w3.org/2000/svg';
@@ -59,11 +46,8 @@
   }
   function h(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function clear(e) { while (e.firstChild) e.removeChild(e.firstChild); }
-  function f1(v) { return v.toFixed(1); }
+  function f1(v) { return (+v).toFixed(1); }
   function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* нет вибрации */ } }
-  // визуальная ширина щели: малые щели преувеличиваем, большие — как есть
-  function gv(g) { g = Math.max(0, g); return g + (EXAG - 1) * Math.min(g, EXAG_CAP); }
-  function gvInv(d) { d = Math.max(0, d); return d <= EXAG * EXAG_CAP ? d / EXAG : d - (EXAG - 1) * EXAG_CAP; }
 
   /* ---------- Звук ---------- */
   var AC = null, muted = false;
@@ -107,8 +91,7 @@
      ========================================================================== */
   function Game(host, mode, opts) {
     opts = opts || {};
-    var M = MODES[mode];
-    var L = M.len, W = L * MM, ROWH = BH * MM;
+    var C = CFG[mode];
     var root = h('div', 'wg wg--' + mode);
     root.innerHTML =
       '<div class="wg-hud" data-wg-hud></div>' +
@@ -116,514 +99,366 @@
       '<div class="wg-card" data-wg-card hidden></div>';
     host.appendChild(root);
     var ui = { hud: root.querySelector('[data-wg-hud]'), say: root.querySelector('[data-wg-say]'), card: root.querySelector('[data-wg-card]') };
-    var svg = sv('svg', { 'class': 'wg-svg', role: 'img', 'aria-label': 'Стена часовни из газобетонных блоков, поддон с блоками рядом' });
+    var svg = sv('svg', { 'class': 'wg-svg', role: 'img', 'aria-label': 'Контур будущей часовни; ряды стены заполняют газобетонными блоками' });
     root.insertBefore(svg, root.firstChild);
+    var id = 'wg' + mode + Math.floor(Math.random() * 1e6);
 
     sv('defs', null, svg,
-      '<pattern id="wg-pore-' + mode + '" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="#EEEBE4"/><circle cx="2" cy="2" r=".7" fill="#D3CEC3"/><circle cx="6.5" cy="5" r=".55" fill="#D9D4CA"/><circle cx="3.5" cy="7.4" r=".45" fill="#D3CEC3"/></pattern>' +
-      '<linearGradient id="wg-gold-' + mode + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C99A45"/><stop offset=".38" stop-color="#F0D28E"/><stop offset="1" stop-color="#B98A3A"/></linearGradient>' +
-      '<radialGradient id="wg-glow-' + mode + '"><stop offset="0" stop-color="#F6DFA4" stop-opacity=".9"/><stop offset=".5" stop-color="#EBC877" stop-opacity=".3"/><stop offset="1" stop-color="#EBC877" stop-opacity="0"/></radialGradient>');
-    var PORE = 'url(#wg-pore-' + mode + ')';
+      '<pattern id="' + id + '-pore" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="#EEEBE4"/><circle cx="2" cy="2" r=".7" fill="#D3CEC3"/><circle cx="6.5" cy="5" r=".55" fill="#D9D4CA"/><circle cx="3.5" cy="7.4" r=".45" fill="#D3CEC3"/></pattern>' +
+      '<linearGradient id="' + id + '-gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C99A45"/><stop offset=".38" stop-color="#F0D28E"/><stop offset="1" stop-color="#B98A3A"/></linearGradient>' +
+      '<linearGradient id="' + id + '-cop" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A9592F"/><stop offset=".4" stop-color="#C9784A"/><stop offset="1" stop-color="#9C5029"/></linearGradient>' +
+      '<radialGradient id="' + id + '-glow"><stop offset="0" stop-color="#F6DFA4" stop-opacity=".9"/><stop offset=".5" stop-color="#EBC877" stop-opacity=".3"/><stop offset="1" stop-color="#EBC877" stop-opacity="0"/></radialGradient>' +
+      '<clipPath id="' + id + '-clip"><rect data-clip x="-400" y="0" width="1600" height="0"/></clipPath>');
+    var PORE = 'url(#' + id + '-pore)', GOLD = 'url(#' + id + '-gold)', COP = 'url(#' + id + '-cop)';
+    var clipRect = svg.querySelector('[data-clip]');
 
     var Lr = {};
     Lr.bg = sv('g', { fill: 'none', stroke: '#3E3122', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, svg);
-    Lr.wall = sv('g', { 'class': 'wg-wall' }, svg);
-    Lr.marks = sv('g', { 'class': 'wg-marks' }, svg);
-    Lr.top = sv('g', { fill: 'none', stroke: '#3E3122', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+    Lr.ghost = sv('g', { 'class': 'wg-ghost' }, svg);                                   // бледный контур храма
+    Lr.done = sv('g', { 'clip-path': 'url(#' + id + '-clip)' }, svg);                 // готовые ряды — настоящая стена
+    Lr.raw = sv('g', null, svg);                                                       // блоки текущего ряда
+    Lr.slots = sv('g', null, svg);                                                     // места под блоки
+    Lr.top = sv('g', null, svg);                                                       // кровля, купол, крест
     Lr.pallet = sv('g', null, svg);
-    Lr.held = sv('g', null, svg);
+    Lr.drag = sv('g', null, svg);
     Lr.fx = sv('g', null, svg);
 
-    /* ---------- Раскладка: поддон справа или (на узком экране) под стеной ---------- */
-    var portrait = false, view = null, palletX = 0, palletY = 0;
+    /* ---------- Чертёж часовни (вид сбоку, по рендеру проекта) ----------
+       Мир: земля y = 0, стены до y = -WALL. Притвор слева (вход смотрит влево),
+       апсида справа, над ними кровля, барабан с куполом и крест. */
+    var WALL = 300, PL = 40;
+    var PORCH = { x0: -170, x1: 0, top: -C.porchH };
+    var MAIN = { x0: 0, x1: 600, top: -WALL };
+    var APSE = { x0: 600, x1: 690, top: -WALL };
+    var WINS = mode === 'easy'
+      ? [{ x0: 180, x1: 390, y0: -200, y1: -100, group: true }]
+      : [{ x0: 186, x1: 226, y0: -210, y1: -100 }, { x0: 266, x1: 306, y0: -210, y1: -100 }, { x0: 346, x1: 386, y0: -210, y1: -100 }, { x0: 630, x1: 660, y0: -200, y1: -110 }];
+    var ROOF = { ax: 300, ay: -345 }, DOME = { ax: 300, ay: -455 }, CROSS = { ax: 300, ay: -555 };
+
+    function archWin(x0, x1, y0, y1) {   // арочное окно с кирпичной аркой и подоконником
+      var w = x1 - x0, r = w / 2, cx = x0 + r;
+      return '<path d="M' + x0 + ' ' + y1 + 'V' + (y0 + r) + 'A' + r + ' ' + r + ' 0 0 1 ' + x1 + ' ' + (y0 + r) + 'V' + y1 + 'Z" fill="#4F5F68" stroke="#3E3122" stroke-width="1.6"/>' +
+        '<path d="M' + cx + ' ' + (y0 + 3) + 'V' + y1 + 'M' + x0 + ' ' + (y0 + r + 30) + 'H' + x1 + '" stroke="#C9A35C" stroke-width="1"/>' +
+        '<path d="M' + (x0 - 5) + ' ' + (y0 + r) + 'A' + (r + 5) + ' ' + (r + 5) + ' 0 0 1 ' + (x1 + 5) + ' ' + (y0 + r) + '" fill="none" stroke="#C4643C" stroke-width="8" stroke-dasharray="6 1.6"/>' +
+        '<rect x="' + (x0 - 5) + '" y="' + y1 + '" width="' + (w + 10) + '" height="5" fill="#E8DCC8" stroke="#3E3122" stroke-width="1"/>';
+    }
+    function wallsArt() {
+      var o = '', P = '#F6EEE2';
+      // штукатурка: притвор, стена, апсида (скруглённая справа)
+      o += '<rect x="' + PORCH.x0 + '" y="' + PORCH.top + '" width="' + (PORCH.x1 - PORCH.x0) + '" height="' + (-PORCH.top) + '" fill="' + P + '" stroke="#3E3122" stroke-width="2"/>';
+      o += '<path d="M' + APSE.x0 + ' 0V' + APSE.top + 'H' + (APSE.x1 - 40) + 'Q' + APSE.x1 + ' ' + APSE.top + ' ' + APSE.x1 + ' ' + (APSE.top + 40) + 'V0Z" fill="' + P + '" stroke="#3E3122" stroke-width="2"/>';
+      o += '<rect x="' + MAIN.x0 + '" y="' + MAIN.top + '" width="' + (MAIN.x1 - MAIN.x0) + '" height="' + (-MAIN.top) + '" fill="' + P + '" stroke="#3E3122" stroke-width="2"/>';
+      // каменный цоколь
+      o += '<rect x="' + PORCH.x0 + '" y="' + (-PL) + '" width="' + (APSE.x1 - PORCH.x0) + '" height="' + PL + '" fill="#D8C6A4" stroke="#3E3122" stroke-width="2"/>';
+      for (var x = PORCH.x0 + 4; x < APSE.x1 - 10; x += 34) o += '<path d="M' + x + ' ' + (-PL) + 'v' + (PL / 2) + 'M' + (x + 17) + ' ' + (-PL / 2) + 'v' + (PL / 2) + '" stroke="#B8A47E" stroke-width="1"/>';
+      o += '<path d="M' + PORCH.x0 + ' ' + (-PL / 2) + 'H' + APSE.x1 + '" stroke="#B8A47E" stroke-width="1"/>';
+      // окна: в простом режиме — три окна в одном проёме
+      WINS.forEach(function (w) {
+        if (w.group) { var st = (w.x1 - w.x0) / 3; for (var k = 0; k < 3; k++) o += archWin(w.x0 + st * k + st * .22, w.x0 + st * (k + 1) - st * .22, w.y0 - 6, w.y1 - 4); }
+        else o += archWin(w.x0, w.x1, w.y0, w.y1);
+      });
+      if (mode === 'easy') o += archWin(630, 660, -200, -110);
+      // кирпичный крест на стене
+      o += '<path d="M500 -230V-130M486 -200H514" stroke="#C4643C" stroke-width="8"/>';
+      // притвор стоит к нам боком: кирпичная кромка портала слева и ступени
+      o += '<rect x="' + (PORCH.x0 - 6) + '" y="' + PORCH.top + '" width="12" height="' + (-PORCH.top - PL) + '" fill="#C4643C" stroke="#3E3122" stroke-width="1.2"/>';
+      o += '<path d="M' + PORCH.x0 + ' 0h-60v-10h20v-10h20v-10h20" fill="#E3D6BE" stroke="#3E3122" stroke-width="1.4"/>';
+      return o;
+    }
+    function roofArt() {
+      var o = '', seams = '';
+      for (var x = 6; x < 600; x += 18) seams += '<path d="M' + x + ' -304L' + (300 + (x - 300) * .8) + ' -386" stroke="#8E4A2A" stroke-width="1"/>';
+      o += '<path d="M-12 -298L60 -390H540L612 -298Z" fill="' + COP + '" stroke="#3E3122" stroke-width="2"/>' + seams;
+      o += '<path d="M' + (PORCH.x0 - 14) + ' ' + (PORCH.top + 2) + 'L' + (PORCH.x0 + 4) + ' ' + (PORCH.top - 46) + 'H6V' + (PORCH.top + 2) + 'Z" fill="' + COP + '" stroke="#3E3122" stroke-width="2"/>';
+      for (var px = PORCH.x0 + 8; px < 0; px += 16) o += '<path d="M' + px + ' ' + (PORCH.top) + 'V' + (PORCH.top - 44) + '" stroke="#8E4A2A" stroke-width="1"/>';
+      o += '<path d="M594 -300Q700 -306 702 -268H594Z" fill="' + COP + '" stroke="#3E3122" stroke-width="2"/>';
+      return o;
+    }
+    function domeArt() {
+      var o = '<rect x="228" y="-460" width="144" height="74" fill="#F6EEE2" stroke="#3E3122" stroke-width="2"/>';
+      [258, 300, 342].forEach(function (x) { o += archWin(x - 10, x + 10, -448, -400); });
+      o += '<path d="M220 -460C228 -528 372 -528 380 -460Z" fill="' + COP + '" stroke="#3E3122" stroke-width="2"/>';
+      o += '<path d="M268 -462Q276 -505 300 -514M332 -462Q324 -505 300 -514M300 -514V-462" fill="none" stroke="#8E4A2A" stroke-width="1.2"/>';
+      o += '<path d="M214 -460H386" stroke="#3E3122" stroke-width="3"/>';
+      return o;
+    }
+    function crossArt() {
+      // восьмиконечный крест: нижняя перекладина — левый от зрителя конец выше
+      return '<circle cx="300" cy="-560" r="70" fill="url(#' + id + '-glow)"/>' +
+        '<circle cx="300" cy="-522" r="7" fill="' + GOLD + '" stroke="#7A5A22" stroke-width="1.4"/>' +
+        '<g stroke="#B88A3E" stroke-width="4" stroke-linecap="round"><path d="M300 -529V-596M293 -588h14M284 -576h32M291 -556l18 8"/></g>';
+    }
+    var STAGES = [
+      { key: 'roof', name: 'Кровля', art: roofArt, a: ROOF },
+      { key: 'dome', name: 'Барабан и купол', art: domeArt, a: DOME },
+      { key: 'cross', name: 'Крест', art: crossArt, a: CROSS }
+    ];
+
+    /* ---------- Ряды и места под блоки ----------
+       Ряд — полоса высотой C.bh. В ряд входят те части здания, что достают до
+       его верха; окна вырезаются. Места раскладываются с перевязкой: чётные ряды
+       начинаются с целого блока, нечётные — с половинки. */
+    function buildRows() {
+      var rows = [], n = Math.round(WALL / C.bh);
+      for (var r = 0; r < n; r++) {
+        var yb = -r * C.bh, yt = yb - C.bh;
+        var spans = [];
+        [PORCH, MAIN, APSE].forEach(function (p) { if (p.top <= yt + .5) spans.push([p.x0, p.x1]); });
+        spans.sort(function (a, b) { return a[0] - b[0]; });
+        var merged = [];
+        spans.forEach(function (s) { var l = merged[merged.length - 1]; if (l && s[0] <= l[1] + .5) l[1] = Math.max(l[1], s[1]); else merged.push(s.slice()); });
+        WINS.forEach(function (w) {
+          if (!(yt < w.y1 && yb > w.y0)) return;
+          var out = [];
+          merged.forEach(function (s) {
+            if (w.x1 <= s[0] || w.x0 >= s[1]) { out.push(s); return; }
+            if (w.x0 > s[0]) out.push([s[0], w.x0]);
+            if (w.x1 < s[1]) out.push([w.x1, s[1]]);
+          });
+          merged = out;
+        });
+        var slots = [];
+        merged.forEach(function (s) {
+          var x = s[0], first = true;
+          while (x < s[1] - .5) {
+            var w = first && r % 2 ? C.bw / 2 : C.bw;
+            first = false;
+            if (s[1] - (x + w) < C.bw * .3) w = s[1] - x;    // остаток к концу — один подрезанный блок
+            slots.push({ x: x, w: w, y: yt, h: C.bh, row: r, filled: false });
+            x += w;
+          }
+        });
+        rows.push({ y: yt, yb: yb, slots: slots });
+      }
+      return rows;
+    }
+
+    /* ---------- Раскладка ---------- */
+    var portrait = false, view = null, PAL = { x: 0, y: 0 };
     function layout() {
       var r = host.getBoundingClientRect();
       if (!r.width || !r.height) return;
       portrait = r.width / r.height < 1.05;
-      var top = -M.rows * ROWH - 70;
-      var box;
-      if (portrait) { palletX = W / 2; palletY = 92; box = { x: -36, y: top, w: W + 72, h: 92 + 60 - top }; }
-      else { palletX = W + 150; palletY = 22; box = { x: -50, y: top, w: W + 300, h: 70 - top }; }
-      // заполняем контейнер, не обрезая нужное
+      var box = portrait ? { x: -250, y: -620, w: 960, h: 790 } : { x: -250, y: -620, w: 1200, h: 660 };
+      PAL = portrait ? { x: 230, y: 90 } : { x: 830, y: -30 };
       var k = Math.max(box.w / r.width, box.h / r.height), vw = r.width * k, vh = r.height * k;
-      view = { x: box.x - (vw - box.w) / 2, y: box.y - (vh - box.h) / 2 - (vh - box.h) * .25, w: vw, h: vh };
-      if (S && S.phase === 'final') view = finalView();
-      applyView();
-      drawBg();
-      render();
+      view = { x: box.x - (vw - box.w) / 2, y: box.y - (vh - box.h) / 2, w: vw, h: vh };
+      svg.setAttribute('viewBox', [view.x, view.y, view.w, view.h].map(f1).join(' '));
+      drawBg(); renderPallet(); renderSlots();
     }
-    function finalView() {
-      var r = host.getBoundingClientRect(), top = -M.rows * ROWH - 310;
-      var box = portrait ? { x: -W * .44, y: top, w: W * 1.6, h: 60 - top } : { x: -W * .46, y: top, w: W * 2.28, h: 70 - top };
-      var k = Math.max(box.w / r.width, box.h / r.height), vw = r.width * k, vh = r.height * k;
-      return { x: box.x - (vw - box.w) / 2, y: box.y - (vh - box.h) / 2, w: vw, h: vh };
-    }
-    function applyView() { svg.setAttribute('viewBox', [view.x, view.y, view.w, view.h].map(f1).join(' ')); }
-
     function drawBg() {
       clear(Lr.bg);
-      var gx0 = view.x - 40, gx1 = view.x + view.w + 40, cx = view.x + view.w - 70, cy = view.y + 60;
+      var gx0 = view.x - 40, gx1 = view.x + view.w + 40, sx = view.x + view.w - 90, sy = view.y + 80;
       sv('g', null, Lr.bg,
-        '<g class="wg-sun"><circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="24" stroke="#B88A3E"/><g stroke="#C9A35C" stroke-width="1.4"><path d="M' + f1(cx) + ' ' + f1(cy - 36) + 'v-10M' + f1(cx) + ' ' + f1(cy + 36) + 'v10M' + f1(cx - 36) + ' ' + f1(cy) + 'h-10M' + f1(cx + 36) + ' ' + f1(cy) + 'h10"/></g></g>' +
-        '<path d="M' + f1(view.x + 30) + ' ' + f1(view.y + 70) + 'c26-9 52-9 78 0M' + f1(view.x + view.w * .45) + ' ' + f1(view.y + 40) + 'c22-8 44-8 66 0" stroke="#C9B48E" stroke-width="1.3"/>' +
-        // земля и фундамент
-        '<path d="M' + f1(gx0) + ' 24c' + f1((gx1 - gx0) * .3) + ' 3 ' + f1((gx1 - gx0) * .6) + ' -3 ' + f1(gx1 - gx0) + ' 1"/>' +
-        '<rect x="-14" y="0" width="' + f1(W + 28) + '" height="22" fill="#D8CFBE" stroke-width="2"/>' +
-        '<path d="M-14 11H' + f1(W + 14) + '" stroke="#BDB2A0" stroke-width="1"/>' +
-        // поддон
-        (portrait
-          ? '<g transform="translate(' + f1(palletX) + ' ' + f1(palletY) + ')"><rect x="-80" y="0" width="160" height="7" fill="#CDB289"/><rect x="-80" y="11" width="160" height="5" fill="#CDB289"/><path d="M-70 7v4M0 7v4M70 7v4" stroke-width="5" stroke="#A88A5C"/></g>'
-          : '<g transform="translate(' + f1(palletX) + ' 0)"><rect x="-80" y="8" width="160" height="6" fill="#CDB289"/><rect x="-80" y="18" width="160" height="4" fill="#CDB289"/><path d="M-70 14v4M0 14v4M70 14v4" stroke-width="5" stroke="#A88A5C"/></g>'));
+        '<circle cx="' + f1(sx) + '" cy="' + f1(sy) + '" r="30" stroke="#B88A3E"/><g stroke="#C9A35C" stroke-width="1.6"><path d="M' + f1(sx) + ' ' + f1(sy - 44) + 'v-12M' + f1(sx) + ' ' + f1(sy + 44) + 'v12M' + f1(sx - 44) + ' ' + f1(sy) + 'h-12M' + f1(sx + 44) + ' ' + f1(sy) + 'h12"/></g>' +
+        '<path d="M' + f1(view.x + 40) + ' ' + f1(view.y + 90) + 'c30-10 60-10 90 0M' + f1(view.x + view.w * .5) + ' ' + f1(view.y + 50) + 'c26-9 52-9 78 0" stroke="#C9B48E" stroke-width="1.4"/>' +
+        '<path d="M' + f1(gx0) + ' 2c' + f1((gx1 - gx0) * .3) + ' 4 ' + f1((gx1 - gx0) * .6) + ' -3 ' + f1(gx1 - gx0) + ' 1"/>' +
+        '<g stroke="#7E7A4E" stroke-width="1.4"><path d="M' + f1(gx0 + 60) + ' 12l4-10M' + f1(gx0 + 90) + ' 13l3-9M' + f1(gx1 - 120) + ' 12l4-10M' + f1(gx1 - 80) + ' 13l3-9"/></g>');
     }
 
     /* ---------- Состояние ---------- */
-    var S = null, raf = 0, lastT = 0, tweens = [], parts = [], timers = [], alive = true;
-    function later(fn, ms) { var id = setTimeout(function () { if (alive) fn(); }, ms); timers.push(id); }
+    var S = null, raf = 0, tweens = [], parts = [], timers = [], alive = true;
+    function later(fn, ms) { var t = setTimeout(function () { if (alive) fn(); }, ms); timers.push(t); }
     function tween(dur, fn, done) { tweens.push({ t0: performance.now(), dur: dur, fn: fn, done: done }); kick(); }
 
     function reset() {
       timers.forEach(clearTimeout); timers = []; tweens = [];
       parts.forEach(function (p) { p.el.remove(); }); parts = [];
-      [Lr.wall, Lr.marks, Lr.top, Lr.pallet, Lr.held, Lr.fx].forEach(clear);
-      S = {
-        phase: 'intro', rows: [[]], row: 0, offer: [], held: null, cracks: [], rebar: [],
-        placed: 0, bumps: 0, overdo: 0, recuts: 0, tips: {}, sunkTold: false
-      };
-      root.classList.remove('is-final');
-      svg.classList.remove('is-final');
-      if (view && view.y !== undefined) layout();
+      [Lr.ghost, Lr.done, Lr.raw, Lr.slots, Lr.top, Lr.pallet, Lr.drag, Lr.fx].forEach(clear);
+      S = { phase: 'intro', rows: buildRows(), row: 0, stage: 0, placed: 0, miss: 0, drag: null, t0: 0 };
+      // бледный контур будущего храма
+      sv('g', { opacity: .16 }, Lr.ghost, wallsArt() + roofArt() + domeArt() + crossArt());
+      sv('g', { 'class': 'wg-outline' }, Lr.ghost,
+        '<path d="M' + PORCH.x0 + ' 0V' + PORCH.top + 'H0V' + MAIN.top + 'H' + (APSE.x1 - 40) + 'Q' + APSE.x1 + ' ' + APSE.top + ' ' + APSE.x1 + ' ' + (APSE.top + 40) + 'V0"/>' +
+        '<path d="M-12 -298L60 -390H540L612 -298M228 -390V-460M372 -390V-460M220 -460C228 -528 372 -528 380 -460M300 -529V-596"/>');
+      sv('g', null, Lr.done, wallsArt());
+      clipRect.setAttribute('y', '0'); clipRect.setAttribute('height', '0');
+      root.classList.remove('is-final'); svg.classList.remove('is-final');
+      if (view) { renderSlots(); renderPallet(); }
       hud();
     }
 
-    /* ---------- Ряд ---------- */
+    /* ---------- Места под блоки и сами блоки ---------- */
     function curRow() { return S.rows[S.row]; }
-    function rowEnd(row) { row = row || curRow(); return row.length ? row[row.length - 1].x + row[row.length - 1].len : 0; }
-    function rowBottomY(r) { return -r * ROWH; }
-
-    function offerNext() {
-      var row = curRow(), R = L - rowEnd(row);
-      clear(Lr.pallet);
-      S.offer = [];
-      if (row.length && row[row.length - 1].cut) { closeRow(); return; }   // подрезанный — последний в ряду
-      if (!row.length) {
-        // начало ряда: целый блок или половинка
-        S.offer.push(makePiece(BL, false, -1), makePiece(HALF, false, 1));
-        S.phase = 'play';
-        if (S.row === 0) say(mode === 'hard' ? 'Первый ряд — на раствор. Начните с целого блока' : 'Начните ряд: возьмите блок с поддона', null, 2600);
-        else if (!S.tips.seam) { S.tips.seam = 1; say('Швы не должны совпадать с нижним рядом', null, 2800); }
-      } else if (R >= BL - .5) {
-        S.offer.push(makePiece(BL, false, 0));
-      } else if (R > 4) {
-        S.offer.push(makePiece(BL, true, 0));          // последний — подрезать по месту
-        if (!S.tips.cut) { S.tips.cut = 1; say('Последний блок подрежьте по рулетке: щёлкните по блоку, где пилить', null, 3400); }
-        drawTape(R);
-      } else { closeRow(); return; }
-      renderPallet();
-      hud();
-    }
-    function makePiece(len, needCut, slot) { return { len: len, needCut: needCut, slot: slot, dl: 0, dr: 0, cut: false }; }
-    function pieceHome(p) {
-      var w = p.len * MM;
-      if (portrait) {
-        var base = palletY;
-        return { x: palletX + (p.slot === 1 ? 6 : p.slot === -1 ? -w - 6 : -w / 2), y: base - ROWH };
-      }
-      return { x: palletX + (p.slot === 1 ? 8 : p.slot === -1 ? -w - 8 : -w / 2) + (p.slot ? 0 : 0), y: 8 - ROWH };
-    }
-    function blockShape(w, dl, dr, cutEnd) {
-      var a = -dl * MM * STEPX, b = -dr * MM * STEPX;
-      return '<path d="M0 ' + f1(ROWH + a) + 'L' + f1(w) + ' ' + f1(ROWH + b) + 'L' + f1(w) + ' ' + f1(b) + 'L0 ' + f1(a) + 'Z" fill="' + PORE + '" stroke="#3E3122" stroke-width="1.8" stroke-linejoin="round"/>' +
-        (cutEnd ? '<path d="M' + f1(w) + ' ' + f1(b + 2) + 'V' + f1(ROWH + b - 2) + '" stroke="#B9AF9C" stroke-width="2.4"/>' : '') +
-        '<path d="M' + f1(w * .18) + ' ' + f1(ROWH * .35 + a * .8) + 'h' + f1(w * .22) + '" stroke="#DAD5CB" stroke-width="1"/>';
-    }
-    function renderPallet() {
-      clear(Lr.pallet);
-      S.offer.forEach(function (p) {
-        var hm = pieceHome(p), g = sv('g', { 'class': 'wg-piece', transform: 'translate(' + f1(hm.x) + ' ' + f1(hm.y) + ')' }, Lr.pallet, blockShape(p.len * MM, 0, 0, p.cut));
-        p.el = g;
-        if (p.needCut && !p.cut) {
-          // рулетка на блоке
-          var t = '<g class="wg-ruler">';
-          for (var m = 50; m < p.len; m += 50) t += '<path d="M' + f1(m * MM) + ' 0v' + (m % 100 ? 4 : 8) + '" stroke="#85642C" stroke-width="1"/>' + (m % 100 ? '' : '<text x="' + f1(m * MM) + '" y="17" text-anchor="middle">' + (m / 10) + '</text>');
-          t += '</g><path class="wg-saw" d="" stroke="#9E2B32" stroke-width="2" stroke-dasharray="4 3"/>';
-          sv('g', null, g, t);
-          p.sawEl = g.querySelector('.wg-saw');
-          g.classList.add('is-cut');
-        } else if (S.rows[S.row].length === 0) {
-          sv('text', { x: f1(p.len * MM / 2), y: f1(ROWH / 2 + 4), 'text-anchor': 'middle', 'class': 'wg-piece-label' }, g).textContent = p.len === BL ? 'целый' : '½';
-        }
-      });
-    }
-    function drawTape(R) {
-      clear(Lr.marks);
-      var x0 = visEnd(S.row), y = rowBottomY(S.row) - ROWH - 10;
-      var t = '<g class="wg-tape"><path d="M' + f1(x0) + ' ' + f1(y) + 'h' + f1(R * MM) + '" stroke="#C9A35C" stroke-width="5" stroke-linecap="butt"/>';
-      for (var m = 50; m < R; m += 50) t += '<path d="M' + f1(x0 + m * MM) + ' ' + f1(y - 2.5) + 'v' + (m % 100 ? 3 : 5) + '" stroke="#5A3F22" stroke-width="1"/>' + (m % 100 ? '' : '<text x="' + f1(x0 + m * MM) + '" y="' + f1(y - 6) + '" text-anchor="middle">' + (m / 10) + '</text>');
-      t += '<path d="M' + f1(x0 + R * MM) + ' ' + f1(y - 8) + 'V' + f1(rowBottomY(S.row)) + '" stroke="#9E2B32" stroke-width="1.4" stroke-dasharray="3 3"/></g>';
-      sv('g', null, Lr.marks, t);
-    }
-
-    /* ---------- Видимые координаты блоков ---------- */
-    function rowVis(r) {
-      var row = S.rows[r] || [], prev = 0, extra = 0, out = [];
-      row.forEach(function (b) { var g = b.x - prev; extra += gv(g) - g; out.push((b.x + extra) * MM); prev = b.x + b.len; });
-      return { xs: out, extra: extra };
-    }
-    function visEnd(r) {
-      var row = S.rows[r] || [];
-      if (!row.length) return 0;
-      var v = rowVis(r), last = row[row.length - 1];
-      return v.xs[v.xs.length - 1] + last.len * MM;
-    }
-
-    function render() {
-      if (!S || !view) return;
-      clear(Lr.wall);
-      // причальный шнур — по верху текущего ряда
-      if (S.phase === 'play' || S.phase === 'rebar') {
-        var yT = rowBottomY(S.row) - ROWH;
-        sv('path', { d: 'M-24 ' + f1(yT) + 'H' + f1(W + 24), 'class': 'wg-string' }, Lr.wall);
-        sv('path', { d: 'M-24 ' + f1(yT - 6) + 'v' + f1(-yT + 6) + 'M' + f1(W + 24) + ' ' + f1(yT - 6) + 'v' + f1(-yT + 6), stroke: '#8C6A3E', 'stroke-width': 2 }, Lr.wall);
-      }
-      S.rows.forEach(function (row, r) {
-        var v = rowVis(r), yb = rowBottomY(r) - ROWH, now = performance.now();
-        // клеевой шов под рядом
-        if (row.length) sv('path', { d: 'M' + f1(v.xs[0]) + ' ' + f1(yb + ROWH + .5) + 'H' + f1(visEnd(r)), stroke: '#BDB6A8', 'stroke-width': 1.2 }, Lr.wall);
-        row.forEach(function (b, i) {
-          var x = v.xs[i], g = sv('g', { transform: 'translate(' + f1(x) + ' ' + f1(yb) + ')', 'class': 'wg-block' + (editable(b) ? ' is-live' : '') }, Lr.wall, blockShape(b.len * MM, b.dl, b.dr, b.cut));
-          b.vx = x; b.vy = yb;
-          // время схватывания клея (сложный режим)
-          if (M.setTime && editable(b)) {
-            var k = clamp((now - b.t) / (M.setTime * 1000), 0, 1), cx = b.len * MM - 9, cy = 9 - b.dr * MM * STEPX, rr = 5, c = 2 * Math.PI * rr;
-            sv('circle', { cx: f1(cx), cy: f1(cy), r: rr, fill: 'none', stroke: '#DCCFB8', 'stroke-width': 2 }, g);
-            sv('circle', { cx: f1(cx), cy: f1(cy), r: rr, fill: 'none', stroke: '#A78345', 'stroke-width': 2, 'stroke-dasharray': f1(c * (1 - k)) + ' ' + f1(c), transform: 'rotate(-90 ' + f1(cx) + ' ' + f1(cy) + ')' }, g);
-          }
-        });
-        // щели и уступы — подписи
-        if ((r === S.row || r === S.row - 1) && S.phase !== 'final' && S.phase !== 'done') {
-          var prevEnd = 0;
-          row.forEach(function (b, i) {
-            var gap = b.x - prevEnd;
-            if ((i > 0 || r === S.row) && gap > GAP_OK + .05) mark(v.xs[i] - gv(gap) * MM / 2, yb + ROWH + 12, Math.round(gap) + ' мм', gap > GAP_BAD ? 'bad' : 'warn');
-            [[b.dl, 0], [b.dr, 1]].forEach(function (d) {
-              if (Math.abs(d[0]) > STEP_OK + .05) mark(v.xs[i] + (d[1] ? b.len * MM - 10 : 10), yb - 6 - Math.max(0, d[0]) * MM * STEPX, (d[0] > 0 ? '↑' : '↓') + Math.round(Math.abs(d[0])), Math.abs(d[0]) > STEP_BAD ? 'bad' : 'warn');
-            });
-            prevEnd = b.x + b.len;
-          });
-        }
-      });
-      // трещины по совпавшим швам
-      S.cracks.forEach(function (c) {
-        var x = c.x, y0 = rowBottomY(c.row) - ROWH, d = 'M' + f1(x) + ' ' + f1(y0);
-        for (var i = 1; i <= 8; i++) d += 'L' + f1(x + (i % 2 ? 3 : -2) + rnd(-.5, .5)) + ' ' + f1(y0 + i * ROWH * 2 / 8);
-        sv('path', { d: d, 'class': 'wg-crack' }, Lr.wall);
-      });
-      // арматура
-      S.rebar.forEach(function (r) {
-        var y = rowBottomY(r) - ROWH + 3;
-        sv('path', { d: 'M8 ' + f1(y) + 'H' + f1(W - 8), stroke: '#6E6A62', 'stroke-width': 2.4, 'stroke-dasharray': '10 3' }, Lr.wall);
-      });
-      // блок в руках
-      clear(Lr.held);
-      if (S.held) {
-        var hb = S.held, hx = heldVisX(), hy = rowBottomY(S.row) - ROWH;
-        if (hb.lift < 1) { hx = lerp(hb.fromX, hx, easeOut(hb.lift)); hy = lerp(hb.fromY, hy, easeOut(hb.lift)); }
-        sv('g', { transform: 'translate(' + f1(hx) + ' ' + f1(hy - (hb.lift < 1 ? 0 : 1.5)) + ')', 'class': 'wg-held' }, Lr.held, blockShape(hb.p.len * MM, 0, 0, hb.p.cut));
-      }
-    }
-    function mark(x, y, text, kind) {
-      var g = sv('g', { 'class': 'wg-mark wg-mark--' + kind }, Lr.wall);
-      var t = sv('text', { x: f1(x), y: f1(y), 'text-anchor': 'middle' }, g); t.textContent = text;
-    }
-    function editable(b) {
-      if (b.locked) return false;
-      if (M.setTime && performance.now() - b.t > M.setTime * 1000) { b.locked = true; return false; }
-      return b.row === S.row && S.phase === 'play';
-    }
-
-    /* ---------- Блок в руках: ведём по ряду ---------- */
-    function heldVisX() {
-      var hb = S.held, row = curRow(), prevEnd = rowEnd(row), vEnd = visEnd(S.row);
-      return vEnd + gv(hb.x - prevEnd) * MM;
-    }
-    function pick(p, wp) {
-      var hm = pieceHome(p), prevEnd = rowEnd();
-      // блок встаёт на ряд и дальше идёт за пальцем на столько, на сколько сдвинули палец
-      var grab = clamp((wp.x - hm.x) / MM, 0, p.len);
-      var x = clamp(xFromPointer(wp.x, grab), prevEnd + 150, L - 40);
-      S.held = { p: p, x: x, x0: x, px0: wp.x, target: x, v: 0, press: 0, cool: 0, lift: 0, fromX: hm.x, fromY: hm.y, contact: false };
-      p.el.style.visibility = 'hidden';
-      tween(160, function (k) { if (S.held) S.held.lift = k; });
-    }
-    function xFromPointer(px, grab) {
-      var prevEnd = rowEnd(), vEnd = visEnd(S.row);
-      var d = (px - vEnd) / MM - grab;
-      return d >= 0 ? prevEnd + gvInv(d) : prevEnd + d;
-    }
-    function heldTick(dt) {
-      var hb = S.held, prevEnd = rowEnd();
-      hb.cool = Math.max(0, hb.cool - dt);
-      var want = hb.target, v = clamp((want - hb.x) * 9, -1600, 1600);  // блок идёт по клею с запаздыванием
-      var nx = hb.x + v * dt;
-      if (nx <= prevEnd && hb.cool <= 0) {
-        if (!hb.contact && -v > V_BUMP && curRow().length) { bump(hb, 'Удар! Блок толкнули с разгона — соседний выбит'); return; }
-        nx = prevEnd; hb.contact = true;
-        var press = prevEnd - want;
-        hb.press = press > P_MAX ? hb.press + dt : 0;
-        if (hb.press > .22 && curRow().length) { bump(hb, 'Передавили — соседний блок сдвинулся'); return; }
-      } else if (nx > prevEnd + .5) hb.contact = false;
-      if (nx < prevEnd) nx = prevEnd;
-      hb.x = nx; hb.v = v;
-    }
-    function bump(hb, msg) {
-      var row = curRow(), nb = row[row.length - 1];
-      disturb(nb, rnd(1.3, 2.6), rnd(.3, 1.1));
-      // если у соседа была щель слева — его вдавило
-      var pe = row.length > 1 ? row[row.length - 2].x + row[row.length - 2].len : 0, g = nb.x - pe;
-      if (g > .3 && !nb.locked) nb.x -= Math.min(g, rnd(.5, 2));
-      var back = rnd(10, 22); hb.x = rowEnd() + back; hb.x0 += (hb.x - Math.min(hb.target, hb.x)); hb.target = Math.max(hb.target, hb.x); hb.cool = .3; hb.press = 0; hb.contact = false;
-      S.bumps++; S.overdo++; hud();
-      say(msg, 'warn', 2600); sfx.bump(); shake(); buzz(40);
-    }
-    function disturb(b, dr, dl) {
-      if (!b) return;
-      if (b.locked) { b.dr += dr * .25; b.dl += dl * .25; return; }   // схватившийся сдвигается меньше
-      b.dr += dr; b.dl += dl;
-    }
-    function release() {
-      var hb = S.held; S.held = null;
-      var p = hb.p, prevEnd = rowEnd();
-      if (hb.x > L - 30 || hb.x + p.len > L + 2) {
-        if (hb.x < L - 30 && hb.x + p.len > L + 2) { say(p.cut ? 'Длинный — выступает за угол. Подрежьте ещё' : 'Блок выступает за угол', 'warn', 2400); sfx.err(); if (p.cut) { p.cut = false; p.needCut = true; S.recuts++; } }
-        p.el.style.visibility = ''; renderPallet(); return;
-      }
-      // блок садится на клей: чуть отходит и встаёт неровно
-      var first = S.row === 0, seat = first ? M.first : M.seat;
-      var b = { len: p.len, x: Math.min(hb.x + (hb.contact ? rnd(0, 1.4) : 0), L - p.len), dl: rnd(seat[0], seat[1]), dr: rnd(seat[0], seat[1]), cut: p.cut, row: S.row, t: performance.now() };
-      if (first && mode === 'hard' && Math.abs(b.dl - b.dr) < 1.5) b.dr += (Math.random() < .5 ? -1 : 1) * 1.6;
-      curRow().push(b);
-      S.placed++;
-      sfx.place(); buzz(12);
-      clear(Lr.marks);
-      render();
-      dust(b.vx + b.len * MM / 2, rowBottomY(S.row), 5);
-      if (first && !S.tips.level) { S.tips.level = 1; later(function () { say(mode === 'hard' ? 'Раствор неровный — стучите киянкой сверху по высокому краю' : 'Есть щель или уступ? Стукните киянкой: по торцу — подвинуть, сверху — осадить', null, 3600); }, 400); }
-      later(offerNext, 250);
-      render();
-    }
-
-    /* ---------- Пила ---------- */
-    function sawAt(p, wp) {
-      var hm = pieceHome(p), m = clamp(Math.round((wp.x - hm.x) / MM / 5) * 5, 60, p.len - 30);
-      return m;
-    }
-    function cut(p, m) {
-      var R = L - rowEnd();
-      p.len = m; p.cut = true; p.needCut = false;
-      S.cutErr = m - R;
-      sfx.saw();
-      // обрезок падает
-      var hm = pieceHome(p), off = sv('g', null, Lr.fx, blockShape((BL - m) * MM, 0, 0, false));
-      parts.push({ el: off, x: hm.x + m * MM + 4, y: hm.y, vx: 40, vy: -60, r: 0, w: 40, log: true, life: 0, max: 1.4 });
-      dust(hm.x + m * MM, hm.y + ROWH / 2, 8);
-      renderPallet();
-    }
-
-    /* ---------- Киянка ---------- */
-    function hitBlock(wp) {
-      var row = curRow(), v = rowVis(S.row), yb = rowBottomY(S.row) - ROWH;
-      for (var i = row.length - 1; i >= 0; i--) {
-        var b = row[i], x0 = v.xs[i], x1 = x0 + b.len * MM;
-        if (wp.x >= x0 - 3 && wp.x <= x1 + 6 && wp.y >= yb - 10 && wp.y <= yb + ROWH + 4) return { b: b, i: i, u: clamp((wp.x - x0) / (x1 - x0), 0, 1), y: (wp.y - yb) / ROWH };
-      }
-      return null;
-    }
-    function mallet(hit, wp) {
-      var b = hit.b, row = curRow(), i = hit.i;
-      if (!editable(b)) { say(M.setTime ? 'Клей схватился — блок уже не подвинуть' : 'Этот ряд уже готов', null, 1800); return; }
-      var pe = i ? row[i - 1].x + row[i - 1].len : 0, gap = b.x - pe;
-      malletFx(wp, hit.u > .8 && hit.y > .15);
-      sfx.knock(); buzz(8);
-      if (hit.u > .8 && hit.y > .15) {
-        // по торцу — подвинуть к соседу
-        if (gap > .05) { b.x -= gap > 6 ? gap * .5 : Math.min(gap, 1.5); if (b.x - pe < .05) b.x = pe; }
-        else {
-          // уже в стык — удар уходит в соседний
-          if (i > 0) disturb(row[i - 1], rnd(.6, 1.3), rnd(.1, .5));
-          b.dr += rnd(.2, .6);
-          S.overdo++; hud();
-          say(i > 0 ? 'Перестарались — уже было в стык, соседний сдвинулся' : 'Перестарались — уже было в стык', 'warn', 2200);
-        }
-      } else {
-        // сверху — осадить: сильнее у того края, по которому стучим
-        var k = .9;
-        b.dl -= (1 - hit.u) * k; b.dr -= hit.u * k;
-        if ((b.dl < -STEP_OK || b.dr < -STEP_OK) && !b.sunkTold) {
-          b.sunkTold = true; S.overdo++; hud();
-          say(i === row.length - 1 ? 'Пережали — блок просел. Его можно снять и уложить заново' : 'Пережали — блок просел', 'warn', 2600);
-        }
-      }
-      render();
-    }
-    function malletFx(wp, side) {
-      var g = sv('g', { 'class': 'wg-mallet', transform: 'translate(' + f1(wp.x) + ' ' + f1(wp.y) + ')' }, Lr.fx,
-        '<g><rect x="-3" y="-34" width="6" height="26" rx="2" fill="#B88A3E" stroke="#3E3122" stroke-width="1.4"/><rect x="-11" y="-10" width="22" height="12" rx="3" fill="#3F3A33" stroke="#3E3122" stroke-width="1.4"/></g>');
-      var inner = g.firstChild, ang = side ? -90 : 0;
-      tween(180, function (k) { inner.setAttribute('transform', 'rotate(' + f1(ang + (1 - k) * -28) + ')'); g.style.opacity = k < .7 ? 1 : (1 - k) / .3; }, function () { g.remove(); });
-    }
-
-    /* ---------- Ряд готов ---------- */
-    function closeRow() {
+    function renderSlots() {
+      clear(Lr.slots);
+      if (!S || S.phase !== 'play') return;
       var row = curRow();
-      row.forEach(function (b) { b.locked = true; });
-      // перевязка: швы этого ряда против швов нижнего
-      if (S.row > 0) {
-        var seams = row.slice(1).map(function (b) { return b.x; });
-        var below = S.rows[S.row - 1].slice(1).map(function (b) { return b.x; });
-        var vBelow = rowVis(S.row - 1), vThis = rowVis(S.row), bad = 0;
-        seams.forEach(function (s, i) {
-          below.forEach(function (t, j) {
-            if (Math.abs(s - t) < SEAM_MIN) { S.cracks.push({ row: S.row, x: (vThis.xs[i + 1] + vBelow.xs[j + 1]) / 2 - 1 }); bad++; }
-          });
-        });
-        if (bad) { sfx.crack(); shake(); say('Швы совпали с нижним рядом — по ним пошла трещина', 'warn', 3200); buzz([30, 30, 60]); }
-      }
-      var endGap = L - rowEnd(row);
-      S.endGaps = (S.endGaps || []).concat([endGap]);
-      if (endGap > GAP_BAD && !S.cracks.length) say('У угла щель ' + Math.round(endGap) + ' мм — подрезали коротко', 'warn', 2400);
-      else if (rowGood(row) && endGap <= GAP_OK + .5) { say('Ряд ровный!', 'ok', 1400); sfx.good(); }
+      sv('rect', { x: PORCH.x0 - 30, y: row.y, width: APSE.x1 - PORCH.x0 + 60, height: row.yb - row.y, 'class': 'wg-band' }, Lr.slots);
+      row.slots.forEach(function (s) {
+        if (s.filled) return;
+        s.el = sv('rect', { x: f1(s.x + 3), y: f1(s.y + 3), width: f1(s.w - 6), height: f1(s.h - 6), rx: 3, 'class': 'wg-slot' + (S.drag && S.drag.target === s ? ' is-target' : '') }, Lr.slots);
+      });
+    }
+    function blockMarkup(w, hgt) {
+      return '<rect x="0" y="0" width="' + f1(w) + '" height="' + f1(hgt) + '" fill="' + PORE + '" stroke="#3E3122" stroke-width="2" rx="1.5"/>' +
+        '<path d="M' + f1(w * .16) + ' ' + f1(hgt * .34) + 'h' + f1(w * .22) + '" stroke="#DAD5CB" stroke-width="1.2"/>';
+    }
+    function placeBlock(s) {
+      s.filled = true; S.placed++;
+      var g = sv('g', { transform: 'translate(' + f1(s.x) + ' ' + f1(s.y) + ')' }, Lr.raw, blockMarkup(s.w, s.h));
+      s.block = g;
+      g.style.opacity = 0;
+      tween(140, function (k) { g.style.opacity = k; g.setAttribute('transform', 'translate(' + f1(s.x) + ' ' + f1(s.y - 8 * (1 - k)) + ')'); });
+      sfx.place(); buzz(10);
+      dust(s.x + s.w / 2, s.y + s.h, 4);
+      if (curRow().slots.every(function (q) { return q.filled; })) later(rowDone, 260);
+      renderSlots(); hud();
+    }
+    // ряд заполнен — блоки становятся настоящей стеной
+    function rowDone() {
+      var row = curRow(), blocks = row.slots.map(function (q) { return q.block; });
+      var y0 = +clipRect.getAttribute('y'), h0 = +clipRect.getAttribute('height');
+      tween(650, function (k) {
+        clipRect.setAttribute('y', f1(lerp(y0, row.y, k)));
+        clipRect.setAttribute('height', f1(lerp(h0, -row.y, k)));
+        blocks.forEach(function (b) { b.style.opacity = 1 - k; });
+      }, function () { blocks.forEach(function (b) { b.remove(); }); });
+      sfx.good();
       S.row++;
       hud();
-      if (S.row >= M.rows) { later(finale, 700); S.phase = 'done'; render(); return; }
-      S.rows.push([]);
-      if (M.rebarAfter && S.row === M.rebarAfter) { later(startRebar, 500); S.phase = 'rebar'; render(); return; }
-      later(offerNext, 600);
-      render();
-    }
-    function rowGood(row) {
-      var pe = 0, ok = true;
-      row.forEach(function (b) { if (b.x - pe > GAP_OK + .05 || Math.abs(b.dl) > STEP_OK + .05 || Math.abs(b.dr) > STEP_OK + .05) ok = false; pe = b.x + b.len; });
-      return ok;
-    }
-
-    /* ---------- Армирование (сложный режим) ---------- */
-    function startRebar() {
-      clear(Lr.pallet);
-      var hm = portrait ? { x: palletX - 90, y: palletY - 6 } : { x: palletX - 90, y: 4 };
-      var g = sv('g', { 'class': 'wg-piece wg-rod', transform: 'translate(' + f1(hm.x) + ' ' + f1(hm.y) + ')' }, Lr.pallet, '<rect x="0" y="-5" width="180" height="10" fill="transparent" stroke="none"/><path d="M0 0H180" stroke="#6E6A62" stroke-width="3" stroke-dasharray="12 3"/>');
-      S.rod = { el: g, hm: hm };
-      say('Каждые три ряда — арматура в штробу. Перетащите прут на стену', null, 3400);
-      // штроба по верху ряда
-      var y = rowBottomY(S.row - 1) - ROWH + 3;
-      sv('path', { d: 'M8 ' + f1(y) + 'H' + f1(W - 8), stroke: '#9E2B32', 'stroke-width': 1.2, 'stroke-dasharray': '4 4', 'class': 'wg-groove' }, Lr.marks);
-    }
-    function dropRod(wp) {
-      var y = rowBottomY(S.row - 1) - ROWH;
-      if (Math.abs(wp.y - y) < 40 && wp.x > -20 && wp.x < W + 20) {
-        S.rebar.push(S.row - 1); clear(Lr.marks); clear(Lr.pallet); S.rod = null;
-        sfx.place(); say('Арматура уложена', 'ok', 1400);
-        S.phase = 'play'; later(offerNext, 400); render(); return true;
+      if (S.row >= S.rows.length) {
+        S.phase = 'top'; renderSlots();
+        later(function () { say('Стены готовы! Теперь — кровля: перетащите её на место', 'ok', 2800); renderPallet(); }, 600);
+      } else {
+        say(S.row === 1 ? 'Ряд готов! Следующий — только на него' : 'Ряд ' + S.row + ' готов', 'ok', 1600);
+        renderSlots(); renderPallet();
       }
-      setTrans(S.rod.el, S.rod.hm.x, S.rod.hm.y);
-      return false;
     }
-    function setTrans(el, x, y) { el.setAttribute('transform', 'translate(' + f1(x) + ' ' + f1(y) + ')'); }
 
-    /* ---------- Указатель ---------- */
-    var ptr = null;
+    /* ---------- Поддон: блок, а потом кровля, купол и крест ---------- */
+    function renderPallet() {
+      clear(Lr.pallet);
+      if (!S || !view) return;
+      var g = sv('g', { transform: 'translate(' + f1(PAL.x) + ' ' + f1(PAL.y) + ')' }, Lr.pallet);
+      sv('g', { fill: 'none', stroke: '#3E3122', 'stroke-width': 2 }, g, '<rect x="-80" y="0" width="160" height="8" fill="#CDB289"/><rect x="-80" y="13" width="160" height="6" fill="#CDB289"/><path d="M-70 8v5M0 8v5M70 8v5" stroke="#A88A5C" stroke-width="5"/>');
+      if (S.phase === 'play') {
+        var bw = Math.min(C.bw, 140) * .8, bh = C.bh * .8 * (Math.min(C.bw, 140) / C.bw);
+        for (var i = 0; i < 2; i++) sv('g', { transform: 'translate(' + f1(-bw / 2 + i * 6 - 3) + ' ' + f1(-bh * (i + 1) - i * 2) + ')' }, g, blockMarkup(bw, bh));
+        S.palHit = { x: PAL.x - bw / 2 - 12, y: PAL.y - bh * 2 - 16, w: bw + 24, h: bh * 2 + 24 };
+        g.classList.add('wg-take');
+        sv('text', { x: 0, y: 40, 'text-anchor': 'middle', 'class': 'wg-pal-label' }, g).textContent = 'возьмите блок';
+      } else if (S.phase === 'top') {
+        var st = STAGES[S.stage], sc = st.key === 'roof' ? .28 : .5;
+        var mini = sv('g', { transform: 'translate(' + f1(-st.a.ax * sc) + ' ' + f1(-st.a.ay * sc - (st.key === 'roof' ? 34 : st.key === 'dome' ? 46 : 26)) + ') scale(' + sc + ')' }, g, st.art());
+        mini.style.pointerEvents = 'none';
+        S.palHit = { x: PAL.x - 100, y: PAL.y - 110, w: 200, h: 120 };
+        g.classList.add('wg-take');
+        sv('text', { x: 0, y: 40, 'text-anchor': 'middle', 'class': 'wg-pal-label' }, g).textContent = st.name.toLowerCase();
+        // где должна встать деталь
+        clear(Lr.slots);
+        sv('circle', { cx: st.a.ax, cy: st.a.ay, r: C.tolTop, 'class': 'wg-spot' }, Lr.slots);
+      } else S.palHit = null;
+    }
+
+    /* ---------- Перетаскивание ---------- */
     function wpt(e) {
       var p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
       var m = svg.getScreenCTM(); return m ? p.matrixTransform(m.inverse()) : { x: 0, y: 0 };
     }
-    function pieceAt(wp) {
-      for (var i = 0; i < S.offer.length; i++) {
-        var p = S.offer[i], hm = pieceHome(p), w = p.len * MM, pad = portrait ? 10 : 4;
-        if (wp.x >= hm.x - pad && wp.x <= hm.x + w + pad && wp.y >= hm.y - pad - 8 && wp.y <= hm.y + ROWH + pad) return p;
-      }
-      return null;
+    function inPal(wp) { var b = S.palHit; return b && wp.x >= b.x && wp.x <= b.x + b.w && wp.y >= b.y && wp.y <= b.y + b.h; }
+    // ближайшее свободное место текущего ряда в пределах допуска
+    function findSlot(wp) {
+      var best = null, row = curRow();
+      row.slots.forEach(function (s) {
+        if (s.filled) return;
+        var dx = Math.abs(wp.x - (s.x + s.w / 2)), dy = Math.abs(wp.y - (s.y + s.h / 2));
+        if (dx <= s.w / 2 + C.tolX && dy <= s.h / 2 + C.tolY) { var d = dx + dy * .5; if (!best || d < best.d) best = { s: s, d: d }; }
+      });
+      return best && best.s;
     }
+    var ptr = null;
     svg.addEventListener('pointerdown', function (e) {
-      if (!S || (S.phase !== 'play' && S.phase !== 'rebar') || S.held) return;
+      if (!S || (S.phase !== 'play' && S.phase !== 'top') || ptr) return;
       var wp = wpt(e);
-      if (S.phase === 'rebar') {
-        if (!S.rod) return;
-        var hm = S.rod.hm;
-        if (wp.x > hm.x - 10 && wp.x < hm.x + 190 && Math.abs(wp.y - hm.y) < 18) { ptr = { id: e.pointerId, kind: 'rod', dx: wp.x - hm.x, dy: wp.y - hm.y }; capture(e); }
-        return;
+      if (!inPal(wp)) return;
+      e.preventDefault();
+      try { svg.setPointerCapture(e.pointerId); } catch (er) { /* */ }
+      ptr = { id: e.pointerId };
+      if (S.phase === 'play') {
+        S.drag = { kind: 'block', el: sv('g', { 'class': 'wg-held' }, Lr.drag, blockMarkup(C.bw, C.bh)), w: C.bw, target: null };
+      } else {
+        var st = STAGES[S.stage];
+        S.drag = { kind: 'top', st: st, el: sv('g', { 'class': 'wg-held' }, Lr.drag, st.art()), dx: 0, dy: 0 };
       }
-      var p = pieceAt(wp);
-      if (p) {
-        e.preventDefault(); capture(e);
-        if (p.needCut && !p.cut) { cut(p, sawAt(p, wp)); return; }
-        ptr = { id: e.pointerId, kind: 'held' };
-        pick(p, wp);
-        // второе предложение (целый/половинка) убираем
-        S.offer.forEach(function (q) { if (q !== p && q.el) q.el.remove(); });
-        S.offer = [p];
-        return;
-      }
-      var hit = hitBlock(wp);
-      if (hit) { e.preventDefault(); capture(e); ptr = { id: e.pointerId, kind: 'tap', hit: hit, wp: wp, sx: e.clientX, sy: e.clientY }; }
+      sfx.knock();
+      moveDrag(wp);
     });
+    function moveDrag(wp) {
+      var d = S.drag; if (!d) return;
+      if (d.kind === 'block') {
+        var s = findSlot(wp);
+        if (s !== d.target) { d.target = s; renderSlots(); }
+        var w = s ? s.w : C.bw, x = s ? s.x : wp.x - w / 2, y = s ? s.y : wp.y - C.bh / 2;
+        if (s) { x = lerp(wp.x - w / 2, s.x, .65); y = lerp(wp.y - C.bh / 2, s.y, .65); }
+        if (w !== d.w) { clear(d.el); d.el.innerHTML = blockMarkup(w, C.bh); d.w = w; }
+        d.el.setAttribute('transform', 'translate(' + f1(x) + ' ' + f1(y) + ')');
+      } else {
+        var near = Math.hypot(wp.x - d.st.a.ax, wp.y - d.st.a.ay) <= C.tolTop;
+        d.near = near;
+        var ox = near ? lerp(wp.x - d.st.a.ax, 0, .7) : wp.x - d.st.a.ax, oy = near ? lerp(wp.y - d.st.a.ay, 0, .7) : wp.y - d.st.a.ay;
+        d.el.setAttribute('transform', 'translate(' + f1(ox) + ' ' + f1(oy) + ')');
+        Lr.slots.classList.toggle('is-near', near);
+      }
+    }
     svg.addEventListener('pointermove', function (e) {
       var wp = wpt(e);
-      if (!ptr) {
-        // наведение: пила следует за мышью, киянка — подсказка курсором
-        if (S && S.phase === 'play') {
-          S.offer.forEach(function (p) {
-            if (p.sawEl) {
-              var hm = pieceHome(p), over = pieceAt(wp) === p;
-              p.sawEl.setAttribute('d', over ? 'M' + f1(sawAt(p, wp) * MM) + ' -8V' + f1(ROWH + 8) : '');
-            }
-          });
-          var hit = S.held ? null : hitBlock(wp), pc = pieceAt(wp);
-          svg.style.cursor = pc ? (pc.needCut && !pc.cut ? 'crosshair' : 'grab') : hit ? (editable(hit.b) ? (hit.u > .8 && hit.y > .15 ? 'w-resize' : 's-resize') : 'default') : '';
-        }
-        return;
-      }
-      if (e.pointerId !== ptr.id) return;
-      if (ptr.kind === 'held' && S.held) S.held.target = S.held.x0 + (wp.x - S.held.px0) / MM;
-      else if (ptr.kind === 'rod' && S.rod) setTrans(S.rod.el, wp.x - ptr.dx, wp.y - ptr.dy);
-      else if (ptr.kind === 'tap') {
-        // потянули последний уложенный блок — снимаем его
-        var dx = e.clientX - ptr.sx, row = curRow();
-        if (dx > 10 && ptr.hit.i === row.length - 1 && editable(ptr.hit.b)) {
-          var b = row.pop(), p = makePiece(b.len, false, 0); p.cut = b.cut;
-          S.placed--;
-          clear(Lr.pallet); clear(Lr.marks);
-          S.offer = [p]; renderPallet();
-          ptr.kind = 'held';
-          S.held = { p: p, x: b.x, x0: b.x, px0: wpt(e).x, target: b.x, v: 0, press: 0, cool: 0, lift: 1, fromX: 0, fromY: 0, contact: false };
-          p.el.style.visibility = 'hidden';
-          say('Блок сняли — уложите заново', null, 1600);
-        }
-      }
+      if (ptr && e.pointerId === ptr.id) { moveDrag(wp); return; }
+      if (S && S.palHit) svg.style.cursor = inPal(wp) ? 'grab' : '';
     });
-    function endPtr(e, cancel) {
+    function endDrag(e, cancel) {
       if (!ptr || e.pointerId !== ptr.id) return;
-      var p0 = ptr; ptr = null;
-      if (p0.kind === 'held' && S.held) release();
-      else if (p0.kind === 'rod') dropRod(wpt(e));
-      else if (p0.kind === 'tap' && !cancel) mallet(p0.hit, p0.wp);
+      ptr = null;
+      var d = S.drag; S.drag = null;
+      if (!d) return;
+      var wp = wpt(e);
+      d.el.remove();
+      Lr.slots.classList.remove('is-near');
+      if (cancel) { renderSlots(); return; }
+      if (d.kind === 'block') {
+        var s = findSlot(wp);
+        if (s) placeBlock(s);
+        else {
+          renderSlots();
+          if (!inPal(wp)) {
+            S.miss++; sfx.err();
+            // блок над пустотой или выше текущего ряда — объясняем почему
+            var row = curRow();
+            if (wp.y < row.y - C.tolY) say('Сначала закончите этот ряд — выше блоку не на что опереться', 'warn', 2400);
+            else if (wp.y > row.yb + C.tolY && wp.y < 0) say('Этот ряд уже готов — ставьте в подсвеченный', 'warn', 2200);
+            else say('Мимо — ставьте блок на подсвеченное место', 'warn', 2000);
+          }
+        }
+      } else {
+        if (Math.hypot(wp.x - d.st.a.ax, wp.y - d.st.a.ay) <= C.tolTop) topPlaced(d.st);
+        else { if (!inPal(wp)) { S.miss++; sfx.err(); say('Не на месте — подведите к подсвеченному кругу', 'warn', 2000); } }
+      }
     }
-    svg.addEventListener('pointerup', function (e) { endPtr(e, false); });
-    svg.addEventListener('pointercancel', function (e) { endPtr(e, true); });
-    function capture(e) { try { svg.setPointerCapture(e.pointerId); } catch (er) { /* */ } }
-    // долгое нажатие на телефоне — без меню и выделения
-    ['touchstart', 'touchmove'].forEach(function (t) { svg.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false }); });
+    svg.addEventListener('pointerup', function (e) { endDrag(e, false); });
+    svg.addEventListener('pointercancel', function (e) { endDrag(e, true); });
+    ['touchstart', 'touchmove'].forEach(function (t) { svg.addEventListener(t, function (e) { if (ptr || (S && S.palHit && inPal(wpt(e.touches[0] || e.changedTouches[0])))) e.preventDefault(); }, { passive: false }); });
     root.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+    function topPlaced(st) {
+      var g = sv('g', null, Lr.top, st.art());
+      g.style.opacity = 0;
+      tween(380, function (k) { g.style.opacity = k; g.setAttribute('transform', 'translate(0 ' + f1(-14 * (1 - k)) + ')'); });
+      sfx.place(); shake();
+      S.stage++;
+      hud();
+      if (S.stage >= STAGES.length) { clear(Lr.slots); clear(Lr.pallet); S.palHit = null; later(finale, 500); return; }
+      say(st.name + ' на месте! Дальше — ' + STAGES[S.stage].name.toLowerCase(), 'ok', 2200);
+      renderPallet();
+    }
 
     /* ---------- Панель, подсказки, карточки ---------- */
     function hud() {
       if (!S) return;
-      var joints = 0, good = 0;
-      S.rows.forEach(function (row) { var pe = 0; row.forEach(function (b) { joints++; if (b.x - pe <= GAP_OK + .05 && Math.abs(b.dl) <= STEP_OK + .05 && Math.abs(b.dr) <= STEP_OK + .05) good++; pe = b.x + b.len; }); });
-      S.good = good; S.joints = joints;
+      var total = 0; S.rows.forEach(function (r) { total += r.slots.length; });
       ui.hud.innerHTML = S.phase === 'intro' || S.phase === 'final' ? '' :
-        '<span><b>Ряд</b>' + Math.min(S.row + 1, M.rows) + ' / ' + M.rows + '</span>' +
-        '<span><b>Ровно</b>' + good + ' / ' + joints + '</span>' +
-        (S.cracks.length ? '<span class="is-bad"><b>Трещины</b>' + S.cracks.length + '</span>' : '') +
-        (S.overdo ? '<span class="is-warn"><b>Перестарались</b>' + S.overdo + '</span>' : '');
+        '<span><b>Ряд</b>' + Math.min(S.row + 1, S.rows.length) + ' / ' + S.rows.length + '</span>' +
+        '<span><b>Блоки</b>' + S.placed + ' / ' + total + '</span>' +
+        (S.phase === 'top' ? '<span><b>Верх</b>' + S.stage + ' / ' + STAGES.length + '</span>' : '');
     }
     var sayT = 0;
     function say(t, tone, ms) {
@@ -635,8 +470,8 @@
     function dust(x, y, n) {
       if (REDUCED.matches) n = 2;
       for (var i = 0; i < n; i++) {
-        var c = sv('circle', { r: rnd(1, 2.4), fill: '#D6D0C4' }, Lr.fx);
-        parts.push({ el: c, x: x + rnd(-6, 6), y: y, vx: rnd(-40, 40), vy: rnd(-60, -15), life: 0, max: rnd(.4, .7) });
+        var c = sv('circle', { r: rnd(1.5, 3.5), fill: '#D6D0C4' }, Lr.fx);
+        parts.push({ el: c, x: x + rnd(-20, 20), y: y, vx: rnd(-60, 60), vy: rnd(-90, -20), life: 0, max: rnd(.4, .7) });
       }
       kick();
     }
@@ -644,25 +479,21 @@
     function showCard(kind) {
       var html;
       if (kind === 'intro') {
-        html = '<span class="eyebrow">' + (mode === 'hard' ? 'Сложный режим' : 'Мини-игра') + '</span><h3>Сложи стену</h3>' +
+        html = '<span class="eyebrow">' + (mode === 'hard' ? 'Сложный режим' : 'Мини-игра') + '</span><h3>Сложи часовню</h3>' +
           '<ul class="wg-rules">' +
-            '<li><b>Ведите блок</b> с поддона к стене и подводите мягко — встанет в стык. С разгона собьёте соседний.</li>' +
-            '<li><b>Киянка:</b> по торцу — подвинуть, сверху — осадить. Лишний удар сдвигает уже уложенные.</li>' +
-            '<li><b>Швы</b> рядов не должны совпадать. Последний блок ряда подрежьте по рулетке.</li>' +
-            (mode === 'hard' ? '<li><b>Сложнее:</b> стена длиннее, первый ряд на неровном растворе, клей схватывается за ' + M.setTime + ' секунд.</li>' : '') +
+            '<li><b>Перетаскивайте блоки</b> с поддона в подсвеченный ряд — блок сам встанет ровно.</li>' +
+            '<li><b>Ряд заполнен</b> — он становится стеной часовни, и открывается следующий.</li>' +
+            '<li><b>Потом</b> — кровля, купол и крест.</li>' +
+            (mode === 'hard' ? '<li><b>Сложнее:</b> блоки мельче, рядов больше, узкие простенки между окнами и точнее прицел.</li>' : '') +
           '</ul>' +
           '<button class="btn btn--gold btn--small" type="button" data-wg="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>';
       } else {
-        var share = S.joints ? S.good / S.joints : 0, cr = S.cracks.length;
-        var stars = share >= .85 && cr === 0 && S.overdo <= 1 ? 3 : share >= .6 && cr <= 1 ? 2 : 1;
-        var price = BLOCK_PRICE ? ' Один настоящий блок стоит около ' + BLOCK_PRICE.toLocaleString('ru-RU') + ' ₽.' : '';
-        html = '<div class="wg-stars">' + [1, 2, 3].map(function (i) { return '<span' + (i <= stars ? ' class="is-on"' : '') + '>✦</span>'; }).join('') + '</div>' +
-          '<h3>Стена готова!</h3>' +
-          '<p class="wg-card__meta">' + S.good + ' из ' + S.joints + ' блоков в стык и ровно' + (cr ? ' · ' + cr + ' ' + plural(cr, ['трещина', 'трещины', 'трещин']) : '') + '</p>' +
+        var secs = Math.round((performance.now() - S.t0) / 1000), mm = Math.floor(secs / 60), ss = secs % 60;
+        html = '<h3>Часовня готова!</h3>' +
+          '<p class="wg-card__meta">' + S.placed + ' ' + plural(S.placed, ['блок', 'блока', 'блоков']) + ' · ' + (mm ? mm + ' мин ' : '') + ss + ' с' + (S.miss ? ' · ' + S.miss + ' ' + plural(S.miss, ['промах', 'промаха', 'промахов']) : ' · без промахов') + '</p>' +
           '<figure class="wg-render"><img src="assets/img/chapel-render.jpg" alt="Проект часовни: белые стены, три арочных окна, медная кровля и купол с крестом" loading="lazy"><figcaption>Так будет выглядеть часовня</figcaption></figure>' +
-          '<p class="wg-card__lead">Видите, как это непросто? Давайте доверим это профессионалам — каменщикам. Если есть возможность — подключайтесь.</p>' +
-          '<p class="wg-card__block">Вы уложили ' + S.placed + ' ' + plural(S.placed, ['блок', 'блока', 'блоков']) + '. В настоящей часовне каждый блок — чьё-то пожертвование.' + price + ' Подарите приходу хотя бы один.</p>' +
-          '<div class="wg-actions"><button class="btn btn--gold btn--small" type="button" data-wg="donate">Подарить блок <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
+          '<p class="wg-card__lead">В игре — несколько минут. В жизни — месяцы работы каменщиков и тысячи настоящих блоков. Если есть возможность — подключайтесь.</p>' +
+          '<div class="wg-actions"><button class="btn btn--gold btn--small" type="button" data-wg="donate">Поддержать строительство <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
           '<button class="wg-link" type="button" data-wg="again">Сложить заново</button>' +
           (mode === 'easy' && opts.onMode ? '<button class="wg-link" type="button" data-wg="hard">Сложный режим</button>' : '') + '</div>';
       }
@@ -670,107 +501,41 @@
       ui.card.className = 'wg-card wg-card--' + kind;
       ui.card.hidden = false;
     }
+    function start() { ui.card.hidden = true; S.phase = 'play'; S.t0 = performance.now(); renderSlots(); renderPallet(); hud(); say('Возьмите блок с поддона и перетащите в подсвеченный ряд', null, 3000); }
     ui.card.addEventListener('click', function (e) {
       var b = e.target.closest('[data-wg]'); if (!b) return;
       var a = b.getAttribute('data-wg');
-      if (a === 'start') { ui.card.hidden = true; S.phase = 'play'; offerNext(); render(); }
-      else if (a === 'again') { reset(); ui.card.hidden = true; S.phase = 'play'; offerNext(); render(); }
+      if (a === 'start') start();
+      else if (a === 'again') { reset(); start(); }
       else if (a === 'donate') { var d = document.querySelector('[data-modal-open="donate"]'); if (opts.onDonate) opts.onDonate(); if (d) d.click(); }
       else if (a === 'hard' && opts.onMode) opts.onMode('hard');
     });
 
-    /* ---------- Финал: штукатурка, кровля, главка, крест ---------- */
     function finale() {
       S.phase = 'final';
-      root.classList.add('is-final');
-      clear(Lr.pallet); clear(Lr.marks);
-      hud(); render();
-      var from = view, to = finalView();
-      tween(900, function (k) { view = { x: lerp(from.x, to.x, k), y: lerp(from.y, to.y, k), w: lerp(from.w, to.w, k), h: lerp(from.h, to.h, k) }; applyView(); }, function () { drawBg(); });
-      // часовня по рендеру проекта: цоколь из камня, белые стены, три арочных окна
-      // с кирпичными арками, кирпичный крест, слева притвор, справа апсида,
-      // медная кровля, барабан с окнами, медный купол, золотой крест с шаром
-      var top = -M.rows * ROWH, Hh = -top, cx = W * .47;
-      var COP = '#B8693E', COPD = '#8E4A2A', BRICK = '#C4643C', PL = '#F6EEE2', STONE = '#D8C6A4';
-      function arch(x, y, w, hgt, brick) {   // арочное окно: x — центр, y — низ
-        var r = w / 2, d = 'M' + f1(x - r) + ' ' + f1(y) + 'V' + f1(y - hgt + r) + 'A' + f1(r) + ' ' + f1(r) + ' 0 0 1 ' + f1(x + r) + ' ' + f1(y - hgt + r) + 'V' + f1(y) + 'Z';
-        var o = '<path d="' + d + '" fill="#4F5F68" stroke="#3E3122" stroke-width="1.4"/>' +
-          '<path d="M' + f1(x) + ' ' + f1(y - hgt + 2) + 'V' + f1(y) + '" stroke="#C9A35C" stroke-width="1"/>';
-        if (brick) o += '<path d="M' + f1(x - r - 3) + ' ' + f1(y - hgt + r) + 'A' + f1(r + 3) + ' ' + f1(r + 3) + ' 0 0 1 ' + f1(x + r + 3) + ' ' + f1(y - hgt + r) + '" fill="none" stroke="' + BRICK + '" stroke-width="5" stroke-dasharray="4 1.4"/>' +
-          '<rect x="' + f1(x - r - 3) + '" y="' + f1(y) + '" width="' + f1(w + 6) + '" height="3" fill="#E8DCC8" stroke="#3E3122" stroke-width=".8"/>';
-        return o;
-      }
-      var plH = Hh * .2, ridge = top - Hh * .3, eave = top - 6;
-      var px0 = -W * .3, porchTop = top + Hh * .1, doorTop = porchTop + Hh * .38;   // притвор
-      var ax1 = W + W * .13;                                  // апсида
-      var dW = W * .28, dTop = ridge - Hh * .3, domeTop = dTop - Hh * .32;
-      var winW = W * .045, winH = Hh * .36, winY = -plH - Hh * .16;
-      var stones = '';
-      for (var sx = px0; sx < ax1; sx += 22) stones += '<path d="M' + f1(sx) + ' ' + f1(-plH) + 'v' + f1(plH / 2) + 'M' + f1(sx + 11) + ' ' + f1(-plH / 2) + 'v' + f1(plH / 2) + '" stroke="#B8A47E" stroke-width=".8"/>';
-      var seams = '';
-      for (var rx = 0; rx <= W; rx += 14) seams += '<path d="M' + f1(rx) + ' ' + f1(eave + 1) + 'L' + f1(W * .5 + (rx - W * .5) * .86) + ' ' + f1(ridge + 2) + '" stroke="' + COPD + '" stroke-width=".8"/>';
-      var steps = [
-        // штукатурка и побелка стены, апсида, притвор, цоколь
-        '<rect x="' + f1(ax1 - W * .13 - 2) + '" y="' + f1(top + 4) + '" width="' + f1(W * .13) + '" height="' + f1(Hh - 4) + '" rx="' + f1(W * .06) + '" fill="' + PL + '"/>' +
-          '<rect x="0" y="' + f1(top) + '" width="' + f1(W) + '" height="' + f1(Hh) + '" fill="' + PL + '" opacity=".96"/>' +
-          '<rect x="' + f1(px0) + '" y="' + f1(porchTop) + '" width="' + f1(-px0) + '" height="' + f1(-porchTop) + '" fill="' + PL + '"/>' +
-          '<rect x="' + f1(px0 - 2) + '" y="' + f1(-plH) + '" width="' + f1(ax1 - px0 + 2) + '" height="' + f1(plH) + '" fill="' + STONE + '"/>' +
-          '<path d="M' + f1(px0) + ' ' + f1(-plH / 2) + 'H' + f1(ax1) + '" stroke="#B8A47E" stroke-width=".8"/>' + stones,
-        // окна с кирпичными арками, крест на стене, дверь притвора со ступенями
-        arch(W * .33, winY, winW, winH, true) + arch(W * .45, winY, winW, winH, true) + arch(W * .57, winY, winW, winH, true) +
-          arch(ax1 - W * .06, winY, winW * .8, winH * .9, true) +
-          '<path d="M' + f1(W * .82) + ' ' + f1(winY - winH * .95) + 'V' + f1(winY - winH * .2) + 'M' + f1(W * .82 - 9) + ' ' + f1(winY - winH * .72) + 'H' + f1(W * .82 + 9) + '" stroke="' + BRICK + '" stroke-width="5"/>' +
-          // притвор стоит к нам боком, вход с аркой смотрит влево: видна кирпичная кромка портала и ступени
-          '<rect x="' + f1(px0 - 4) + '" y="' + f1(porchTop) + '" width="9" height="' + f1(-porchTop - plH) + '" fill="' + BRICK + '" stroke="#3E3122" stroke-width="1"/>' +
-          '<path d="M' + f1(px0 - 4) + ' ' + f1(porchTop + 8) + 'h9M' + f1(px0 - 4) + ' ' + f1(porchTop + 20) + 'h9M' + f1(px0 - 4) + ' ' + f1(porchTop + 32) + 'h9" stroke="#8E4A2A" stroke-width=".8"/>' +
-          '<path d="M' + f1(px0) + ' 0h' + f1(-W * .12) + 'v' + f1(-plH * .3) + 'h' + f1(W * .04) + 'v' + f1(-plH * .3) + 'h' + f1(W * .04) + 'v' + f1(-plH * .3) + 'h' + f1(W * .04) + '" fill="#E3D6BE" stroke="#3E3122" stroke-width="1.2"/>',
-        // медная кровля: основная, притвор, апсида
-        '<path d="M' + f1(-8) + ' ' + f1(eave) + 'L' + f1(W * .5 - W * .43) + ' ' + f1(ridge) + 'H' + f1(W * .5 + W * .43) + 'L' + f1(W + 8) + ' ' + f1(eave) + 'Z" fill="' + COP + '" stroke="#3E3122"/>' + seams +
-          '<path d="M' + f1(px0 - 10) + ' ' + f1(porchTop + 2) + 'L' + f1(px0 + 2) + ' ' + f1(porchTop - Hh * .2) + 'H' + f1(4) + 'V' + f1(porchTop + 2) + 'Z" fill="' + COP + '" stroke="#3E3122"/>' +
-          (function () { var o = ''; for (var x = px0; x < 0; x += 12) o += '<path d="M' + f1(x) + ' ' + f1(porchTop + 1) + 'V' + f1(porchTop - Hh * .2 + 1) + '" stroke="' + COPD + '" stroke-width=".8"/>'; return o; })() +
-          '<path d="M' + f1(W - 4) + ' ' + f1(top - 4) + 'Q' + f1(ax1 + 8) + ' ' + f1(top - 6) + ' ' + f1(ax1 + 6) + ' ' + f1(top + 10) + 'H' + f1(W - 4) + 'Z" fill="' + COP + '" stroke="#3E3122"/>',
-        // барабан с окнами и медный купол
-        '<rect x="' + f1(cx - dW / 2) + '" y="' + f1(dTop) + '" width="' + f1(dW) + '" height="' + f1(ridge - dTop + 4) + '" fill="' + PL + '" stroke="#3E3122"/>' +
-          arch(cx - dW * .3, ridge - 6, winW * .8, (ridge - dTop) * .62, true) + arch(cx, ridge - 6, winW * .8, (ridge - dTop) * .62, true) + arch(cx + dW * .3, ridge - 6, winW * .8, (ridge - dTop) * .62, true) +
-          '<path d="M' + f1(cx - dW / 2 - 6) + ' ' + f1(dTop) + 'C' + f1(cx - dW / 2) + ' ' + f1(domeTop + 6) + ' ' + f1(cx + dW / 2) + ' ' + f1(domeTop + 6) + ' ' + f1(cx + dW / 2 + 6) + ' ' + f1(dTop) + 'Z" fill="' + COP + '" stroke="#3E3122"/>' +
-          '<path d="M' + f1(cx - dW * .18) + ' ' + f1(dTop - 2) + 'Q' + f1(cx - dW * .12) + ' ' + f1(domeTop + 14) + ' ' + f1(cx) + ' ' + f1(domeTop + 2) + 'M' + f1(cx + dW * .18) + ' ' + f1(dTop - 2) + 'Q' + f1(cx + dW * .12) + ' ' + f1(domeTop + 14) + ' ' + f1(cx) + ' ' + f1(domeTop + 2) + '" fill="none" stroke="' + COPD + '" stroke-width="1"/>' +
-          '<path d="M' + f1(cx - dW / 2 - 8) + ' ' + f1(dTop) + 'H' + f1(cx + dW / 2 + 8) + '" stroke="#3E3122" stroke-width="2.4"/>',
-        // золотой шар и восьмиконечный крест: нижняя перекладина — левый от зрителя конец выше
-        '<circle cx="' + f1(cx) + '" cy="' + f1(domeTop - 30) + '" r="80" fill="url(#wg-glow-' + mode + ')" stroke="none"/>' +
-          '<circle cx="' + f1(cx) + '" cy="' + f1(domeTop - 3) + '" r="5" fill="url(#wg-gold-' + mode + ')" stroke="#7A5A22"/>' +
-          '<g stroke="#B88A3E" stroke-width="3"><path d="M' + f1(cx) + ' ' + f1(domeTop - 8) + 'V' + f1(domeTop - 62) + 'M' + f1(cx - 6) + ' ' + f1(domeTop - 54) + 'h12M' + f1(cx - 14) + ' ' + f1(domeTop - 44) + 'h28M' + f1(cx - 8) + ' ' + f1(domeTop - 26) + 'l16 7"/></g>'
-      ];
-      steps.forEach(function (s, i) {
-        later(function () {
-          var e = sv('g', null, Lr.top, s); e.style.opacity = 0;
-          tween(450, function (k) { e.style.opacity = k; });
-          if (i === steps.length - 1) { sfx.bell(); svg.classList.add('is-final'); } else sfx.place();
-        }, 700 + i * 520);
-      });
-      later(function () { showCard('final'); }, 700 + steps.length * 520 + 600);
+      root.classList.add('is-final'); svg.classList.add('is-final');
+      Lr.ghost.style.opacity = 0;
+      sfx.bell(); hud();
+      later(function () { showCard('final'); }, 1100);
     }
 
     /* ---------- Цикл ---------- */
-    function kick() { if (!raf && alive) { lastT = performance.now(); raf = requestAnimationFrame(loop); } }
+    function kick() { if (!raf && alive) raf = requestAnimationFrame(loop); }
+    var lastT = 0;
     function loop(t) {
-      raf = 0;
-      if (!alive) return;
-      var dt = Math.min(.05, Math.max(.001, (t - lastT) / 1000)); lastT = t;
+      raf = 0; if (!alive) return;
+      var dt = Math.min(.05, lastT ? (t - lastT) / 1000 : .016); lastT = t;
       for (var i = tweens.length - 1; i >= 0; i--) {
         var tw = tweens[i], k = clamp((t - tw.t0) / tw.dur, 0, 1);
         tw.fn(easeOut(k)); if (k >= 1) { tweens.splice(i, 1); tw.done && tw.done(); }
       }
-      if (S && S.held) heldTick(dt);
       for (var j = parts.length - 1; j >= 0; j--) {
         var p = parts[j]; p.life += dt;
         if (p.life > p.max) { p.el.remove(); parts.splice(j, 1); continue; }
-        p.vy += (p.log ? 900 : 140) * dt; p.x += p.vx * dt; p.y += p.vy * dt;
-        if (p.log) { p.r += p.w * dt; if (p.y > 24 - ROWH * .4 && !portrait) { p.y = 24 - ROWH * .4; p.vy *= -.2; p.vx *= .5; } p.el.setAttribute('transform', 'translate(' + f1(p.x) + ' ' + f1(p.y) + ') rotate(' + f1(p.r) + ')'); p.el.style.opacity = p.life > p.max - .4 ? (p.max - p.life) / .4 : 1; }
-        else { p.el.setAttribute('cx', f1(p.x)); p.el.setAttribute('cy', f1(p.y)); p.el.setAttribute('opacity', f1(1 - p.life / p.max)); }
+        p.vy += 200 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+        p.el.setAttribute('cx', f1(p.x)); p.el.setAttribute('cy', f1(p.y)); p.el.setAttribute('opacity', f1(1 - p.life / p.max));
       }
-      if (S && (S.phase === 'play' || S.phase === 'rebar')) render();
-      // в сложном режиме идёт таймер клея — перерисовываем постоянно
-      if (tweens.length || parts.length || (S && S.held) || (M.setTime && S && S.phase === 'play')) raf = requestAnimationFrame(loop);
+      if (tweens.length || parts.length) raf = requestAnimationFrame(loop); else lastT = 0;
     }
 
     var ro = window.ResizeObserver ? new ResizeObserver(function () { layout(); }) : null;
@@ -778,11 +543,11 @@
     reset();
     layout();
     showCard('intro');
-    kick();
 
     return {
       destroy: function () { alive = false; cancelAnimationFrame(raf); timers.forEach(clearTimeout); if (ro) ro.disconnect(); root.remove(); },
-      root: root
+      root: root,
+      _state: function () { return S; }
     };
   }
 
@@ -826,8 +591,8 @@
     if (hard) return;
     hardBox = h('div', 'wg-hard');
     hardBox.setAttribute('role', 'region');
-    hardBox.setAttribute('aria-label', 'Игра «Сложи стену», сложный режим');
-    var head = h('header', 'wg-hard__head', '<div><span class="eyebrow">Строим вместе</span><h2>Сложи стену</h2></div>');
+    hardBox.setAttribute('aria-label', 'Игра «Сложи часовню», сложный режим');
+    var head = h('header', 'wg-hard__head', '<div><span class="eyebrow">Строим вместе</span><h2>Сложи часовню</h2></div>');
     var tools = h('div', 'wg-hard__tools');
     tools.appendChild(switcher('hard', closeHard, function () {}));
     tools.appendChild(soundBtn());
@@ -853,7 +618,7 @@
   function mountMobile() {
     launcher = h('button', 'wg-launch',
       '<span class="wg-launch__icon"><svg aria-hidden="true"><use href="#i-hammer"/></svg></span>' +
-      '<span class="wg-launch__text"><b>Сложи стену сам</b><small>Мини-игра · газобетон</small></span>' +
+      '<span class="wg-launch__text"><b>Сложи часовню сам</b><small>Мини-игра · газобетон</small></span>' +
       '<svg class="wg-launch__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>');
     launcher.type = 'button';
     launcher.setAttribute('aria-haspopup', 'dialog');
@@ -867,12 +632,12 @@
       overlay = h('div', 'wg-over');
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-modal', 'true');
-      overlay.setAttribute('aria-label', 'Игра «Сложи стену»');
+      overlay.setAttribute('aria-label', 'Игра «Сложи часовню»');
       document.body.appendChild(overlay);
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay && !overlay.hidden && !document.querySelector('.modal:not([hidden])')) closeOverlay(); });
     }
     clear(overlay);
-    var head = h('header', 'wg-over__head', '<h2>Сложи стену</h2>');
+    var head = h('header', 'wg-over__head', '<h2>Сложи часовню</h2>');
     head.appendChild(switcher(m, function () { openOverlay('easy'); }, function () { openOverlay('hard'); }));
     var x = h('button', 'wg-icon', '<svg aria-hidden="true"><use href="#i-close"/></svg>'); x.type = 'button'; x.setAttribute('aria-label', 'Закрыть'); x.addEventListener('click', closeOverlay);
     head.appendChild(x);
