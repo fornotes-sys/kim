@@ -39,9 +39,10 @@
   var SEAM_MIN = 150;           // швы соседних рядов — не ближе четверти блока
   var V_BUMP = 520;             // мм/с: быстрее — удар по соседнему блоку
   var P_MAX = 90;               // мм «передавливания» мышью/пальцем
+  var BEAR = 150;               // перемычка заходит на стену с каждой стороны, мм
   var MODES = {
-    easy: { len: 2250, rows: 5, seat: [-.3, 1.6], first: [-.3, 1.6], setTime: 0, rebarAfter: 0 },
-    hard: { len: 3150, rows: 6, seat: [-.4, 2.0], first: [-.8, 4.6], setTime: 12, rebarAfter: 0 }
+    easy: { len: 2250, rows: 5, seat: [-.3, 1.6], first: [-.3, 1.6], setTime: 0, win: { x0: 750, x1: 1350, r0: 1, r1: 2 } },
+    hard: { len: 3150, rows: 6, seat: [-.4, 2.0], first: [-.8, 4.6], setTime: 12, win: { x0: 1050, x1: 1650, r0: 1, r1: 3 } }
   };
 
   var NS = 'http://www.w3.org/2000/svg';
@@ -186,9 +187,10 @@
       parts.forEach(function (p) { p.el.remove(); }); parts = [];
       [Lr.wall, Lr.marks, Lr.top, Lr.pallet, Lr.held, Lr.fx].forEach(clear);
       S = {
-        phase: 'intro', rows: [[]], row: 0, offer: [], held: null, cracks: [], rebar: [],
+        phase: 'intro', rows: [[]], row: 0, seg: 0, spans: {}, lintels: [], offer: [], held: null, cracks: [], rebar: [],
         placed: 0, bumps: 0, overdo: 0, recuts: 0, tips: {}, sunkTold: false
       };
+      for (var wr = M.win.r0; wr <= M.win.r1; wr++) S.spans[wr] = [{ x0: M.win.x0, x1: M.win.x1, kind: 'hole' }];
       root.classList.remove('is-final');
       svg.classList.remove('is-final');
       if (view && view.y !== undefined) layout();
@@ -199,12 +201,33 @@
     function curRow() { return S.rows[S.row]; }
     function rowEnd(row) { row = row || curRow(); return row.length ? row[row.length - 1].x + row[row.length - 1].len : 0; }
     function rowBottomY(r) { return -r * ROWH; }
+    // ряд делится проёмом или перемычкой на участки; каждый кладут от его левого края
+    function spansOf(r) { return S.spans[r] || []; }
+    function segsOf(r) { var a = 0, out = []; spansOf(r).forEach(function (sp) { out.push({ a: a, b: sp.x0 }); a = sp.x1; }); out.push({ a: a, b: L, solid: spansOf(r).length && spansOf(r)[spansOf(r).length - 1].kind === 'lintel' }); return out; }
+    function curSeg() { var sg = segsOf(S.row); return sg[Math.min(S.seg, sg.length - 1)]; }
+    function segBlocks(sg) { return curRow().filter(function (b) { return b.x >= sg.a - 1 && b.x < sg.b; }); }
+    function segPrev() { var sg = curSeg(), e = sg.a; segBlocks(sg).forEach(function (b) { e = Math.max(e, b.x + b.len); }); return e; }
+    function segEnd() { return curSeg().b; }
+    function segLast() { var bl = segBlocks(curSeg()); return bl.length ? bl[bl.length - 1] : null; }
+    function peFor(row, i) {   // где кончается то, к чему примыкает блок слева
+      var b = row[i], pe = i ? row[i - 1].x + row[i - 1].len : 0;
+      spansOf(b.row).forEach(function (sp) { if (sp.x1 <= b.x + .5 && sp.x1 > pe) pe = sp.x1; });
+      return pe;
+    }
+    function prevVis() {
+      var last = segLast(); if (!last) return curSeg().a * MM;
+      var v = rowVis(S.row), i = curRow().indexOf(last); return v.xs[i] + last.len * MM;
+    }
 
     function offerNext() {
-      var row = curRow(), R = L - rowEnd(row);
+      var row = curRow(), sg = curSeg(), pe = segPrev(), R = sg.b - pe, last = segLast();
       clear(Lr.pallet);
       S.offer = [];
-      if (row.length && row[row.length - 1].cut) { closeRow(); return; }   // подрезанный — последний в ряду
+      // участок закончен: последний подрезан или дошли до края
+      if ((last && last.cut) || R <= 4) {
+        if (S.seg < segsOf(S.row).length - 1) { S.seg++; offerNext(); return; }
+        closeRow(); return;
+      }
       if (!row.length) {
         // начало ряда: целый блок или половинка
         S.offer.push(makePiece(BL, false, -1), makePiece(HALF, false, 1));
@@ -213,11 +236,13 @@
         else if (!S.tips.seam) { S.tips.seam = 1; say('Швы не должны совпадать с нижним рядом', null, 2800); }
       } else if (R >= BL - .5) {
         S.offer.push(makePiece(BL, false, 0));
-      } else if (R > 4) {
-        S.offer.push(makePiece(BL, true, 0));          // последний — подрезать по месту
+        if (!last && spansOf(S.row).length && !S.tips.after) { S.tips.after = 1; say(sg.solid ? 'Теперь — от перемычки: подведите блок к ней вплотную' : 'За проёмом ряд начинается заново — от края проёма', null, 2800); }
+      } else {
+        S.offer.push(makePiece(BL, true, 0));          // последний на участке — подрезать по месту
         if (!S.tips.cut) { S.tips.cut = 1; say('Последний блок подрежьте по рулетке: щёлкните по блоку, где пилить', null, 3400); }
+        else if (sg.b < L && !S.tips.cutWin) { S.tips.cutWin = 1; say(spansOf(S.row)[0].kind === 'hole' ? 'Перед проёмом — подрезать до края окна' : 'Перед перемычкой — подрезать вплотную к ней', null, 3000); }
         drawTape(R);
-      } else { closeRow(); return; }
+      }
       renderPallet();
       hud();
     }
@@ -256,7 +281,7 @@
     }
     function drawTape(R) {
       clear(Lr.marks);
-      var x0 = visEnd(S.row), y = rowBottomY(S.row) - ROWH - 10;
+      var x0 = prevVis(), y = rowBottomY(S.row) - ROWH - 10;
       var t = '<g class="wg-tape"><path d="M' + f1(x0) + ' ' + f1(y) + 'h' + f1(R * MM) + '" stroke="#C9A35C" stroke-width="5" stroke-linecap="butt"/>';
       for (var m = 50; m < R; m += 50) t += '<path d="M' + f1(x0 + m * MM) + ' ' + f1(y - 2.5) + 'v' + (m % 100 ? 3 : 5) + '" stroke="#5A3F22" stroke-width="1"/>' + (m % 100 ? '' : '<text x="' + f1(x0 + m * MM) + '" y="' + f1(y - 6) + '" text-anchor="middle">' + (m / 10) + '</text>');
       t += '<path d="M' + f1(x0 + R * MM) + ' ' + f1(y - 8) + 'V' + f1(rowBottomY(S.row)) + '" stroke="#9E2B32" stroke-width="1.4" stroke-dasharray="3 3"/></g>';
@@ -266,7 +291,10 @@
     /* ---------- Видимые координаты блоков ---------- */
     function rowVis(r) {
       var row = S.rows[r] || [], prev = 0, extra = 0, out = [];
-      row.forEach(function (b) { var g = b.x - prev; extra += gv(g) - g; out.push((b.x + extra) * MM); prev = b.x + b.len; });
+      row.forEach(function (b) {
+        spansOf(r).forEach(function (sp) { if (sp.x1 <= b.x + .5 && sp.x1 > prev) { prev = sp.x1; extra = 0; } });
+        var g = b.x - prev; extra += gv(g) - g; out.push((b.x + extra) * MM); prev = b.x + b.len;
+      });
       return { xs: out, extra: extra };
     }
     function visEnd(r) {
@@ -301,14 +329,12 @@
         });
         // щели и уступы — подписи
         if ((r === S.row || r === S.row - 1) && S.phase !== 'final' && S.phase !== 'done') {
-          var prevEnd = 0;
           row.forEach(function (b, i) {
-            var gap = b.x - prevEnd;
+            var gap = b.x - peFor(row, i);
             if ((i > 0 || r === S.row) && gap > GAP_OK + .05) mark(v.xs[i] - gv(gap) * MM / 2, yb + ROWH + 12, Math.round(gap) + ' мм', gap > GAP_BAD ? 'bad' : 'warn');
             [[b.dl, 0], [b.dr, 1]].forEach(function (d) {
               if (Math.abs(d[0]) > STEP_OK + .05) mark(v.xs[i] + (d[1] ? b.len * MM - 10 : 10), yb - 6 - Math.max(0, d[0]) * MM * STEPX, (d[0] > 0 ? '↑' : '↓') + Math.round(Math.abs(d[0])), Math.abs(d[0]) > STEP_BAD ? 'bad' : 'warn');
             });
-            prevEnd = b.x + b.len;
           });
         }
       });
@@ -318,11 +344,18 @@
         for (var i = 1; i <= 8; i++) d += 'L' + f1(x + (i % 2 ? 3 : -2) + rnd(-.5, .5)) + ' ' + f1(y0 + i * ROWH * 2 / 8);
         sv('path', { d: d, 'class': 'wg-crack' }, Lr.wall);
       });
-      // арматура
-      S.rebar.forEach(function (r) {
-        var y = rowBottomY(r) - ROWH + 3;
-        sv('path', { d: 'M8 ' + f1(y) + 'H' + f1(W - 8), stroke: '#6E6A62', 'stroke-width': 2.4, 'stroke-dasharray': '10 3' }, Lr.wall);
-      });
+      // перемычки
+      S.lintels.forEach(function (ln) { sv('g', { transform: 'translate(' + f1(ln.x * MM) + ' ' + f1(rowBottomY(ln.row) - ROWH) + ')' }, Lr.wall, lintelShape(ln.len * MM)); });
+      // проём под окна — по проекту, пунктиром
+      if (S.phase !== 'final') {
+        var wy0 = rowBottomY(M.win.r1) - ROWH, wh = (M.win.r1 - M.win.r0 + 1) * ROWH;
+        sv('rect', { x: f1(M.win.x0 * MM), y: f1(wy0), width: f1((M.win.x1 - M.win.x0) * MM), height: f1(wh), 'class': 'wg-win' }, Lr.wall);
+        if (S.row <= M.win.r1) sv('text', { x: f1((M.win.x0 + M.win.x1) / 2 * MM), y: f1(wy0 + wh / 2 + 3), 'text-anchor': 'middle', 'class': 'wg-win-label' }, Lr.wall).textContent = 'окно';
+        if (S.phase === 'rebar' && S.row === M.win.r1 + 1) {
+          var ly = rowBottomY(S.row) - ROWH;
+          sv('rect', { x: f1((M.win.x0 - BEAR) * MM), y: f1(ly), width: f1((M.win.x1 - M.win.x0 + 2 * BEAR) * MM), height: f1(ROWH), 'class': 'wg-win wg-win--lintel' }, Lr.wall);
+        }
+      }
       // блок в руках
       clear(Lr.held);
       if (S.held) {
@@ -343,45 +376,47 @@
 
     /* ---------- Блок в руках: ведём по ряду ---------- */
     function heldVisX() {
-      var hb = S.held, row = curRow(), prevEnd = rowEnd(row), vEnd = visEnd(S.row);
+      var hb = S.held, prevEnd = segPrev(), vEnd = prevVis();
       return vEnd + gv(hb.x - prevEnd) * MM;
     }
     function pick(p, wp) {
-      var hm = pieceHome(p), prevEnd = rowEnd();
+      var hm = pieceHome(p), prevEnd = segPrev();
       // блок встаёт на ряд и дальше идёт за пальцем на столько, на сколько сдвинули палец
       var grab = clamp((wp.x - hm.x) / MM, 0, p.len);
-      var x = clamp(xFromPointer(wp.x, grab), prevEnd + 150, L - 40);
+      var x = clamp(xFromPointer(wp.x, grab), prevEnd + 150, Math.max(prevEnd + 150, segEnd() - 40));
       S.held = { p: p, x: x, x0: x, px0: wp.x, target: x, v: 0, press: 0, cool: 0, lift: 0, fromX: hm.x, fromY: hm.y, contact: false };
       p.el.style.visibility = 'hidden';
       tween(160, function (k) { if (S.held) S.held.lift = k; });
     }
     function xFromPointer(px, grab) {
-      var prevEnd = rowEnd(), vEnd = visEnd(S.row);
+      var prevEnd = segPrev(), vEnd = prevVis();
       var d = (px - vEnd) / MM - grab;
       return d >= 0 ? prevEnd + gvInv(d) : prevEnd + d;
     }
     function heldTick(dt) {
-      var hb = S.held, prevEnd = rowEnd();
+      var hb = S.held, prevEnd = segPrev(), stopIsBlock = !!segLast() || curSeg().solid;
       hb.cool = Math.max(0, hb.cool - dt);
       var want = hb.target, v = clamp((want - hb.x) * 9, -1600, 1600);  // блок идёт по клею с запаздыванием
       var nx = hb.x + v * dt;
       if (nx <= prevEnd && hb.cool <= 0) {
-        if (!hb.contact && -v > V_BUMP && curRow().length) { bump(hb, 'Удар! Блок толкнули с разгона — соседний выбит'); return; }
+        if (!hb.contact && -v > V_BUMP && stopIsBlock) { bump(hb, 'Удар! Блок толкнули с разгона — соседний выбит'); return; }
         nx = prevEnd; hb.contact = true;
         var press = prevEnd - want;
         hb.press = press > P_MAX ? hb.press + dt : 0;
-        if (hb.press > .22 && curRow().length) { bump(hb, 'Передавили — соседний блок сдвинулся'); return; }
+        if (hb.press > .22 && stopIsBlock) { bump(hb, 'Передавили — соседний блок сдвинулся'); return; }
       } else if (nx > prevEnd + .5) hb.contact = false;
       if (nx < prevEnd) nx = prevEnd;
       hb.x = nx; hb.v = v;
     }
     function bump(hb, msg) {
-      var row = curRow(), nb = row[row.length - 1];
-      disturb(nb, rnd(1.3, 2.6), rnd(.3, 1.1));
-      // если у соседа была щель слева — его вдавило
-      var pe = row.length > 1 ? row[row.length - 2].x + row[row.length - 2].len : 0, g = nb.x - pe;
-      if (g > .3 && !nb.locked) nb.x -= Math.min(g, rnd(.5, 2));
-      var back = rnd(10, 22); hb.x = rowEnd() + back; hb.x0 += (hb.x - Math.min(hb.target, hb.x)); hb.target = Math.max(hb.target, hb.x); hb.cool = .3; hb.press = 0; hb.contact = false;
+      var row = curRow(), nb = segLast();
+      if (nb) {
+        disturb(nb, rnd(1.3, 2.6), rnd(.3, 1.1));
+        // если у соседа была щель слева — его вдавило
+        var ni = row.indexOf(nb), pe = peFor(row, ni), g = nb.x - pe;
+        if (g > .3 && !nb.locked) nb.x -= Math.min(g, rnd(.5, 2));
+      } else msg = 'Удар о перемычку — так её можно сдвинуть. Подводите мягче';
+      var back = rnd(10, 22); hb.x = segPrev() + back; hb.x0 += (hb.x - Math.min(hb.target, hb.x)); hb.target = Math.max(hb.target, hb.x); hb.cool = .3; hb.press = 0; hb.contact = false;
       S.bumps++; S.overdo++; hud();
       say(msg, 'warn', 2600); sfx.bump(); shake(); buzz(40);
     }
@@ -392,16 +427,17 @@
     }
     function release() {
       var hb = S.held; S.held = null;
-      var p = hb.p, prevEnd = rowEnd();
-      if (hb.x > L - 30 || hb.x + p.len > L + 2) {
-        if (hb.x < L - 30 && hb.x + p.len > L + 2) { say(p.cut ? 'Длинный — выступает за угол. Подрежьте ещё' : 'Блок выступает за угол', 'warn', 2400); sfx.err(); if (p.cut) { p.cut = false; p.needCut = true; S.recuts++; } }
+      var p = hb.p, prevEnd = segPrev(), E = segEnd(), atWin = E < L;
+      if (hb.x > E - 30 || hb.x + p.len > E + 2) {
+        if (hb.x < E - 30 && hb.x + p.len > E + 2) { say(p.cut ? (atWin ? 'Длинный — заходит в проём. Подрежьте ещё' : 'Длинный — выступает за угол. Подрежьте ещё') : (atWin ? 'Блок заходит в проём' : 'Блок выступает за угол'), 'warn', 2400); sfx.err(); if (p.cut) { p.cut = false; p.needCut = true; S.recuts++; } }
         p.el.style.visibility = ''; renderPallet(); return;
       }
       // блок садится на клей: чуть отходит и встаёт неровно
       var first = S.row === 0, seat = first ? M.first : M.seat;
-      var b = { len: p.len, x: Math.min(hb.x + (hb.contact ? rnd(0, 1.4) : 0), L - p.len), dl: rnd(seat[0], seat[1]), dr: rnd(seat[0], seat[1]), cut: p.cut, row: S.row, t: performance.now() };
+      var b = { len: p.len, x: Math.min(hb.x + (hb.contact ? rnd(0, 1.4) : 0), E - p.len), dl: rnd(seat[0], seat[1]), dr: rnd(seat[0], seat[1]), cut: p.cut, row: S.row, t: performance.now() };
       if (first && mode === 'hard' && Math.abs(b.dl - b.dr) < 1.5) b.dr += (Math.random() < .5 ? -1 : 1) * 1.6;
       curRow().push(b);
+      curRow().sort(function (u, w) { return u.x - w.x; });
       S.placed++;
       sfx.place(); buzz(12);
       clear(Lr.marks);
@@ -418,7 +454,7 @@
       return m;
     }
     function cut(p, m) {
-      var R = L - rowEnd();
+      var R = segEnd() - segPrev();
       p.len = m; p.cut = true; p.needCut = false;
       S.cutErr = m - R;
       sfx.saw();
@@ -441,7 +477,7 @@
     function mallet(hit, wp) {
       var b = hit.b, row = curRow(), i = hit.i;
       if (!editable(b)) { say(M.setTime ? 'Клей схватился — блок уже не подвинуть' : 'Этот ряд уже готов', null, 1800); return; }
-      var pe = i ? row[i - 1].x + row[i - 1].len : 0, gap = b.x - pe;
+      var pe = peFor(row, i), gap = b.x - pe;
       malletFx(wp, hit.u > .8 && hit.y > .15);
       sfx.knock(); buzz(8);
       if (hit.u > .8 && hit.y > .15) {
@@ -478,53 +514,65 @@
       row.forEach(function (b) { b.locked = true; });
       // перевязка: швы этого ряда против швов нижнего
       if (S.row > 0) {
-        var seams = row.slice(1).map(function (b) { return b.x; });
-        var below = S.rows[S.row - 1].slice(1).map(function (b) { return b.x; });
+        var edges = []; [S.row, S.row - 1].forEach(function (r) { spansOf(r).forEach(function (sp) { edges.push(sp.x0, sp.x1); }); });
+        function realSeam(x) { return !edges.some(function (e) { return Math.abs(e - x) < 2; }); }
+        var seams = row.slice(1).map(function (b) { return b.x; }).filter(realSeam);
+        var below = S.rows[S.row - 1].slice(1).map(function (b) { return b.x; }).filter(realSeam);
         var vBelow = rowVis(S.row - 1), vThis = rowVis(S.row), bad = 0;
         seams.forEach(function (s, i) {
           below.forEach(function (t, j) {
-            if (Math.abs(s - t) < SEAM_MIN) { S.cracks.push({ row: S.row, x: (vThis.xs[i + 1] + vBelow.xs[j + 1]) / 2 - 1 }); bad++; }
+            if (Math.abs(s - t) < SEAM_MIN) { S.cracks.push({ row: S.row, x: (s + t) / 2 * MM - 1 }); bad++; }
           });
         });
         if (bad) { sfx.crack(); shake(); say('Швы совпали с нижним рядом — по ним пошла трещина', 'warn', 3200); buzz([30, 30, 60]); }
       }
-      var endGap = L - rowEnd(row);
+      var endGap = L - row.reduce(function (e, b) { return Math.max(e, b.x + b.len); }, 0);
       S.endGaps = (S.endGaps || []).concat([endGap]);
       if (endGap > GAP_BAD && !S.cracks.length) say('У угла щель ' + Math.round(endGap) + ' мм — подрезали коротко', 'warn', 2400);
       else if (rowGood(row) && endGap <= GAP_OK + .5) { say('Ряд ровный!', 'ok', 1400); sfx.good(); }
-      S.row++;
+      S.row++; S.seg = 0;
       hud();
       if (S.row >= M.rows) { later(finale, 700); S.phase = 'done'; render(); return; }
       S.rows.push([]);
-      if (M.rebarAfter && S.row === M.rebarAfter) { later(startRebar, 500); S.phase = 'rebar'; render(); return; }
+      if (S.row === M.win.r1 + 1) { later(startRebar, 500); S.phase = 'rebar'; render(); return; }
       later(offerNext, 600);
       render();
     }
     function rowGood(row) {
-      var pe = 0, ok = true;
-      row.forEach(function (b) { if (b.x - pe > GAP_OK + .05 || Math.abs(b.dl) > STEP_OK + .05 || Math.abs(b.dr) > STEP_OK + .05) ok = false; pe = b.x + b.len; });
+      var ok = true;
+      row.forEach(function (b, i) { if (b.x - peFor(row, i) > GAP_OK + .05 || Math.abs(b.dl) > STEP_OK + .05 || Math.abs(b.dr) > STEP_OK + .05) ok = false; });
       return ok;
     }
 
     /* ---------- Армирование (сложный режим) ---------- */
+    var LEN_LINTEL = 0;
     function startRebar() {
       clear(Lr.pallet);
-      var hm = portrait ? { x: palletX - 90, y: palletY - 6 } : { x: palletX - 90, y: 4 };
-      var g = sv('g', { 'class': 'wg-piece wg-rod', transform: 'translate(' + f1(hm.x) + ' ' + f1(hm.y) + ')' }, Lr.pallet, '<rect x="0" y="-5" width="180" height="10" fill="transparent" stroke="none"/><path d="M0 0H180" stroke="#6E6A62" stroke-width="3" stroke-dasharray="12 3"/>');
-      S.rod = { el: g, hm: hm };
-      say('Каждые три ряда — арматура в штробу. Перетащите прут на стену', null, 3400);
-      // штроба по верху ряда
-      var y = rowBottomY(S.row - 1) - ROWH + 3;
-      sv('path', { d: 'M8 ' + f1(y) + 'H' + f1(W - 8), stroke: '#9E2B32', 'stroke-width': 1.2, 'stroke-dasharray': '4 4', 'class': 'wg-groove' }, Lr.marks);
+      LEN_LINTEL = M.win.x1 - M.win.x0 + 2 * BEAR;
+      var w = LEN_LINTEL * MM, hm = portrait ? { x: palletX - w / 2, y: palletY - ROWH } : { x: palletX - w / 2, y: 8 - ROWH };
+      var g = sv('g', { 'class': 'wg-piece wg-rod', transform: 'translate(' + f1(hm.x) + ' ' + f1(hm.y) + ')' }, Lr.pallet, lintelShape(w));
+      S.rod = { el: g, hm: hm, w: w };
+      say('Окно выложено. Положите перемычку над проёмом — она должна опираться на стену с обеих сторон', null, 3800);
+      render();
+    }
+    function lintelShape(w) {
+      return '<rect x="0" y="0" width="' + f1(w) + '" height="' + f1(ROWH) + '" fill="' + PORE + '" stroke="#3E3122" stroke-width="1.8"/>' +
+        '<path d="M' + f1(BEAR * MM * .5) + ' ' + f1(ROWH * .35) + 'H' + f1(w - BEAR * MM * .5) + '" stroke="#9C968B" stroke-width="1.4" stroke-dasharray="6 3"/>' +
+        '<text x="' + f1(w / 2) + '" y="' + f1(ROWH * .72) + '" text-anchor="middle" class="wg-piece-label">перемычка</text>';
     }
     function dropRod(wp) {
-      var y = rowBottomY(S.row - 1) - ROWH;
-      if (Math.abs(wp.y - y) < 40 && wp.x > -20 && wp.x < W + 20) {
-        S.rebar.push(S.row - 1); clear(Lr.marks); clear(Lr.pallet); S.rod = null;
-        sfx.place(); say('Арматура уложена', 'ok', 1400);
-        S.phase = 'play'; later(offerNext, 400); render(); return true;
+      var r = S.row, yTop = rowBottomY(r) - ROWH, el = S.rod.el;
+      var x = (wp.x - S.rodDx) / MM, cx = (M.win.x0 + M.win.x1) / 2, ok = Math.abs(x + LEN_LINTEL / 2 - cx) <= BEAR - 60;
+      if (Math.abs(wp.y - S.rodDy - yTop) < 60 && Math.abs(x + LEN_LINTEL / 2 - cx) < 600) {
+        if (!ok) { say('Перемычка опирается одним краем — сдвиньте, чтобы зашла на стену с обеих сторон', 'warn', 3000); sfx.err(); setTrans(el, S.rod.hm.x, S.rod.hm.y); return false; }
+        var lx = Math.round(x);
+        S.spans[r] = [{ x0: lx, x1: lx + LEN_LINTEL, kind: 'lintel' }];
+        S.lintels.push({ row: r, x: lx, len: LEN_LINTEL });
+        clear(Lr.pallet); S.rod = null;
+        sfx.place(); shake(); buzz(20); say('Перемычка на месте — дальше ряд упирается в неё', 'ok', 2200);
+        S.phase = 'play'; S.seg = 0; later(offerNext, 400); render(); return true;
       }
-      setTrans(S.rod.el, S.rod.hm.x, S.rod.hm.y);
+      setTrans(el, S.rod.hm.x, S.rod.hm.y);
       return false;
     }
     function setTrans(el, x, y) { el.setAttribute('transform', 'translate(' + f1(x) + ' ' + f1(y) + ')'); }
@@ -548,7 +596,7 @@
       if (S.phase === 'rebar') {
         if (!S.rod) return;
         var hm = S.rod.hm;
-        if (wp.x > hm.x - 10 && wp.x < hm.x + 190 && Math.abs(wp.y - hm.y) < 18) { ptr = { id: e.pointerId, kind: 'rod', dx: wp.x - hm.x, dy: wp.y - hm.y }; capture(e); }
+        if (wp.x > hm.x - 6 && wp.x < hm.x + S.rod.w + 6 && wp.y > hm.y - 8 && wp.y < hm.y + ROWH + 8) { ptr = { id: e.pointerId, kind: 'rod', dx: wp.x - hm.x, dy: wp.y - hm.y }; S.rodDx = ptr.dx; S.rodDy = ptr.dy; capture(e); }
         return;
       }
       var p = pieceAt(wp);
@@ -617,7 +665,7 @@
     function hud() {
       if (!S) return;
       var joints = 0, good = 0;
-      S.rows.forEach(function (row) { var pe = 0; row.forEach(function (b) { joints++; if (b.x - pe <= GAP_OK + .05 && Math.abs(b.dl) <= STEP_OK + .05 && Math.abs(b.dr) <= STEP_OK + .05) good++; pe = b.x + b.len; }); });
+      S.rows.forEach(function (row) { row.forEach(function (b, i) { joints++; if (b.x - peFor(row, i) <= GAP_OK + .05 && Math.abs(b.dl) <= STEP_OK + .05 && Math.abs(b.dr) <= STEP_OK + .05) good++; }); });
       S.good = good; S.joints = joints;
       ui.hud.innerHTML = S.phase === 'intro' || S.phase === 'final' ? '' :
         '<span><b>Ряд</b>' + Math.min(S.row + 1, M.rows) + ' / ' + M.rows + '</span>' +
@@ -648,7 +696,8 @@
           '<ul class="wg-rules">' +
             '<li><b>Ведите блок</b> с поддона к стене и подводите мягко — встанет в стык. С разгона собьёте соседний.</li>' +
             '<li><b>Киянка:</b> по торцу — подвинуть, сверху — осадить. Лишний удар сдвигает уже уложенные.</li>' +
-            '<li><b>Швы</b> рядов не должны совпадать. Последний блок ряда подрежьте по рулетке.</li>' +
+            '<li><b>Швы</b> рядов не должны совпадать. Последний блок перед углом или окном подрежьте по рулетке.</li>' +
+            '<li><b>Окно:</b> над проёмом положите перемычку — она должна опираться на стену с обеих сторон.</li>' +
             (mode === 'hard' ? '<li><b>Сложнее:</b> стена длиннее, первый ряд на неровном растворе, клей схватывается за ' + M.setTime + ' секунд.</li>' : '') +
           '</ul>' +
           '<button class="btn btn--gold btn--small" type="button" data-wg="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>';
@@ -704,7 +753,7 @@
       var px0 = -W * .3, porchTop = top + Hh * .1, doorTop = porchTop + Hh * .38;   // притвор
       var ax1 = W + W * .13;                                  // апсида
       var dW = W * .28, dTop = ridge - Hh * .3, domeTop = dTop - Hh * .32;
-      var winW = W * .045, winH = Hh * .36, winY = -plH - Hh * .16;
+      var winW = W * .045, winY = rowBottomY(M.win.r0) - 3, winH = (M.win.r1 - M.win.r0 + 1) * ROWH - 6;
       var stones = '';
       for (var sx = px0; sx < ax1; sx += 22) stones += '<path d="M' + f1(sx) + ' ' + f1(-plH) + 'v' + f1(plH / 2) + 'M' + f1(sx + 11) + ' ' + f1(-plH / 2) + 'v' + f1(plH / 2) + '" stroke="#B8A47E" stroke-width=".8"/>';
       var seams = '';
@@ -717,7 +766,7 @@
           '<rect x="' + f1(px0 - 2) + '" y="' + f1(-plH) + '" width="' + f1(ax1 - px0 + 2) + '" height="' + f1(plH) + '" fill="' + STONE + '"/>' +
           '<path d="M' + f1(px0) + ' ' + f1(-plH / 2) + 'H' + f1(ax1) + '" stroke="#B8A47E" stroke-width=".8"/>' + stones,
         // окна с кирпичными арками, крест на стене, дверь притвора со ступенями
-        arch(W * .33, winY, winW, winH, true) + arch(W * .45, winY, winW, winH, true) + arch(W * .57, winY, winW, winH, true) +
+        (function () { var a0 = M.win.x0 * MM, a1 = M.win.x1 * MM, st = (a1 - a0) / 3, o = ''; for (var k = 0; k < 3; k++) o += arch(a0 + st * (k + .5), winY, Math.min(winW * 1.4, st * .62), winH, true); return o; })() +
           arch(ax1 - W * .06, winY, winW * .8, winH * .9, true) +
           '<path d="M' + f1(W * .82) + ' ' + f1(winY - winH * .95) + 'V' + f1(winY - winH * .2) + 'M' + f1(W * .82 - 9) + ' ' + f1(winY - winH * .72) + 'H' + f1(W * .82 + 9) + '" stroke="' + BRICK + '" stroke-width="5"/>' +
           // притвор стоит к нам боком, вход с аркой смотрит влево: видна кирпичная кромка портала и ступени

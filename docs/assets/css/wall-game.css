@@ -115,3 +115,9 @@ html.wg-open, html.wg-open body { overflow: hidden; }
 .wg-render img { display: block; width: 100%; height: auto; border-radius: 8px; box-shadow: 0 0 0 1px var(--line); }
 .wg-render figcaption { margin-top: 4px; font-size: .75rem; color: var(--muted); }
 .wg-host--easy .wg-render { display: none; }
+/* проём под окна и место под перемычку */
+.wg-win { fill: rgba(79,95,104,.07); stroke: #4F5F68; stroke-width: 1.2; stroke-dasharray: 5 4; }
+.wg-win--lintel { fill: rgba(167,131,69,.10); stroke: #A78345; animation: wg-blink 1.2s ease-in-out infinite; }
+@keyframes wg-blink { 50% { opacity: .45; } }
+.wg-win-label { font-size: 11px; fill: #4F5F68; font-style: italic; }
+.wg-rod { cursor: grab; }
