@@ -105,9 +105,13 @@ html.wg-open, html.wg-open body { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .wg-launch__icon::after { animation: none; } .wg-card, .wg-hard { animation: none; } }
 
 /* простой режим в блоке: финальная карточка компактнее, часовня видна целиком */
-.wg-host--easy .wg-card--final { width: min(330px, 52%); padding: 16px 18px 14px; gap: 7px; }
+.wg-host--easy .wg-card--final { width: min(300px, 42%); padding: 16px 18px 14px; gap: 7px; }
 .wg-host--easy .wg-card--final h3 { font-size: 1.5rem; }
 .wg-host--easy .wg-card--final p { font-size: .8125rem; line-height: 1.45; }
 .wg-host--easy .wg-card--final .wg-card__block { display: none; }
 .wg-host--easy .wg-card--intro { width: min(430px, calc(100% - 24px)); padding: 16px 20px 14px; gap: 8px; }
 .wg-host--easy .wg-card--intro h3 { font-size: 1.5rem; }
+.wg-render { margin: 2px 0 0; width: 100%; }
+.wg-render img { display: block; width: 100%; height: auto; border-radius: 8px; box-shadow: 0 0 0 1px var(--line); }
+.wg-render figcaption { margin-top: 4px; font-size: .75rem; color: var(--muted); }
+.wg-host--easy .wg-render { display: none; }

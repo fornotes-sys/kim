@@ -154,7 +154,7 @@
     }
     function finalView() {
       var r = host.getBoundingClientRect(), top = -M.rows * ROWH - 310;
-      var box = portrait ? { x: -36, y: top, w: W + 72, h: 60 - top } : { x: -60, y: top, w: W * 1.95 + 60, h: 70 - top };
+      var box = portrait ? { x: -W * .44, y: top, w: W * 1.6, h: 60 - top } : { x: -W * .46, y: top, w: W * 2.28, h: 70 - top };
       var k = Math.max(box.w / r.width, box.h / r.height), vw = r.width * k, vh = r.height * k;
       return { x: box.x - (vw - box.w) / 2, y: box.y - (vh - box.h) / 2, w: vw, h: vh };
     }
@@ -300,7 +300,7 @@
           }
         });
         // щели и уступы — подписи
-        if (r === S.row || r === S.row - 1 || S.phase === 'final') {
+        if ((r === S.row || r === S.row - 1) && S.phase !== 'final' && S.phase !== 'done') {
           var prevEnd = 0;
           row.forEach(function (b, i) {
             var gap = b.x - prevEnd;
@@ -659,6 +659,7 @@
         html = '<div class="wg-stars">' + [1, 2, 3].map(function (i) { return '<span' + (i <= stars ? ' class="is-on"' : '') + '>✦</span>'; }).join('') + '</div>' +
           '<h3>Стена готова!</h3>' +
           '<p class="wg-card__meta">' + S.good + ' из ' + S.joints + ' блоков в стык и ровно' + (cr ? ' · ' + cr + ' ' + plural(cr, ['трещина', 'трещины', 'трещин']) : '') + '</p>' +
+          '<figure class="wg-render"><img src="assets/img/chapel-render.jpg" alt="Проект часовни: белые стены, три арочных окна, медная кровля и купол с крестом" loading="lazy"><figcaption>Так будет выглядеть часовня</figcaption></figure>' +
           '<p class="wg-card__lead">Видите, как это непросто? Давайте доверим это профессионалам — каменщикам. Если есть возможность — подключайтесь.</p>' +
           '<p class="wg-card__block">Вы уложили ' + S.placed + ' ' + plural(S.placed, ['блок', 'блока', 'блоков']) + '. В настоящей часовне каждый блок — чьё-то пожертвование.' + price + ' Подарите приходу хотя бы один.</p>' +
           '<div class="wg-actions"><button class="btn btn--gold btn--small" type="button" data-wg="donate">Подарить блок <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
@@ -686,29 +687,63 @@
       hud(); render();
       var from = view, to = finalView();
       tween(900, function (k) { view = { x: lerp(from.x, to.x, k), y: lerp(from.y, to.y, k), w: lerp(from.w, to.w, k), h: lerp(from.h, to.h, k) }; applyView(); }, function () { drawBg(); });
-      var top = -M.rows * ROWH, cx = W / 2;
+      // часовня по рендеру проекта: цоколь из камня, белые стены, три арочных окна
+      // с кирпичными арками, кирпичный крест, слева притвор, справа апсида,
+      // медная кровля, барабан с окнами, медный купол, золотой крест с шаром
+      var top = -M.rows * ROWH, Hh = -top, cx = W * .47;
+      var COP = '#B8693E', COPD = '#8E4A2A', BRICK = '#C4643C', PL = '#F6EEE2', STONE = '#D8C6A4';
+      function arch(x, y, w, hgt, brick) {   // арочное окно: x — центр, y — низ
+        var r = w / 2, d = 'M' + f1(x - r) + ' ' + f1(y) + 'V' + f1(y - hgt + r) + 'A' + f1(r) + ' ' + f1(r) + ' 0 0 1 ' + f1(x + r) + ' ' + f1(y - hgt + r) + 'V' + f1(y) + 'Z';
+        var o = '<path d="' + d + '" fill="#4F5F68" stroke="#3E3122" stroke-width="1.4"/>' +
+          '<path d="M' + f1(x) + ' ' + f1(y - hgt + 2) + 'V' + f1(y) + '" stroke="#C9A35C" stroke-width="1"/>';
+        if (brick) o += '<path d="M' + f1(x - r - 3) + ' ' + f1(y - hgt + r) + 'A' + f1(r + 3) + ' ' + f1(r + 3) + ' 0 0 1 ' + f1(x + r + 3) + ' ' + f1(y - hgt + r) + '" fill="none" stroke="' + BRICK + '" stroke-width="5" stroke-dasharray="4 1.4"/>' +
+          '<rect x="' + f1(x - r - 3) + '" y="' + f1(y) + '" width="' + f1(w + 6) + '" height="3" fill="#E8DCC8" stroke="#3E3122" stroke-width=".8"/>';
+        return o;
+      }
+      var plH = Hh * .2, ridge = top - Hh * .3, eave = top - 6;
+      var px0 = -W * .3, porchTop = top + Hh * .1, doorTop = porchTop + Hh * .38;   // притвор
+      var ax1 = W + W * .13;                                  // апсида
+      var dW = W * .28, dTop = ridge - Hh * .3, domeTop = dTop - Hh * .32;
+      var winW = W * .045, winH = Hh * .36, winY = -plH - Hh * .16;
+      var stones = '';
+      for (var sx = px0; sx < ax1; sx += 22) stones += '<path d="M' + f1(sx) + ' ' + f1(-plH) + 'v' + f1(plH / 2) + 'M' + f1(sx + 11) + ' ' + f1(-plH / 2) + 'v' + f1(plH / 2) + '" stroke="#B8A47E" stroke-width=".8"/>';
+      var seams = '';
+      for (var rx = 0; rx <= W; rx += 14) seams += '<path d="M' + f1(rx) + ' ' + f1(eave + 1) + 'L' + f1(W * .5 + (rx - W * .5) * .86) + ' ' + f1(ridge + 2) + '" stroke="' + COPD + '" stroke-width=".8"/>';
       var steps = [
-        // армопояс
-        '<rect x="0" y="' + f1(top - 16) + '" width="' + f1(W) + '" height="16" fill="#CFCAC0"/>',
-        // штукатурка и побелка, дверь и окно
-        '<rect class="wg-plaster" x="0" y="' + f1(top - 16) + '" width="' + f1(W) + '" height="' + f1(-top + 16) + '" fill="#F7F3EA"/>' +
-          '<path d="M' + f1(cx - 26) + ' 0V' + f1(-64) + 'a26 26 0 0 1 52 0V0" fill="#E9DDC7"/><path d="M' + f1(cx) + ' -90V0" stroke="#C9B48E" stroke-width="1"/>' +
-          '<rect x="' + f1(cx - 26 - W * .24) + '" y="' + f1(top * .62) + '" width="30" height="40" rx="15" fill="#E9DDC7"/>' +
-          '<rect x="' + f1(cx + W * .24 - 4) + '" y="' + f1(top * .62) + '" width="30" height="40" rx="15" fill="#E9DDC7"/>',
-        // кровля
-        '<path d="M-26 ' + f1(top - 10) + 'L' + f1(cx) + ' ' + f1(top - 120) + 'L' + f1(W + 26) + ' ' + f1(top - 10) + 'Z" fill="#8E9A86" stroke="#3E3122"/>' +
-          '<path d="M' + f1(cx * .45) + ' ' + f1(top - 12 - 110 * .45) + 'V' + f1(top - 12) + 'M' + f1(cx) + ' ' + f1(top - 118) + 'V' + f1(top - 12) + 'M' + f1(W - cx * .45) + ' ' + f1(top - 12 - 110 * .45) + 'V' + f1(top - 12) + '" stroke="#6F7B68" stroke-width="1.2"/>',
-        // барабан и главка
-        '<rect x="' + f1(cx - 15) + '" y="' + f1(top - 160) + '" width="30" height="46" fill="#F7F3EA"/>' +
-          '<path d="M' + f1(cx - 19) + ' ' + f1(top - 160) + 'C' + f1(cx - 36) + ' ' + f1(top - 172) + ' ' + f1(cx - 26) + ' ' + f1(top - 194) + ' ' + f1(cx) + ' ' + f1(top - 214) + 'C' + f1(cx + 26) + ' ' + f1(top - 194) + ' ' + f1(cx + 36) + ' ' + f1(top - 172) + ' ' + f1(cx + 19) + ' ' + f1(top - 160) + 'Z" fill="url(#wg-gold-' + mode + ')" stroke="#7A5A22"/>',
-        // восьмиконечный крест: нижняя перекладина — левый от зрителя конец выше
-        '<circle cx="' + f1(cx) + '" cy="' + f1(top - 238) + '" r="80" fill="url(#wg-glow-' + mode + ')" stroke="none"/>' +
-          '<g stroke="#7A5A22" stroke-width="3"><path d="M' + f1(cx) + ' ' + f1(top - 214) + 'V' + f1(top - 272) + 'M' + f1(cx - 7) + ' ' + f1(top - 263) + 'h14M' + f1(cx - 16) + ' ' + f1(top - 251) + 'h32M' + f1(cx - 9) + ' ' + f1(top - 233) + 'l18 8"/></g>'
+        // штукатурка и побелка стены, апсида, притвор, цоколь
+        '<rect x="' + f1(ax1 - W * .13 - 2) + '" y="' + f1(top + 4) + '" width="' + f1(W * .13) + '" height="' + f1(Hh - 4) + '" rx="' + f1(W * .06) + '" fill="' + PL + '"/>' +
+          '<rect x="0" y="' + f1(top) + '" width="' + f1(W) + '" height="' + f1(Hh) + '" fill="' + PL + '" opacity=".96"/>' +
+          '<rect x="' + f1(px0) + '" y="' + f1(porchTop) + '" width="' + f1(-px0) + '" height="' + f1(-porchTop) + '" fill="' + PL + '"/>' +
+          '<rect x="' + f1(px0 - 2) + '" y="' + f1(-plH) + '" width="' + f1(ax1 - px0 + 2) + '" height="' + f1(plH) + '" fill="' + STONE + '"/>' +
+          '<path d="M' + f1(px0) + ' ' + f1(-plH / 2) + 'H' + f1(ax1) + '" stroke="#B8A47E" stroke-width=".8"/>' + stones,
+        // окна с кирпичными арками, крест на стене, дверь притвора со ступенями
+        arch(W * .33, winY, winW, winH, true) + arch(W * .45, winY, winW, winH, true) + arch(W * .57, winY, winW, winH, true) +
+          arch(ax1 - W * .06, winY, winW * .8, winH * .9, true) +
+          '<path d="M' + f1(W * .82) + ' ' + f1(winY - winH * .95) + 'V' + f1(winY - winH * .2) + 'M' + f1(W * .82 - 9) + ' ' + f1(winY - winH * .72) + 'H' + f1(W * .82 + 9) + '" stroke="' + BRICK + '" stroke-width="5"/>' +
+          // притвор стоит к нам боком, вход с аркой смотрит влево: видна кирпичная кромка портала и ступени
+          '<rect x="' + f1(px0 - 4) + '" y="' + f1(porchTop) + '" width="9" height="' + f1(-porchTop - plH) + '" fill="' + BRICK + '" stroke="#3E3122" stroke-width="1"/>' +
+          '<path d="M' + f1(px0 - 4) + ' ' + f1(porchTop + 8) + 'h9M' + f1(px0 - 4) + ' ' + f1(porchTop + 20) + 'h9M' + f1(px0 - 4) + ' ' + f1(porchTop + 32) + 'h9" stroke="#8E4A2A" stroke-width=".8"/>' +
+          '<path d="M' + f1(px0) + ' 0h' + f1(-W * .12) + 'v' + f1(-plH * .3) + 'h' + f1(W * .04) + 'v' + f1(-plH * .3) + 'h' + f1(W * .04) + 'v' + f1(-plH * .3) + 'h' + f1(W * .04) + '" fill="#E3D6BE" stroke="#3E3122" stroke-width="1.2"/>',
+        // медная кровля: основная, притвор, апсида
+        '<path d="M' + f1(-8) + ' ' + f1(eave) + 'L' + f1(W * .5 - W * .43) + ' ' + f1(ridge) + 'H' + f1(W * .5 + W * .43) + 'L' + f1(W + 8) + ' ' + f1(eave) + 'Z" fill="' + COP + '" stroke="#3E3122"/>' + seams +
+          '<path d="M' + f1(px0 - 10) + ' ' + f1(porchTop + 2) + 'L' + f1(px0 + 2) + ' ' + f1(porchTop - Hh * .2) + 'H' + f1(4) + 'V' + f1(porchTop + 2) + 'Z" fill="' + COP + '" stroke="#3E3122"/>' +
+          (function () { var o = ''; for (var x = px0; x < 0; x += 12) o += '<path d="M' + f1(x) + ' ' + f1(porchTop + 1) + 'V' + f1(porchTop - Hh * .2 + 1) + '" stroke="' + COPD + '" stroke-width=".8"/>'; return o; })() +
+          '<path d="M' + f1(W - 4) + ' ' + f1(top - 4) + 'Q' + f1(ax1 + 8) + ' ' + f1(top - 6) + ' ' + f1(ax1 + 6) + ' ' + f1(top + 10) + 'H' + f1(W - 4) + 'Z" fill="' + COP + '" stroke="#3E3122"/>',
+        // барабан с окнами и медный купол
+        '<rect x="' + f1(cx - dW / 2) + '" y="' + f1(dTop) + '" width="' + f1(dW) + '" height="' + f1(ridge - dTop + 4) + '" fill="' + PL + '" stroke="#3E3122"/>' +
+          arch(cx - dW * .3, ridge - 6, winW * .8, (ridge - dTop) * .62, true) + arch(cx, ridge - 6, winW * .8, (ridge - dTop) * .62, true) + arch(cx + dW * .3, ridge - 6, winW * .8, (ridge - dTop) * .62, true) +
+          '<path d="M' + f1(cx - dW / 2 - 6) + ' ' + f1(dTop) + 'C' + f1(cx - dW / 2) + ' ' + f1(domeTop + 6) + ' ' + f1(cx + dW / 2) + ' ' + f1(domeTop + 6) + ' ' + f1(cx + dW / 2 + 6) + ' ' + f1(dTop) + 'Z" fill="' + COP + '" stroke="#3E3122"/>' +
+          '<path d="M' + f1(cx - dW * .18) + ' ' + f1(dTop - 2) + 'Q' + f1(cx - dW * .12) + ' ' + f1(domeTop + 14) + ' ' + f1(cx) + ' ' + f1(domeTop + 2) + 'M' + f1(cx + dW * .18) + ' ' + f1(dTop - 2) + 'Q' + f1(cx + dW * .12) + ' ' + f1(domeTop + 14) + ' ' + f1(cx) + ' ' + f1(domeTop + 2) + '" fill="none" stroke="' + COPD + '" stroke-width="1"/>' +
+          '<path d="M' + f1(cx - dW / 2 - 8) + ' ' + f1(dTop) + 'H' + f1(cx + dW / 2 + 8) + '" stroke="#3E3122" stroke-width="2.4"/>',
+        // золотой шар и восьмиконечный крест: нижняя перекладина — левый от зрителя конец выше
+        '<circle cx="' + f1(cx) + '" cy="' + f1(domeTop - 30) + '" r="80" fill="url(#wg-glow-' + mode + ')" stroke="none"/>' +
+          '<circle cx="' + f1(cx) + '" cy="' + f1(domeTop - 3) + '" r="5" fill="url(#wg-gold-' + mode + ')" stroke="#7A5A22"/>' +
+          '<g stroke="#B88A3E" stroke-width="3"><path d="M' + f1(cx) + ' ' + f1(domeTop - 8) + 'V' + f1(domeTop - 62) + 'M' + f1(cx - 6) + ' ' + f1(domeTop - 54) + 'h12M' + f1(cx - 14) + ' ' + f1(domeTop - 44) + 'h28M' + f1(cx - 8) + ' ' + f1(domeTop - 26) + 'l16 7"/></g>'
       ];
       steps.forEach(function (s, i) {
         later(function () {
           var e = sv('g', null, Lr.top, s); e.style.opacity = 0;
-          tween(450, function (k) { e.style.opacity = i === 1 ? k * .94 : k; });
+          tween(450, function (k) { e.style.opacity = k; });
           if (i === steps.length - 1) { sfx.bell(); svg.classList.add('is-final'); } else sfx.place();
         }, 700 + i * 520);
       });
