@@ -134,3 +134,22 @@ html.wg-open, html.wg-open body { overflow: hidden; }
   .wg-over__head h2 { font-size: 1.125rem; }
   .wg-over .kim-modes button { padding: 6px 9px; font-size: .75rem; }
 }
+/* кладка с киянкой: ровный блок — зелёная кромка, сбившийся — красная, выбранный — золотая */
+.wg-blk .wg-blk__body { stroke: #9E2B32; stroke-width: 2.4; }
+.wg-blk.is-ok .wg-blk__body { stroke: #4F6B3A; stroke-width: 2; }
+.wg-blk.is-sel .wg-blk__body { stroke: #A78345; stroke-width: 3.2; }
+.wg-blk { cursor: pointer; }
+.wg-tag rect { fill: #9E2B32; }
+.wg-tag text { fill: #fff; font-size: 12px; font-weight: 600; }
+.wg-tag.is-ok rect { fill: #4F6B3A; }
+.wg-gapline { stroke: #9E2B32; stroke-width: 3; stroke-linecap: round; }
+.wg-btn { cursor: pointer; }
+.wg-btn circle { fill: #8E6C33; stroke: #fff; stroke-width: 2; filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); transition: fill .15s ease; }
+.wg-btn:hover circle { fill: #6E5222; }
+.wg-btn text { fill: #fff; font-weight: 700; pointer-events: none; }
+.wg-btn--undo circle { fill: #7A746A; }
+.wg-tape path { stroke: #9E2B32; stroke-width: 2.4; }
+.wg-tape .wg-tape__tick { stroke: #3E3122; stroke-width: 1; }
+.wg-tape text { font-size: 13px; fill: #9E2B32; font-weight: 600; }
+.wg-saw { cursor: crosshair; }
+.is-wait .wg-pal-label { fill: #9E2B32; }
