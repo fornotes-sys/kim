@@ -719,8 +719,7 @@
         html = '<span class="eyebrow">Половина стены</span><h3>Видите, как непросто?</h3>' +
           '<p class="wg-card__lead">Каждый блок — это точность, терпение и руки мастера. Настоящую часовню построят профессиональные каменщики, а помочь может каждый.</p>' +
           '<p>Если хотите участвовать — деньгами или своими руками на стройке, — присоединяйтесь. А можно достроить часовню здесь.</p>' +
-          '<div class="wg-actions"><button class="btn btn--gold btn--small" type="button" data-wg="donate">Поддержать строительство <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
-          '<button class="wg-link" type="button" data-wg="volunteer">Помочь руками</button>' +
+          '<div class="wg-actions"><button class="btn btn--gold btn--small" type="button" data-wg="help">Как помочь <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
           '<button class="wg-link wg-link--strong" type="button" data-wg="resume">Продолжить игру →</button></div>';
       } else {
         var secs = Math.round((performance.now() - S.t0) / 1000), mm = Math.floor(secs / 60), ss = secs % 60;
@@ -743,6 +742,11 @@
       if (a === 'start') start();
       else if (a === 'again') { reset(); start(); }
       else if (a === 'resume') { ui.card.hidden = true; S.phase = 'play'; renderSlots(); renderPallet(); renderRaw(); hud(); say('Продолжаем — следующий ряд', null, 1600); }
+      else if (a === 'help') {                      // к разделу «Как помочь» на странице
+        if (opts.onDonate) opts.onDonate();
+        var hs = document.getElementById('help');
+        if (hs) hs.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' });
+      }
       else if (a === 'volunteer') { var vb = document.querySelector('[data-modal-open="volunteer"]'); if (opts.onDonate) opts.onDonate(); if (vb) vb.click(); }
       else if (a === 'donate') { var d = document.querySelector('[data-modal-open="donate"]'); if (opts.onDonate) opts.onDonate(); if (d) d.click(); }
       else if (a === 'hard' && opts.onMode) opts.onMode('hard');
