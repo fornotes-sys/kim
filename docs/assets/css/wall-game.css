@@ -154,3 +154,12 @@ html.wg-open, html.wg-open body { overflow: hidden; }
 .wg-saw { cursor: crosshair; }
 .is-wait .wg-pal-label { fill: #9E2B32; }
 .wg-recut { fill: #85642C; text-decoration: underline; cursor: pointer; }
+/* кран и шкала замаха */
+.wg-crane__rope { stroke: #6B5130; stroke-width: 2; fill: none; }
+.wg-crane__sling { stroke: #8C6A3E; stroke-width: 1.6; fill: none; }
+.wg-crane__hook { stroke: #3E3122; stroke-width: 2.4; fill: none; }
+.wg-meter { pointer-events: none; }
+.wg-meter__bg { fill: rgba(247,242,233,.95); stroke: #3E3122; stroke-width: 1.4; }
+.wg-meter__zone { fill: rgba(79,107,58,.55); }
+.wg-meter__fill { fill: rgba(142,108,51,.75); }
+.wg-meter__lbl { font-size: 11px; fill: #3E3122; font-weight: 600; }

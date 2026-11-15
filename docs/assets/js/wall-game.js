@@ -27,10 +27,16 @@
      tolX, tolY — как близко к месту надо отпустить блок; tolTop — для частей верха;
      tolGap, tolH — допуск щели и высоты («ровно»); sideStep, topStep — сколько
      сдвигает один удар киянки; dz — насколько блок сидит выше ряда на свежем
-     клее; jiggle — удар сверху тревожит соседа; cutSnap — шаг рулетки. */
+     клее; jiggle — удар сверху тревожит соседа; cutSnap — шаг рулетки.
+     Кран: sling — длина строп (маятник), winch — скорость лебёдки вниз, vSoft — с какой
+     скорости посадка считается жёсткой, hardK — насколько глубоко уходит блок при жёсткой
+     посадке, tiltK — насколько выше встаёт край, если блок качался; wind — ветер.
+     Киянка: sideMax, topMax — сила полного удара, period — скорость шкалы замаха. */
   var CFG = {
-    easy: { bh: 100, bw: 200, porchH: 200, tolX: 40, tolY: 55, tolTop: 46, tolGap: 3, tolH: 2, sideStep: 4, topStep: 2.2, dz: [2, 5], jiggle: 0, cutSnap: 2 },
-    hard: { bh: 60, bw: 144, porchH: 180, tolX: 26, tolY: 26, tolTop: 22, tolGap: 2, tolH: 1, sideStep: 3, topStep: 1.4, dz: [2.5, 6], jiggle: .5, cutSnap: 1 }
+    easy: { bh: 100, bw: 200, porchH: 200, tolX: 40, tolY: 55, tolTop: 46, tolGap: 3, tolH: 2, sideStep: 4, topStep: 2.2, dz: [1, 3], jiggle: 0, cutSnap: 2,
+            sideMax: 12, topMax: 7, period: 1.35, winch: 160, vSoft: 110, hardK: .03, tiltK: .5, sling: 62, wind: 0 },
+    hard: { bh: 60, bw: 144, porchH: 180, tolX: 26, tolY: 26, tolTop: 22, tolGap: 2, tolH: 1, sideStep: 3, topStep: 1.4, dz: [1.5, 3.5], jiggle: .5, cutSnap: 1,
+            sideMax: 10, topMax: 6, period: .9, winch: 220, vSoft: 95, hardK: .05, tiltK: .7, sling: 56, wind: 1 }
   };
 
   var NS = 'http://www.w3.org/2000/svg';
@@ -123,6 +129,7 @@
     Lr.top = sv('g', null, svg);                                                       // кровля, купол, крест
     Lr.pallet = sv('g', null, svg);
     Lr.drag = sv('g', null, svg);
+    Lr.meter = sv('g', null, svg);
     Lr.fx = sv('g', null, svg);
 
     /* ---------- Чертёж часовни (вид сбоку, по рендеру проекта) ----------
@@ -363,17 +370,27 @@
         var bg = sv('g', { 'class': 'wg-btn wg-btn--' + d[0], 'data-act': d[0], transform: 'translate(' + f1(cx + (i - 1) * gapb * UK) + ' ' + f1(by) + ') scale(' + UK.toFixed(3) + ')' }, Lr.raw);
         sv('circle', { r: r }, bg);
         sv('text', { y: 5.5, 'text-anchor': 'middle', style: 'font-size:15px' }, bg).textContent = d[1];
-        sv('title', null, bg).textContent = d[2];
+        sv('title', null, bg).textContent = d[0] === 'undo' ? d[2] : d[2] + ': зажмите для замаха';
       });
     }
 
-    function landBlock(s, x, piece) {
-      var p = prevEnd(s), w = piece.w;
+    // lnd — как села: vy — скорость вниз, vx — вбок, th — качка в момент касания
+    function landBlock(s, x, piece, lnd) {
+      lnd = lnd || { vy: 0, vx: 0, th: 0 };
+      var p = prevEnd(s), w = piece.w, msg = null;
       if (x < p) x = p + rnd(2, 5);                        // наехал на соседа — клей отжал назад
-      var b = { slot: s, x: x, w: w, dz: rnd(C.dz[0], C.dz[1]), cut: piece.cut };
+      var dz = rnd(C.dz[0], C.dz[1]) + Math.abs(lnd.th) * 57.3 * C.tiltK;   // качался — встал с перекосом, край выше
+      if (lnd.vy > C.vSoft) { dz -= (lnd.vy - C.vSoft) * C.hardK; msg = 'Опустили резко — клей выдавило, блок сел глубоко'; }
+      x += clamp(lnd.vx * .03, -6, 6);
+      if (x < p) x = p + rnd(.5, 2);
+      var pv = prevOf(s);
+      if (pv && pv.block && lnd.vx < -60 && x - p < 4) { pv.block.dz += clamp(-lnd.vx / 80, .8, 3); msg = 'Задели соседний блок — его приподняло'; S.over++; }
+      else if (Math.abs(lnd.th) > .12 && !msg) msg = 'Блок качался — встал с перекосом';
+      var b = { slot: s, x: x, w: w, dz: dz, cut: piece.cut };
       s.block = b; S.sel = b; S.placed++;
       sfx.place(); buzz(10); dust(x + w / 2, s.y + s.h, 4);
-      if (!S.tips.mallet) { S.tips.mallet = 1; say('Блок лёг. Подбейте его к соседу ◀ и осадите ▼ — до «ровно ✓»', null, 3600); }
+      if (msg) say(msg, 'warn', 2600);
+      else if (!S.tips.mallet) { S.tips.mallet = 1; say('Блок лёг. Зажмите ◀ или ▼ — растёт сила удара, отпустите в зелёной зоне', null, 4200); }
       afterChange();
     }
     function firstBad() { var sl = curRow().slots; for (var i = 0; i < sl.length; i++) if (sl[i].block && !okOf(sl[i].block)) return sl[i].block; return null; }
@@ -385,11 +402,11 @@
       var row = curRow();
       if (row.slots.every(function (q) { return q.block && okOf(q.block); })) { S.sel = null; renderRaw(); later(rowDone, 380); }
     }
-    function act(kind) {
+    function act(kind, pw) {
       var b = S.sel; if (!b || S.phase !== 'play') return;
       var s = b.slot, gap = gapOf(b);
       if (kind === 'side') {
-        var step = C.sideStep * rnd(.8, 1.15);
+        var step = pw == null ? C.sideStep : C.sideMax * pw * rnd(.92, 1.08);
         b.dz -= rnd(0, .4);
         if (gap > step) b.x -= step;
         else {
@@ -403,7 +420,7 @@
         }
         sfx.knock();
       } else if (kind === 'top') {
-        b.dz -= C.topStep * rnd(.8, 1.2);
+        b.dz -= (pw == null ? C.topStep : C.topMax * pw) * rnd(.92, 1.08);
         if (C.jiggle) [prevOf(s)].forEach(function (q) { if (q && q.block && q.block !== b) q.block.dz += rnd(-C.jiggle, C.jiggle); });
         if (b.dz < -C.tolH - .01) { say('Слишком глубоко — снимите блок ↺ и уложите заново', 'warn', 2800); S.over++; }
         sfx.knock();
@@ -416,6 +433,26 @@
       }
       if (S.sel && okOf(S.sel) && kind !== 'undo') { sfx.good(); }
       afterChange();
+    }
+    // замах: шкала силы ходит туда-обратно, удар — когда отпустили
+    function power(t) { var ph = ((t - S.wind.t0) / 1000 / C.period) % 2; return ph < 1 ? ph : 2 - ph; }
+    function idealOf(kind) {
+      var b = S.sel; if (!b) return null;
+      return kind === 'side' ? { c: gapOf(b) / C.sideMax, tol: C.tolGap / C.sideMax } : { c: b.dz / C.topMax, tol: C.tolH / C.topMax };
+    }
+    function renderMeter(t) {
+      clear(Lr.meter);
+      if (!S.wind || !S.sel) return;
+      var b = S.sel, p = power(t), id = idealOf(S.wind.kind), W = 140, H = 14;
+      var g = sv('g', { 'class': 'wg-meter', transform: 'translate(' + f1(b.x + b.w / 2) + ' ' + f1(b.slot.y - b.dz - 62 * UK) + ') scale(' + UK.toFixed(3) + ')' }, Lr.meter);
+      sv('rect', { x: -W / 2, y: -H / 2, width: W, height: H, rx: 7, 'class': 'wg-meter__bg' }, g);
+      if (id && id.c > 0) {
+        var a = clamp(id.c - id.tol, 0, 1), z = clamp(id.c + id.tol * .6, 0, 1);
+        if (id.c > 1) { a = .88; z = 1; }
+        sv('rect', { x: f1(-W / 2 + a * W), y: -H / 2, width: f1(Math.max(4, (z - a) * W)), height: H, 'class': 'wg-meter__zone' }, g);
+      }
+      sv('rect', { x: -W / 2, y: -H / 2, width: f1(p * W), height: H, rx: 7, 'class': 'wg-meter__fill' }, g);
+      sv('text', { x: 0, y: -H / 2 - 5, 'text-anchor': 'middle', 'class': 'wg-meter__lbl' }, g).textContent = S.wind.kind === 'side' ? 'сила удара сбоку' : 'сила удара сверху';
     }
     // ряд готов — блоки становятся настоящей стеной
     function rowDone() {
@@ -520,7 +557,15 @@
     svg.addEventListener('pointerdown', function (e) {
       if (!S || ptr || (S.phase !== 'play' && S.phase !== 'top')) return;
       var wp = wpt(e), btn = e.target.closest && e.target.closest('[data-act]');
-      if (btn) { e.preventDefault(); act(btn.getAttribute('data-act')); return; }
+      if (btn) {
+        e.preventDefault();
+        var k = btn.getAttribute('data-act');
+        if (k === 'undo') { act(k); return; }
+        try { svg.setPointerCapture(e.pointerId); } catch (er) { /* */ }
+        ptr = { id: e.pointerId };
+        S.wind = { kind: k, t0: performance.now() }; kick();
+        return;
+      }
       var bel = e.target.closest && e.target.closest('[data-blk]');
       if (bel && S.phase === 'play') {         // выбрать уложенный блок текущего ряда
         var i = +bel.getAttribute('data-blk').split(':')[1], s = curRow().slots[i];
@@ -535,7 +580,15 @@
       ptr = { id: e.pointerId };
       if (S.phase === 'play') {
         var pc = S.piece;
-        S.drag = { kind: 'block', piece: pc, el: sv('g', { 'class': 'wg-held' }, Lr.drag, blockMarkup(pc.w, C.bh)), target: null };
+        // блок цепляют краном: тележка идёт за рукой, блок висит на стропах и качается
+        var cr = sv('g', { 'class': 'wg-crane' }, Lr.drag);
+        S.drag = { kind: 'block', piece: pc, target: null, crane: cr,
+          rope: sv('path', { 'class': 'wg-crane__rope' }, cr), slings: sv('path', { 'class': 'wg-crane__sling' }, cr),
+          hook: sv('path', { d: 'M0 -9v6a5 5 0 1 0 6 5', 'class': 'wg-crane__hook' }, cr),
+          el: sv('g', { 'class': 'wg-held' }, cr, blockMarkup(pc.w, C.bh)),
+          off: C.sling + C.bh / 2 + (e.pointerType === 'mouse' ? 0 : 70 * UK),
+          px: wp.x, py: wp.y, tx: wp.x, hy: wp.y - C.sling - C.bh / 2, th: 0, om: 0, vs: 0, vp: 0, lx: wp.x, ly: wp.y, vx: 0, vy: 0, bumpT: 0, lifted: false };
+        kick();
       } else {
         var st = STAGES[S.stage];
         S.drag = { kind: 'top', st: st, el: sv('g', { 'class': 'wg-held' }, Lr.drag, st.art()) };
@@ -545,13 +598,8 @@
     });
     function moveDrag(wp) {
       var d = S.drag; if (!d) return;
-      if (d.kind === 'block') {
-        var s = nearSlot(wp, d.piece.w);
-        if (s !== d.target) { d.target = s; renderSlots(); }
-        // над рядом блок держится на его высоте, но по горизонтали — где рука
-        var y = s ? s.y - 6 : wp.y - C.bh / 2;
-        d.el.setAttribute('transform', 'translate(' + f1(wp.x - d.piece.w / 2) + ' ' + f1(y) + ')');
-      } else {
+      if (d.kind === 'block') { d.px = wp.x; d.py = wp.y; return; }
+      else {
         var dx = wp.x - d.st.a.ax, dy = wp.y - d.st.a.ay, near = Math.hypot(dx, dy) <= C.tolTop;
         d.el.setAttribute('transform', 'translate(' + f1(near ? dx * .25 : dx) + ' ' + f1(near ? dy * .25 : dy) + ')');
         Lr.slots.classList.toggle('is-near', near);
@@ -565,9 +613,20 @@
     function endDrag(e, cancel) {
       if (!ptr || e.pointerId !== ptr.id) return;
       ptr = null;
+      if (S.wind) {                                       // удар киянкой
+        var pw = power(performance.now()), kind = S.wind.kind;
+        S.wind = null; clear(Lr.meter);
+        if (!cancel) act(kind, pw);
+        return;
+      }
       var d = S.drag; S.drag = null;
       if (!d) return;
       var wp = wpt(e);
+      if (d.crane) {                                      // отпустили блок, не опустив до ряда, — он возвращается на поддон
+        d.crane.remove(); renderSlots();
+        if (!cancel && d.lifted) say('Блок не опустили — он вернулся на поддон. Опускайте, ведя вниз', null, 2400);
+        return;
+      }
       d.el.remove();
       Lr.slots.classList.remove('is-near');
       if (cancel) { renderSlots(); return; }
@@ -647,11 +706,11 @@
       if (kind === 'intro') {
         html = '<span class="eyebrow">' + (mode === 'hard' ? 'Сложный режим' : 'Мини-игра') + '</span><h3>Сложи часовню</h3>' +
           '<ul class="wg-rules">' +
-            '<li><b>Положите блок</b> с поддона к подсвеченному месту — вплотную к соседу.</li>' +
-            '<li><b>Киянка:</b> ◀ — подбить к соседу, ▼ — осадить на уровень. До «ровно ✓», но без лишнего: перебьёте — сдвинете соседний.</li>' +
+            '<li><b>Кран:</b> возьмите блок с поддона — он повиснет на стропах. Ведите к подсвеченному месту и опускайте плавно: резко поведёте — раскачаете, резко опустите — сядет криво.</li>' +
+            '<li><b>Киянка:</b> зажмите ◀ (подбить) или ▼ (осадить) — растёт сила удара; отпустите в зелёной зоне. Перебьёте — сдвинете соседний.</li>' +
             '<li><b>У края и у окна</b> блок подрежьте по рулетке. Ряд ровный — он становится стеной часовни.</li>' +
             '<li><b>Потом верх</b> — кровля, барабан, купол и крест по частям.</li>' +
-            (mode === 'hard' ? '<li><b>Сложнее:</b> блоки мельче, допуск в 1–2 единицы, удар сверху тревожит соседний блок.</li>' : '') +
+            (mode === 'hard' ? '<li><b>Сложнее:</b> ветер раскачивает блок, шкала удара быстрее, допуск в 1–2 единицы.</li>' : '') +
           '</ul>' +
           '<button class="btn btn--gold btn--small" type="button" data-wg="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>';
       } else {
@@ -668,7 +727,7 @@
       ui.card.className = 'wg-card wg-card--' + kind;
       ui.card.hidden = false;
     }
-    function start() { ui.card.hidden = true; S.phase = 'play'; S.t0 = performance.now(); renderSlots(); renderPallet(); hud(); say('Возьмите блок с поддона и положите к подсвеченному месту', null, 3000); }
+    function start() { ui.card.hidden = true; S.phase = 'play'; S.t0 = performance.now(); renderSlots(); renderPallet(); hud(); say('Возьмите блок с поддона — кран подхватит его. Опустите на подсвеченное место', null, 3400); }
     ui.card.addEventListener('click', function (e) {
       var b = e.target.closest('[data-wg]'); if (!b) return;
       var a = b.getAttribute('data-wg');
@@ -684,6 +743,81 @@
       Lr.ghost.style.opacity = 0;
       sfx.bell(); hud();
       later(function () { showCard('final'); }, 1100);
+    }
+
+    /* ---------- Физика крана ----------
+       Рука ведёт тележку крана (с запаздыванием) и крюк (лебёдка вниз — не быстрее
+       C.winch). Блок висит на стропах длины C.sling — маятник: резкое движение
+       тележки раскачивает его, качка гаснет медленно. Касание ряда — посадка:
+       скорость вниз, вбок и качка в этот момент решают, как ляжет блок. */
+    function craneTick(dt) {
+      var d = S.drag, row = curRow(), s = nextSlot();
+      var k = Math.min(1, dt * 9), ntx = lerp(d.tx, d.px, k);
+      var v = (ntx - d.tx) / dt; d.vs += (v - d.vs) * Math.min(1, dt * 12);
+      var ax = clamp((d.vs - d.vp) / dt, -8000, 8000); d.vp = d.vs; d.tx = ntx;
+      var want = d.py - d.off, maxDown = C.winch * dt;
+      d.hy = want > d.hy ? Math.min(want, d.hy + maxDown) : lerp(d.hy, want, Math.min(1, dt * 12));
+      // ветер (сложный режим): порывы раскачивают блок
+      S.windT = (S.windT || 0) + dt;
+      var gust = C.wind ? C.wind * (Math.sin(S.windT * .8) * .6 + Math.sin(S.windT * 2.3 + 1) * .4) * 260 : 0;
+      var L = C.sling, n = Math.max(1, Math.ceil(dt * 240)), hh = dt / n;
+      for (var i = 0; i < n; i++) {
+        var a = -(1100 / L) * Math.sin(d.th) - 1.6 * d.om - (ax * .55 / L) * Math.cos(d.th) + gust / L;
+        d.om += a * hh; d.th = clamp(d.th + d.om * hh, -.8, .8);
+      }
+      var bw = d.piece.w, bh = C.bh;
+      var cx = d.tx + L * Math.sin(d.th), top = d.hy + L * Math.cos(d.th), left = cx - bw / 2, bottom = top + bh;
+      // крюк выше подсвеченного ряда, если внизу уже готовый ряд, — нельзя ниже его верха
+      var support = row.yb;
+      // задели уложенный блок текущего ряда
+      d.bumpT -= dt;
+      if (bottom > row.y + 4) {
+        row.slots.forEach(function (q) {
+          var bk = q.block; if (!bk || d.bumpT > 0) return;
+          if (left < bk.x + bk.w - 1 && left + bw > bk.x + 1) {
+            var ov = Math.min(bk.x + bk.w - left, left + bw - bk.x);
+            // чуть зашёл на соседа и движется спокойно — клей отжимает блок в сторону, без удара
+            if (ov <= 10 && Math.abs(d.vx) < 90) { var dir = left > bk.x ? 1 : -1; d.tx += dir * (ov + .5); d.px += dir * (ov + .5); return; }
+            bk.dz += clamp(Math.abs(d.vx) / 120 + d.vy / 200, .6, 3); S.over++;
+            d.hy -= 26; d.om += (d.vx > 0 ? -1 : 1) * 1.2; d.bumpT = .5;
+            sfx.knock(); say('Задели уложенный блок — его сдвинуло', 'warn', 2200);
+            S.sel = bk; renderRaw();
+          }
+        });
+      }
+      // ниже основания ряда — нельзя: либо посадка, либо упор
+      if (bottom >= support) {
+        var ok = s && Math.abs(left - s.x) <= C.tolX;
+        if (ok) {
+          var x = left, endLimit = s.last ? s.segEnd : Infinity;
+          if (x + bw > endLimit && prevEnd(s) + bw <= endLimit + C.tolGap + .5) x = Math.max(prevEnd(s), endLimit - bw);
+          if (prevEnd(s) + bw > endLimit + C.tolGap + .5) {
+            S.miss++; sfx.err(); say(d.piece.cut ? 'Длинный — не помещается. Подрежьте новый блок короче' : 'Не помещается до края', 'warn', 2600);
+            if (d.piece.cut) S.carry = null;
+            d.crane.remove(); S.drag = null; renderSlots(); renderPallet(); return;
+          }
+          var lnd = { vy: d.vy, vx: d.vx, th: d.th };
+          d.crane.remove(); S.drag = null; S.carry = null;
+          landBlock(s, x, d.piece, lnd);
+          return;
+        }
+        d.hy = support - bh - L * Math.cos(d.th);
+        if (d.lifted && (!d.warnT || S.windT - d.warnT > 2.5)) { d.warnT = S.windT; say(d.py < row.y - C.tolY ? 'Сначала закончите этот ряд' : 'Сюда нельзя — опускайте на подсвеченное место', 'warn', 2000); }
+        top = d.hy + L * Math.cos(d.th); bottom = top + bh;
+      }
+      d.vx = (cx - d.lx) / dt; d.vy = (top - d.ly) / dt; d.lx = cx; d.ly = top;
+      if (top < row.y - 40) d.lifted = true;
+      // подсветка места, если блок над ним
+      var tg = s && Math.abs(left - s.x) <= C.tolX && bottom > row.y - 160 ? s : null;
+      if (tg !== d.target) { d.target = tg; renderSlots(); }
+      // рисуем: трос до крюка, стропы, блок с наклоном по качке
+      var vtop = view ? view.y - 20 : -800, rot = d.th * 57.3 * .5;
+      d.rope.setAttribute('d', 'M' + f1(d.tx) + ' ' + f1(vtop) + 'V' + f1(d.hy));
+      d.hook.setAttribute('transform', 'translate(' + f1(d.tx) + ' ' + f1(d.hy + 6) + ')');
+      var c = Math.cos(rot / 57.3), sn = Math.sin(rot / 57.3);
+      function pt(px, py) { return f1(cx + (px - bw / 2) * c - py * sn) + ' ' + f1(top + (px - bw / 2) * sn + py * c); }
+      d.slings.setAttribute('d', 'M' + f1(d.tx) + ' ' + f1(d.hy + 12) + 'L' + pt(bw * .15, 0) + 'M' + f1(d.tx) + ' ' + f1(d.hy + 12) + 'L' + pt(bw * .85, 0));
+      d.el.setAttribute('transform', 'translate(' + pt(0, 0) + ') rotate(' + f1(rot) + ')');
     }
 
     /* ---------- Цикл ---------- */
@@ -702,7 +836,9 @@
         p.vy += 200 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
         p.el.setAttribute('cx', f1(p.x)); p.el.setAttribute('cy', f1(p.y)); p.el.setAttribute('opacity', f1(1 - p.life / p.max));
       }
-      if (tweens.length || parts.length) raf = requestAnimationFrame(loop); else lastT = 0;
+      if (S && S.drag && S.drag.crane) craneTick(dt);
+      if (S && S.wind) renderMeter(t);
+      if (tweens.length || parts.length || (S && ((S.drag && S.drag.crane) || S.wind))) raf = requestAnimationFrame(loop); else lastT = 0;
     }
 
     var ro = window.ResizeObserver ? new ResizeObserver(function () { layout(); }) : null;
