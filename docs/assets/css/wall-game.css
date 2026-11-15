@@ -153,3 +153,4 @@ html.wg-open, html.wg-open body { overflow: hidden; }
 .wg-tape text { font-size: 13px; fill: #9E2B32; font-weight: 600; }
 .wg-saw { cursor: crosshair; }
 .is-wait .wg-pal-label { fill: #9E2B32; }
+.wg-recut { fill: #85642C; text-decoration: underline; cursor: pointer; }

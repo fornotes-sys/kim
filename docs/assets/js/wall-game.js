@@ -409,7 +409,9 @@
         sfx.knock();
       } else if (kind === 'undo') {
         s.block = null; S.sel = null; S.redo++; S.placed--;
-        S.carry = { w: b.w, cut: b.cut };                   // этот же блок — снова на поддоне
+        // целый блок возвращается на поддон; неудачно подрезанный — в обрезки, пилим новый
+        S.carry = b.cut ? null : { w: b.w, cut: false };
+        if (b.cut) say('Обрезок — в сторону. Возьмите новый блок и отпилите заново', null, 2600);
         sfx.err();
       }
       if (S.sel && okOf(S.sel) && kind !== 'undo') { sfx.good(); }
@@ -441,7 +443,7 @@
     var palScale = 1, palBox = null;
     function renderPallet() {
       clear(Lr.pallet);
-      S && (S.palHit = null, S.sawHit = null);
+      S && (S.palHit = null, S.sawHit = null, S.recutHit = null);
       if (!S || !view) return;
       var g = sv('g', { transform: 'translate(' + f1(PAL.x) + ' ' + f1(PAL.y) + ')' }, Lr.pallet);
       sv('g', { fill: 'none', stroke: '#3E3122', 'stroke-width': 2 }, g, '<rect x="-90" y="0" width="180" height="8" fill="#CDB289"/><rect x="-90" y="13" width="180" height="6" fill="#CDB289"/><path d="M-80 8v5M0 8v5M80 8v5" stroke="#A88A5C" stroke-width="5"/>');
@@ -463,6 +465,11 @@
           S.piece = piece;
           g.classList.add('wg-take');
           label.textContent = piece.cut ? 'подрезанный блок' : nx.half ? 'половинка' : 'возьмите блок';
+          if (piece.cut) {
+            var re = sv('text', { x: 0, y: f1(22 + 32 * UK), 'text-anchor': 'middle', 'class': 'wg-recut', style: 'font-size:' + f1(12 * UK) + 'px' }, g);
+            re.textContent = '↺ отпилить заново';
+            S.recutHit = { x: PAL.x - 60 * UK, y: PAL.y + 22 + 20 * UK, w: 120 * UK, h: 18 * UK };
+          }
         } else {
           // подрезка: щёлкните по блоку там, где пилить; рулетка показывает нужную длину
           var need = needLen(nx), W0 = C.bw * palScale, H0 = C.bh * palScale, bx = -W0 / 2, by = -H0 - 2;
@@ -521,6 +528,7 @@
         return;
       }
       if (S.phase === 'play' && S.sawHit && inBox(S.sawHit, wp)) { e.preventDefault(); saw(wp); return; }
+      if (S.phase === 'play' && S.recutHit && inBox(S.recutHit, wp)) { e.preventDefault(); S.carry = null; S.redo++; sfx.err(); renderPallet(); hud(); return; }
       if (!inBox(S.palHit, wp)) return;
       e.preventDefault();
       try { svg.setPointerCapture(e.pointerId); } catch (er) { /* */ }
