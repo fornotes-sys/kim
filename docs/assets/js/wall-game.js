@@ -473,6 +473,8 @@
       } else {
         say(S.row === 1 ? 'Ряд готов! Следующий — только на него' : 'Ряд ' + S.row + ' готов', 'ok', 1700);
         later(function () { renderSlots(); renderPallet(); }, 660);
+        // на середине стройки — пауза: видите, как непросто
+        if (!S.midShown && S.row === Math.max(1, Math.floor(S.rows.length / 2))) { S.midShown = true; later(function () { S.phase = 'pause'; renderSlots(); renderPallet(); showCard('mid'); }, 1300); }
       }
     }
 
@@ -713,6 +715,13 @@
             (mode === 'hard' ? '<li><b>Сложнее:</b> ветер раскачивает блок, шкала удара быстрее, допуск в 1–2 единицы.</li>' : '') +
           '</ul>' +
           '<button class="btn btn--gold btn--small" type="button" data-wg="start">Начать <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>';
+      } else if (kind === 'mid') {
+        html = '<span class="eyebrow">Половина стены</span><h3>Видите, как непросто?</h3>' +
+          '<p class="wg-card__lead">Каждый блок — это точность, терпение и руки мастера. Настоящую часовню построят профессиональные каменщики, а помочь может каждый.</p>' +
+          '<p>Если хотите участвовать — деньгами или своими руками на стройке, — присоединяйтесь. А можно достроить часовню здесь.</p>' +
+          '<div class="wg-actions"><button class="btn btn--gold btn--small" type="button" data-wg="donate">Поддержать строительство <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>' +
+          '<button class="wg-link" type="button" data-wg="volunteer">Помочь руками</button>' +
+          '<button class="wg-link wg-link--strong" type="button" data-wg="resume">Продолжить игру →</button></div>';
       } else {
         var secs = Math.round((performance.now() - S.t0) / 1000), mm = Math.floor(secs / 60), ss = secs % 60;
         html = '<h3>Часовня готова!</h3>' +
@@ -733,6 +742,8 @@
       var a = b.getAttribute('data-wg');
       if (a === 'start') start();
       else if (a === 'again') { reset(); start(); }
+      else if (a === 'resume') { ui.card.hidden = true; S.phase = 'play'; renderSlots(); renderPallet(); renderRaw(); hud(); say('Продолжаем — следующий ряд', null, 1600); }
+      else if (a === 'volunteer') { var vb = document.querySelector('[data-modal-open="volunteer"]'); if (opts.onDonate) opts.onDonate(); if (vb) vb.click(); }
       else if (a === 'donate') { var d = document.querySelector('[data-modal-open="donate"]'); if (opts.onDonate) opts.onDonate(); if (d) d.click(); }
       else if (a === 'hard' && opts.onMode) opts.onMode('hard');
     });

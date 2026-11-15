@@ -163,3 +163,4 @@ html.wg-open, html.wg-open body { overflow: hidden; }
 .wg-meter__zone { fill: rgba(79,107,58,.55); }
 .wg-meter__fill { fill: rgba(142,108,51,.75); }
 .wg-meter__lbl { font-size: 11px; fill: #3E3122; font-weight: 600; }
+.wg-link--strong { font-weight: 600; color: var(--ink); }
