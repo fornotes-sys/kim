@@ -30,13 +30,14 @@
      клее; jiggle — удар сверху тревожит соседа; cutSnap — шаг рулетки.
      Кран: sling — длина строп (маятник), winch — скорость лебёдки вниз, vSoft — с какой
      скорости посадка считается жёсткой, hardK — насколько глубоко уходит блок при жёсткой
-     посадке, tiltK — насколько выше встаёт край, если блок качался; wind — ветер.
+     посадке, tiltK — насколько выше встаёт край, если блок качался; wind — ветер;
+     slip — при какой раскачке (в радианах) блок срывается со строп.
      Киянка: sideMax, topMax — сила полного удара, period — скорость шкалы замаха. */
   var CFG = {
     easy: { bh: 100, bw: 200, porchH: 200, tolX: 40, tolY: 55, tolTop: 46, tolGap: 3, tolH: 2, sideStep: 4, topStep: 2.2, dz: [1, 3], jiggle: 0, cutSnap: 2,
-            sideMax: 12, topMax: 7, period: 1.35, winch: 160, vSoft: 110, hardK: .03, tiltK: .5, sling: 62, wind: 0 },
+            sideMax: 12, topMax: 7, period: 1.35, winch: 160, vSoft: 110, hardK: .03, tiltK: .5, sling: 62, wind: 0, slip: .55 },
     hard: { bh: 60, bw: 144, porchH: 180, tolX: 26, tolY: 26, tolTop: 22, tolGap: 2, tolH: 1, sideStep: 3, topStep: 1.4, dz: [1.5, 3.5], jiggle: .5, cutSnap: 1,
-            sideMax: 10, topMax: 6, period: .9, winch: 220, vSoft: 95, hardK: .05, tiltK: .7, sling: 56, wind: 1 }
+            sideMax: 10, topMax: 6, period: .9, winch: 220, vSoft: 95, hardK: .05, tiltK: .7, sling: 56, wind: 1, slip: .48 }
   };
 
   var NS = 'http://www.w3.org/2000/svg';
@@ -381,6 +382,7 @@
       if (x < p) x = p + rnd(2, 5);                        // наехал на соседа — клей отжал назад
       var dz = rnd(C.dz[0], C.dz[1]) + Math.abs(lnd.th) * 57.3 * C.tiltK;   // качался — встал с перекосом, край выше
       if (lnd.vy > C.vSoft) { dz -= (lnd.vy - C.vSoft) * C.hardK; msg = 'Опустили резко — клей выдавило, блок сел глубоко'; }
+      if (lnd.h > 6) { dz += Math.min(lnd.h * .035, 7); x += rnd(0, Math.min(lnd.h * .06, 14)); msg = 'Отпустили с высоты — лёг криво. Подбейте киянкой'; }
       x += clamp(lnd.vx * .03, -6, 6);
       if (x < p) x = p + rnd(.5, 2);
       var pv = prevOf(s);
@@ -624,9 +626,9 @@
       var d = S.drag; S.drag = null;
       if (!d) return;
       var wp = wpt(e);
-      if (d.crane) {                                      // отпустили блок, не опустив до ряда, — он возвращается на поддон
-        d.crane.remove(); renderSlots();
-        if (!cancel && d.lifted) say('Блок не опустили — он вернулся на поддон. Опускайте, ведя вниз', null, 2400);
+      if (d.crane) {                                      // отпустили — блок падает со строп на своё место
+        if (cancel || !d.lifted || d.left == null) { d.crane.remove(); renderSlots(); return; }
+        placeFromCrane(d, d.left, Math.max(0, curRow().yb - d.bottom));
         return;
       }
       d.el.remove();
@@ -708,7 +710,7 @@
       if (kind === 'intro') {
         html = '<span class="eyebrow">' + (mode === 'hard' ? 'Сложный режим' : 'Мини-игра') + '</span><h3>Сложи часовню</h3>' +
           '<ul class="wg-rules">' +
-            '<li><b>Кран:</b> возьмите блок с поддона — он повиснет на стропах. Ведите к подсвеченному месту и опускайте плавно: резко поведёте — раскачаете, резко опустите — сядет криво.</li>' +
+            '<li><b>Кран:</b> возьмите блок с поддона — он повиснет на стропах. Несите плавно: раскачаете — сорвётся. Над подсвеченным местом отпустите — блок встанет. Чем ниже и спокойнее, тем ровнее.</li>' +
             '<li><b>Киянка:</b> зажмите ◀ (подбить) или ▼ (осадить) — растёт сила удара; отпустите в зелёной зоне. Перебьёте — сдвинете соседний.</li>' +
             '<li><b>У края и у окна</b> блок подрежьте по рулетке. Ряд ровный — он становится стеной часовни.</li>' +
             '<li><b>Потом верх</b> — кровля, барабан, купол и крест по частям.</li>' +
@@ -765,6 +767,25 @@
        C.winch). Блок висит на стропах длины C.sling — маятник: резкое движение
        тележки раскачивает его, качка гаснет медленно. Касание ряда — посадка:
        скорость вниз, вбок и качка в этот момент решают, как ляжет блок. */
+    // над своим местом? — щедро: левый край блока в пределах большей части блока от места
+    function overSlot(left) { var s = nextSlot(); return s && Math.abs(left - s.x) <= C.bw * .8 ? s : null; }
+    // поставить блок с крана: всегда на своё место, но чем выше отпустили и сильнее качался — тем кривее
+    function placeFromCrane(d, left, h) {
+      var s = overSlot(left);
+      d.crane.remove(); S.drag = null; renderSlots();
+      if (!s) { S.miss++; sfx.err(); say('Мимо места — блок упал. Его вернули на поддон', 'warn', 2400); dust(left + d.piece.w / 2, curRow().yb, 8); renderPallet(); return; }
+      var bw = d.piece.w, endLimit = s.last ? s.segEnd : Infinity, pe = prevEnd(s);
+      if (pe + bw > endLimit + C.tolGap + .5) {
+        S.miss++; sfx.err(); say(d.piece.cut ? 'Длинный — не помещается. Подрежьте новый блок короче' : 'Не помещается до края', 'warn', 2600);
+        if (d.piece.cut) S.carry = null;
+        renderPallet(); return;
+      }
+      // куда сядет: где был блок, но не дальше 30 от соседа и не за край
+      var x = clamp(left, pe, pe + 30);
+      if (x + bw > endLimit) x = Math.max(pe, endLimit - bw);
+      S.carry = null;
+      landBlock(s, x, d.piece, { vy: h > 0 ? 0 : d.vy, vx: d.vx, th: d.th, h: h });
+    }
     function craneTick(dt) {
       var d = S.drag, row = curRow(), s = nextSlot();
       var k = Math.min(1, dt * 9), ntx = lerp(d.tx, d.px, k);
@@ -777,7 +798,7 @@
       var gust = C.wind ? C.wind * (Math.sin(S.windT * .8) * .6 + Math.sin(S.windT * 2.3 + 1) * .4) * 260 : 0;
       var L = C.sling, n = Math.max(1, Math.ceil(dt * 240)), hh = dt / n;
       for (var i = 0; i < n; i++) {
-        var a = -(1100 / L) * Math.sin(d.th) - 1.6 * d.om - (ax * .55 / L) * Math.cos(d.th) + gust / L;
+        var a = -(1100 / L) * Math.sin(d.th) - 2.4 * d.om - (ax * .3 / L) * Math.cos(d.th) + gust / L;
         d.om += a * hh; d.th = clamp(d.th + d.om * hh, -.8, .8);
       }
       var bw = d.piece.w, bh = C.bh;
@@ -800,22 +821,16 @@
           }
         });
       }
+      // сильно раскачали — блок срывается со строп
+      if (d.lifted && Math.abs(d.th) > C.slip) {
+        d.crane.remove(); S.drag = null; renderSlots();
+        S.miss++; sfx.err(); dust(cx, curRow().yb, 10);
+        say('Сорвался со строп — несите плавнее. Блок вернули на поддон', 'warn', 2800);
+        renderPallet(); return;
+      }
       // ниже основания ряда — нельзя: либо посадка, либо упор
       if (bottom >= support) {
-        var ok = s && Math.abs(left - s.x) <= C.tolX;
-        if (ok) {
-          var x = left, endLimit = s.last ? s.segEnd : Infinity;
-          if (x + bw > endLimit && prevEnd(s) + bw <= endLimit + C.tolGap + .5) x = Math.max(prevEnd(s), endLimit - bw);
-          if (prevEnd(s) + bw > endLimit + C.tolGap + .5) {
-            S.miss++; sfx.err(); say(d.piece.cut ? 'Длинный — не помещается. Подрежьте новый блок короче' : 'Не помещается до края', 'warn', 2600);
-            if (d.piece.cut) S.carry = null;
-            d.crane.remove(); S.drag = null; renderSlots(); renderPallet(); return;
-          }
-          var lnd = { vy: d.vy, vx: d.vx, th: d.th };
-          d.crane.remove(); S.drag = null; S.carry = null;
-          landBlock(s, x, d.piece, lnd);
-          return;
-        }
+        if (overSlot(left)) { placeFromCrane(d, left, 0); return; }
         d.hy = support - bh - L * Math.cos(d.th);
         if (d.lifted && (!d.warnT || S.windT - d.warnT > 2.5)) { d.warnT = S.windT; say(d.py < row.y - C.tolY ? 'Сначала закончите этот ряд' : 'Сюда нельзя — опускайте на подсвеченное место', 'warn', 2000); }
         top = d.hy + L * Math.cos(d.th); bottom = top + bh;
@@ -823,7 +838,8 @@
       d.vx = (cx - d.lx) / dt; d.vy = (top - d.ly) / dt; d.lx = cx; d.ly = top;
       if (top < row.y - 40) d.lifted = true;
       // подсветка места, если блок над ним
-      var tg = s && Math.abs(left - s.x) <= C.tolX && bottom > row.y - 160 ? s : null;
+      var tg = overSlot(left);
+      d.left = left; d.bottom = bottom;
       if (tg !== d.target) { d.target = tg; renderSlots(); }
       // рисуем: трос до крюка, стропы, блок с наклоном по качке
       var vtop = view ? view.y - 20 : -800, rot = d.th * 57.3 * .5;
