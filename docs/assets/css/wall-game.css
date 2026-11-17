@@ -164,3 +164,7 @@ html.wg-open, html.wg-open body { overflow: hidden; }
 .wg-meter__fill { fill: rgba(142,108,51,.75); }
 .wg-meter__lbl { font-size: 11px; fill: #3E3122; font-weight: 600; }
 .wg-link--strong { font-weight: 600; color: var(--ink); }
+/* зона над местом, где отпущенный блок встанет */
+.wg-zone { fill: rgba(167,131,69,.06); stroke: #A78345; stroke-width: 1.4; stroke-dasharray: 4 6; pointer-events: none; }
+.wg-zone.is-on { fill: rgba(79,107,58,.10); stroke: #4F6B3A; stroke-dasharray: none; }
+.wg-fall { pointer-events: none; }

@@ -326,6 +326,10 @@
       if (!S || S.phase !== 'play') return;
       var row = curRow(), nx = nextSlot();
       sv('rect', { x: PORCH.x0 - 30, y: row.y, width: APSE.x1 - PORCH.x0 + 60, height: row.yb - row.y, 'class': 'wg-band' }, Lr.slots);
+      if (nx && S.drag && S.drag.crane) {
+        var zw = S.drag.piece.w;
+        sv('rect', { x: f1(nx.x - C.bw * .8), y: f1(row.y - C.bh * 1.2), width: f1(C.bw * 1.6 + zw), height: f1(C.bh * 2.2), rx: 6, 'class': 'wg-zone' + (S.drag.target ? ' is-on' : '') }, Lr.slots);
+      }
       row.slots.forEach(function (s) {
         if (s.block) return;
         sv('rect', { x: f1(s.x + 3), y: f1(s.y + 3), width: f1(s.w - 6), height: f1(s.h - 6), rx: 3, 'class': 'wg-slot' + (s === nx ? ' is-next' : '') + (S.drag && S.drag.target === s ? ' is-target' : '') }, Lr.slots);
@@ -492,6 +496,7 @@
       if (S.phase === 'play') {
         var nx = nextSlot();
         if (!nx) return;
+        if (S.falling) { label.textContent = 'несут новый блок…'; return; }
         if (firstBad()) { label.textContent = 'сначала уложите блок ровно'; g.classList.add('is-wait'); return; }
         var piece = S.carry;
         if (!piece) {
@@ -627,8 +632,11 @@
       if (!d) return;
       var wp = wpt(e);
       if (d.crane) {                                      // отпустили — блок падает со строп на своё место
-        if (cancel || !d.lifted || d.left == null) { d.crane.remove(); renderSlots(); return; }
-        placeFromCrane(d, d.left, Math.max(0, curRow().yb - d.bottom));
+        if (cancel || d.left == null) { d.crane.remove(); renderSlots(); return; }
+        // место горит зелёным — блок встаёт; иначе: подняли и бросили — падает, нет — тихо вернулся
+        if (overSlot(d.left)) placeFromCrane(d, d.left, Math.max(0, curRow().yb - d.bottom));
+        else if (d.lifted) placeFromCrane(d, d.left, 0);
+        else { d.crane.remove(); renderSlots(); }
         return;
       }
       d.el.remove();
@@ -770,10 +778,35 @@
     // над своим местом? — щедро: левый край блока в пределах большей части блока от места
     function overSlot(left) { var s = nextSlot(); return s && Math.abs(left - s.x) <= C.bw * .8 ? s : null; }
     // поставить блок с крана: всегда на своё место, но чем выше отпустили и сильнее качался — тем кривее
+    // блок сорвался или брошен мимо — он падает, кувыркаясь, на землю; потом новый — на поддоне
+    var falls = [];
+    function fallBlock(d, left) {
+      var w = d.piece.w, top = d.top != null ? d.top : (d.bottom - C.bh);
+      if (d.crane.parentNode) d.crane.remove();
+      S.drag = null; renderSlots();
+      S.falling = true; renderPallet();
+      var g = sv('g', { 'class': 'wg-fall' }, Lr.fx, blockMarkup(w, C.bh));
+      falls.push({ el: g, x: left, y: top, w: w, vx: clamp(d.vx || 0, -400, 400) * .6, vy: Math.max(0, d.vy || 0) * .5, r: d.th * 28.6, w0: (d.om || 0) * 40 + (d.th >= 0 ? 90 : -90), t: 0, bounced: 0 });
+      kick();
+    }
+    function fallTick(dt) {
+      for (var i = falls.length - 1; i >= 0; i--) {
+        var f = falls[i]; f.t += dt;
+        f.vy += 1800 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.r += f.w0 * dt;
+        var ground = -C.bh * .5;
+        if (f.y > ground && f.vy > 0) {
+          if (f.bounced < 1) { f.vy *= -.28; f.vx *= .5; f.w0 *= -.4; f.bounced++; sfx.knock(); dust(f.x + f.w / 2, 0, 10); shake(); }
+          else { f.y = ground; f.vy = 0; f.vx *= .9; f.w0 *= .8; }
+        }
+        f.el.setAttribute('transform', 'translate(' + f1(f.x) + ' ' + f1(f.y) + ') rotate(' + f1(f.r) + ' ' + f1(f.w / 2) + ' ' + f1(C.bh / 2) + ')');
+        if (f.t > 1.3) f.el.style.opacity = Math.max(0, 1 - (f.t - 1.3) / .4);
+        if (f.t > 1.7) { f.el.remove(); falls.splice(i, 1); if (!falls.length) { S.falling = false; renderPallet(); } }
+      }
+    }
     function placeFromCrane(d, left, h) {
       var s = overSlot(left);
       d.crane.remove(); S.drag = null; renderSlots();
-      if (!s) { S.miss++; sfx.err(); say('Мимо места — блок упал. Его вернули на поддон', 'warn', 2400); dust(left + d.piece.w / 2, curRow().yb, 8); renderPallet(); return; }
+      if (!s) { S.miss++; sfx.err(); say('Мимо места — блок упал. Его вернули на поддон', 'warn', 2400); fallBlock(d, left); return; }
       var bw = d.piece.w, endLimit = s.last ? s.segEnd : Infinity, pe = prevEnd(s);
       if (pe + bw > endLimit + C.tolGap + .5) {
         S.miss++; sfx.err(); say(d.piece.cut ? 'Длинный — не помещается. Подрежьте новый блок короче' : 'Не помещается до края', 'warn', 2600);
@@ -823,10 +856,9 @@
       }
       // сильно раскачали — блок срывается со строп
       if (d.lifted && Math.abs(d.th) > C.slip) {
-        d.crane.remove(); S.drag = null; renderSlots();
-        S.miss++; sfx.err(); dust(cx, curRow().yb, 10);
-        say('Сорвался со строп — несите плавнее. Блок вернули на поддон', 'warn', 2800);
-        renderPallet(); return;
+        S.miss++; sfx.err();
+        say('Сорвался со строп — несите плавнее', 'warn', 2800);
+        d.left = left; d.top = top; fallBlock(d, left); return;
       }
       // ниже основания ряда — нельзя: либо посадка, либо упор
       if (bottom >= support) {
@@ -840,7 +872,7 @@
       // подсветка места, если блок над ним
       var tg = overSlot(left);
       d.left = left; d.bottom = bottom;
-      if (tg !== d.target) { d.target = tg; renderSlots(); }
+      if (tg !== d.target || !d.zoneDrawn) { d.target = tg; d.zoneDrawn = true; renderSlots(); }
       // рисуем: трос до крюка, стропы, блок с наклоном по качке
       var vtop = view ? view.y - 20 : -800, rot = d.th * 57.3 * .5;
       d.rope.setAttribute('d', 'M' + f1(d.tx) + ' ' + f1(vtop) + 'V' + f1(d.hy));
@@ -868,8 +900,9 @@
         p.el.setAttribute('cx', f1(p.x)); p.el.setAttribute('cy', f1(p.y)); p.el.setAttribute('opacity', f1(1 - p.life / p.max));
       }
       if (S && S.drag && S.drag.crane) craneTick(dt);
+      if (falls.length) fallTick(dt);
       if (S && S.wind) renderMeter(t);
-      if (tweens.length || parts.length || (S && ((S.drag && S.drag.crane) || S.wind))) raf = requestAnimationFrame(loop); else lastT = 0;
+      if (tweens.length || parts.length || falls.length || (S && ((S.drag && S.drag.crane) || S.wind))) raf = requestAnimationFrame(loop); else lastT = 0;
     }
 
     var ro = window.ResizeObserver ? new ResizeObserver(function () { layout(); }) : null;
